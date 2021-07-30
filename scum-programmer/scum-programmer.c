@@ -11,6 +11,7 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 
 #define UART_BUF_SIZE               1
 #define NUM_LEDS                    4
+#define MAX_COMMAND_LEN             64
 
 // https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_nrf52840_dk%2FUG%2Fdk%2Fhw_buttons_leds.html
 // Button 1 P0.11
@@ -21,6 +22,8 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 // LED 2 P0.14
 // LED 3 P0.15
 // LED 4 P0.16
+
+static const MAGIC_STRING_TRANSFERSRAM[] = "transfersram\n";
 
 //=========================== prototypes ======================================
 
@@ -38,6 +41,8 @@ typedef struct {
     uint8_t        uart_buf_DK_TX[UART_BUF_SIZE];
     uint8_t        uart_buf_SCuM_RX[UART_BUF_SIZE];
     uint8_t        uart_buf_SCuM_TX[UART_BUF_SIZE];
+
+    uint8_t        uart_RX_command_buf[MAX_COMMAND_LEN];
 } app_vars_t;
 
 app_vars_t app_vars;
@@ -257,6 +262,8 @@ void RTC0_IRQHandler(void) {
 
 void UARTE0_UART0_IRQHandler(void) {
 
+    uint8_t rx_byte;
+
     // debug
     app_dbg.num_ISR_UARTE0_UART0_IRQHandler++;
 
@@ -269,13 +276,28 @@ void UARTE0_UART0_IRQHandler(void) {
         // debug
         app_dbg.num_ISR_UARTE0_UART0_IRQHandler_ENDRX++;
 
-        // send byte to SCuM
-        app_vars.uart_buf_SCuM_TX[0] = app_vars.uart_buf_DK_RX[0];
+        // handle byte
+        //app_vars.uart_buf_SCuM_TX[0] = app_vars.uart_buf_DK_RX[0];
+        //buffer[index++] = app_vars.uart_buf_DK_RX[0];
 
-        // start sending
-        NRF_UARTE1->EVENTS_TXSTARTED = 0x00000000;
-        NRF_UARTE1->TASKS_STARTTX = 0x00000001;
-        while (NRF_UARTE1->EVENTS_TXSTARTED == 0x00000000);
+        rx_byte = app_vars.uart_buf_DK_RX[0];
+        app_vars.uart_RX_command_buf[app_vars.uart_RX_command_idx++] = rx_byte;
+
+        if(rx_byte=="\n") {
+            if(memcmp(buffer,MAGIC_STRING_TRANSFERSRAM,sizeof(MAGIC_STRING_TRANSFERSRAM))==0) {
+
+            }
+        }
+
+        is buffer[0:length] = "transfersram\n"?:
+        memcmp(buffer,MAGIC_STRING_TRANSFERSRAM,sizeof(MAGIC_STRING_TRANSFERSRAM))
+        memcmp(&buffer[0],MAGIC_STRING_TRANSFERSRAM, sizeof(MAGIC_STRING_TRANSFERSRAM))
+
+        //TODO: change buffer name to something useful
+        //TODO: change buffer index to something useful
+        //TODO: put variables names into the APP STRUCT
+        
+
     }
 }
 
