@@ -2,6 +2,10 @@
 SCuM programmer.
 */
 
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include "string.h"
 #include "uicr_config.h"
 #include "nrf52840.h"
 
@@ -13,6 +17,24 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define NUM_LEDS                    4
 #define MAX_COMMAND_LEN             64
 
+#define SCUM_MEM_SIZE               65536 //  = 64kB = 64 * 2^10
+
+#define PROGRAMMER_WAIT_4_CMD_ST    0
+#define PROGRAMMER_SRAM_LD_ST       1
+#define PROGRAMMER_SRAM_LD_DONE     2
+#define PROGRAMMER_3WB_BOOT_ST      3
+#define PROGRAMMER_OPT_BOOT_ST      4
+#define PROGRAMMER_3WB_BOOT_DONE    5
+#define PROGRAMMER_OPT_BOOT_DONE    6
+#define PROGRAMMER_DBG_ST           38
+#define PROGRAMMER_ERR_ST           0xFF
+
+#define PROGRAMMER_PORT             0
+#define PROGRAMMER_EN_PIN           30
+#define PROGRAMMER_HRST_PIN         31
+#define PROGRAMMER_CLK_PIN          28
+#define PROGRAMMER_DATA_PIN         29
+
 // https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_nrf52840_dk%2FUG%2Fdk%2Fhw_buttons_leds.html
 // Button 1 P0.11
 // Button 2 P0.12
@@ -23,7 +45,16 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 // LED 3 P0.15
 // LED 4 P0.16
 
-static const MAGIC_STRING_TRANSFERSRAM[] = "transfersram\n";
+static uint8_t UART_TRANSFERSRAM[] = "transfersram\n";
+static uint8_t UART_3WB[] = "boot3wb\n"; // TODO: change these to \n once I'm done debugging with putty
+
+static uint8_t SRAM_LOAD_START_MSG[] = "SRAM load ready\r\n";
+#define SRAM_LOAD_START_MSG_LEN 17
+static uint8_t SRAM_LOAD_DONE_MSG[] = "SRAM load complete\r\n";
+#define SRAM_LOAD_DONE_MSG_LEN 20
+static uint8_t PROG_3WB_DONE_MSG[] = "3WB bootload complete\r\n";
+#define PROG_3WB_DONE_MSG_LEN 23
+static uint8_t PROG_OPT_DONE_MSG[] = "Optical bootload complete\r\n";
 
 //=========================== prototypes ======================================
 
@@ -32,6 +63,13 @@ void hfclock_start(void);
 void led_enable(void);
 void led_advance(void);
 void uarts_init(void);
+void bootloader_init(void);
+void busy_wait_1us(void);
+void busy_wait_200us(void);
+void busy_wait_1ms(void);
+void print_3wb_done_msg(void);
+void print_sram_started_msg(void);
+void print_sram_done_msg(void);
 
 //=========================== variables =======================================
 
@@ -42,9 +80,11 @@ typedef struct {
     uint8_t        uart_buf_SCuM_RX[UART_BUF_SIZE];
     uint8_t        uart_buf_SCuM_TX[UART_BUF_SIZE];
 
+    uint8_t        scum_programmer_state;
+    uint8_t        scum_instruction_memory[SCUM_MEM_SIZE];
     uint8_t        uart_RX_command_buf[MAX_COMMAND_LEN];
+    uint32_t       uart_RX_command_idx;
 } app_vars_t;
-
 app_vars_t app_vars;
 
 typedef struct {
@@ -56,12 +96,19 @@ typedef struct {
     uint32_t       num_ISR_UARTE1_IRQHandler;
     uint32_t       num_ISR_UARTE1_IRQHandler_ENDRX;
 } app_dbg_t;
-
 app_dbg_t app_dbg;
 
 //=========================== main ============================================
 
+
+
+// 
+
 int main(void) {
+
+    // initialize bootloader state
+    app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
+    bootloader_init();
     
     // main loop
     while(1) {
@@ -107,6 +154,40 @@ void hfclock_start(void) {
 
 //=== led
 
+void bootloader_init(void) {
+    if (PROGRAMMER_PORT == 0) {
+        NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
+        NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
+        NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000003;
+        NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
+    }
+    else if (PROGRAMMER_PORT == 1) {
+        NRF_P1->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
+        NRF_P1->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
+        NRF_P1->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000003;
+        NRF_P1->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
+    }
+}
+
+void busy_wait_1us(void) {
+    int k=0;
+    for (int i=0; i<4; i++) {
+        k++;
+    }
+}
+void busy_wait_200us(void) {
+    int k=0;
+    for (int i=0; i<800; i++) {
+        k++;
+    }
+}
+void busy_wait_1ms(void) {
+    int k=0;
+    for (int i=0; i<4000; i++) {
+        k++;
+    }
+}
+
 void led_enable(void) {
     // do after LF XTAL started
 
@@ -125,7 +206,7 @@ void led_enable(void) {
     NRF_RTC0->INTENSET                 = 0x00010000;       // enable compare 0 interrupts
 
     // enable interrupts
-    NVIC_SetPriority(RTC0_IRQn, 1);
+    NVIC_SetPriority(RTC0_IRQn, 10);
     NVIC_ClearPendingIRQ(RTC0_IRQn);
     NVIC_EnableIRQ(RTC0_IRQn);
     
@@ -171,8 +252,9 @@ void uarts_init(void) {
     NRF_UARTE0->PSEL.TXD               = 0x00000006; // 0x00000006==P0.6
     NRF_UARTE0->PSEL.RXD               = 0x00000008; // 0x00000008==P0.8
     NRF_UARTE0->CONFIG                 = 0x00000000; // 0x00000000==no flow control, no parity bits, 1 stop bit
-    NRF_UARTE0->BAUDRATE               = 0x004EA000; // 0x004EA000==19200 baud (actual rate: 19208)
+    NRF_UARTE0->BAUDRATE               = 0x04000000; // 0x004EA000==19200 baud (actual rate: 19208)
     NRF_UARTE0->TASKS_STARTRX          = 0x00000001; // 0x00000001==start RX state machine; read received byte from RXD register
+    NRF_UARTE0->SHORTS                 = 0x00000020; // short end RX to start RX
     //  3           2            1           0
     // 1098 7654 3210 9876 5432 1098 7654 3210
     // .... .... .... .... .... .... .... ...A A: CTS
@@ -190,7 +272,7 @@ void uarts_init(void) {
     //    0    0    0    0    0    0    1    0 0x00000010
     NRF_UARTE0->INTENSET               = 0x00000010;
     NRF_UARTE0->ENABLE                 = 0x00000008; // 0x00000008==enable
-    
+
     // enable interrupts
     NVIC_SetPriority(UARTE0_UART0_IRQn, 1);
     NVIC_ClearPendingIRQ(UARTE0_UART0_IRQn);
@@ -210,7 +292,7 @@ void uarts_init(void) {
     NRF_UARTE1->PSEL.TXD               = 0x0000001a; // 0x0000001a==P0.26
     NRF_UARTE1->PSEL.RXD               = 0x00000002; // 0x00000002==P0.02
     NRF_UARTE1->CONFIG                 = 0x00000000; // 0x00000000==no flow control, no parity bits, 1 stop bit
-    NRF_UARTE1->BAUDRATE               = 0x004EA000; // 0x004EA000==19200 baud (actual rate: 19208)
+    NRF_UARTE1->BAUDRATE               = 0x0075C000; // 0x004EA000==19200 baud (actual rate: 19208)
     NRF_UARTE1->TASKS_STARTRX          = 0x00000001; // 0x00000001==start RX state machine; read received byte from RXD register
     //  3           2            1           0
     // 1098 7654 3210 9876 5432 1098 7654 3210
@@ -231,7 +313,7 @@ void uarts_init(void) {
     NRF_UARTE1->ENABLE                 = 0x00000008; // 0x00000008==enable
     
     // enable interrupts
-    NVIC_SetPriority(UARTE1_IRQn, 1);
+    NVIC_SetPriority(UARTE1_IRQn, 2);
     NVIC_ClearPendingIRQ(UARTE1_IRQn);
     NVIC_EnableIRQ(UARTE1_IRQn);
 }
@@ -262,10 +344,17 @@ void RTC0_IRQHandler(void) {
 
 void UARTE0_UART0_IRQHandler(void) {
 
-    uint8_t rx_byte;
+    uint8_t uart_rx_byte;
 
     // debug
     app_dbg.num_ISR_UARTE0_UART0_IRQHandler++;
+
+    if (NRF_UARTE0->EVENTS_ERROR == 0x00000001) {
+        // clear the error and continue?
+        NRF_UARTE0->EVENTS_ERROR = 0x00000000;
+        NRF_UARTE0->TASKS_FLUSHRX = 0x00000001;
+        NRF_UARTE0->TASKS_STARTRX = 0x00000001;
+    }
 
     if (NRF_UARTE0->EVENTS_ENDRX == 0x00000001) {
         // byte received from DK
@@ -276,28 +365,113 @@ void UARTE0_UART0_IRQHandler(void) {
         // debug
         app_dbg.num_ISR_UARTE0_UART0_IRQHandler_ENDRX++;
 
-        // handle byte
-        //app_vars.uart_buf_SCuM_TX[0] = app_vars.uart_buf_DK_RX[0];
-        //buffer[index++] = app_vars.uart_buf_DK_RX[0];
+        if(app_vars.scum_programmer_state == PROGRAMMER_WAIT_4_CMD_ST) {
+            uart_rx_byte = app_vars.uart_buf_DK_RX[0];
+            app_vars.uart_RX_command_buf[app_vars.uart_RX_command_idx++] = uart_rx_byte;
 
-        rx_byte = app_vars.uart_buf_DK_RX[0];
-        app_vars.uart_RX_command_buf[app_vars.uart_RX_command_idx++] = rx_byte;
+            if((uart_rx_byte=='\n')||(uart_rx_byte=='\r')) { // \r for debugging w/ putty, \n for the python scripts
+                app_vars.uart_RX_command_idx = 0; // reset index to receive the next command
+                if(memcmp(app_vars.uart_RX_command_buf,UART_TRANSFERSRAM,sizeof(UART_TRANSFERSRAM))==0) { // enter transfer SRAM state
+                    app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
+                    app_vars.uart_RX_command_idx = 0;
+                    print_sram_started_msg();
+                }
 
-        if(rx_byte=="\n") {
-            if(memcmp(buffer,MAGIC_STRING_TRANSFERSRAM,sizeof(MAGIC_STRING_TRANSFERSRAM))==0) {
-
+                else if (memcmp(app_vars.uart_RX_command_buf, UART_3WB, sizeof(UART_3WB))==0) { // enter 3WB state
+                    app_vars.scum_programmer_state = PROGRAMMER_3WB_BOOT_ST;
+                }
+                // else - erroneous command, clear the buffer and reset to default state
+                else {
+                    memset(app_vars.uart_RX_command_buf,0,sizeof(app_vars.uart_RX_command_buf));
+                    app_vars.uart_RX_command_idx = 0;
+                    app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
+                }
+            }
+            else if (app_vars.uart_RX_command_idx > MAX_COMMAND_LEN) { // max length exceeded w/out return character, reset buffer
+                memset(app_vars.uart_RX_command_buf,0,sizeof(app_vars.uart_RX_command_buf));
+                app_vars.uart_RX_command_idx = 0;
+                app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
             }
         }
-
-        is buffer[0:length] = "transfersram\n"?:
-        memcmp(buffer,MAGIC_STRING_TRANSFERSRAM,sizeof(MAGIC_STRING_TRANSFERSRAM))
-        memcmp(&buffer[0],MAGIC_STRING_TRANSFERSRAM, sizeof(MAGIC_STRING_TRANSFERSRAM))
-
-        //TODO: change buffer name to something useful
-        //TODO: change buffer index to something useful
-        //TODO: put variables names into the APP STRUCT
+        else if (app_vars.scum_programmer_state == PROGRAMMER_SRAM_LD_ST) {
+            uart_rx_byte = app_vars.uart_buf_DK_RX[0];
+            app_vars.scum_instruction_memory[app_vars.uart_RX_command_idx++] = uart_rx_byte;
+            if(app_vars.uart_RX_command_idx == SCUM_MEM_SIZE) { // finished w/ the memory
+                // after loading memory - reset state, index, and command buffer
+                app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_DONE;
+                print_sram_done_msg();
+                app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
+                app_vars.uart_RX_command_idx = 0;
+                memset(app_vars.uart_RX_command_buf,0,sizeof(app_vars.uart_RX_command_buf));
+            }
+        }
         
+        if (app_vars.scum_programmer_state == PROGRAMMER_3WB_BOOT_ST) {
+            NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_CLK_PIN;
+            NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_DATA_PIN;
+            NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_EN_PIN;
+            for (uint32_t i=1; i<SCUM_MEM_SIZE+1; i++) {
+                for (uint8_t j=0; j<8; j++) {
+                    if ((app_vars.scum_instruction_memory[i-1]>>j)==0x01) {
+                        NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_DATA_PIN;
+                    }
+                    else if ((app_vars.scum_instruction_memory[i-1]>>j)==0x00) {
+                        NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_DATA_PIN;
+                    }
+                    busy_wait_1us();
+                    if ((i%4 == 0) && (j==7)) {
+                        NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_EN_PIN;
+                    }
+                    else {
+                        NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_EN_PIN;
+                    }
+                    // toggle the clock
+                    busy_wait_1us();
+                    NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_CLK_PIN;
+                    busy_wait_1us();
+                    NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_CLK_PIN;
+                    busy_wait_1us();
+                }
+            }
+            // after bootloading - go to print state, command buffer, and index
+            app_vars.scum_programmer_state = PROGRAMMER_3WB_BOOT_DONE;
+            print_3wb_done_msg();
+            app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
+            app_vars.uart_RX_command_idx = 0;
+            memset(app_vars.uart_RX_command_buf,0,sizeof(app_vars.uart_RX_command_buf));
+        }
+    }
+}
 
+void print_3wb_done_msg(void) {
+    uint8_t i;
+    uint8_t j=0;
+    for (i=0;i<PROG_3WB_DONE_MSG_LEN;i++) {
+        app_vars.uart_buf_DK_TX[0] = PROG_3WB_DONE_MSG[i];
+        NRF_UARTE0->EVENTS_TXSTARTED = 0x00000000;
+        NRF_UARTE0->TASKS_STARTTX = 0x00000001;
+        busy_wait_1ms(); //TODO: this should not be necessary... but it is?
+        while (NRF_UARTE0->EVENTS_TXSTARTED==0x00000000);
+    }
+}
+void print_sram_started_msg(void) {
+    uint8_t i;
+    for (i=0;i<SRAM_LOAD_START_MSG_LEN;i++) {
+        app_vars.uart_buf_DK_TX[0] = SRAM_LOAD_START_MSG[i];
+        NRF_UARTE0->EVENTS_TXSTARTED = 0x00000000;
+        NRF_UARTE0->TASKS_STARTTX = 0x00000001;
+        busy_wait_1ms(); //TODO: this should not be necessary... but it is?
+        while (NRF_UARTE0->EVENTS_ENDTX==0x00000000);
+    }
+}
+void print_sram_done_msg(void) {
+    uint8_t i;
+    for (i=0;i<SRAM_LOAD_DONE_MSG_LEN;i++) {
+        app_vars.uart_buf_DK_TX[0] = SRAM_LOAD_DONE_MSG[i];
+        NRF_UARTE0->EVENTS_TXSTARTED = 0x00000000;
+        NRF_UARTE0->TASKS_STARTTX = 0x00000001;
+        busy_wait_1ms(); //TODO: this should not be necessary... but it is?
+        while (NRF_UARTE0->EVENTS_ENDTX==0x00000000);
     }
 }
 
@@ -324,3 +498,4 @@ void UARTE1_IRQHandler(void) {
         while (NRF_UARTE0->EVENTS_TXSTARTED == 0x00000000);
     }
 }
+
