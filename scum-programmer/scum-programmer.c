@@ -345,6 +345,9 @@ void RTC0_IRQHandler(void) {
 void UARTE0_UART0_IRQHandler(void) {
 
     uint8_t uart_rx_byte;
+    if (app_dbg.num_ISR_UARTE0_UART0_IRQHandler == 0) {
+        app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
+    }
 
     // debug
     app_dbg.num_ISR_UARTE0_UART0_IRQHandler++;
@@ -398,10 +401,9 @@ void UARTE0_UART0_IRQHandler(void) {
             app_vars.scum_instruction_memory[app_vars.uart_RX_command_idx++] = uart_rx_byte;
             if(app_vars.uart_RX_command_idx == SCUM_MEM_SIZE) { // finished w/ the memory
                 // after loading memory - reset state, index, and command buffer
-                app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_DONE;
                 print_sram_done_msg();
-                app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
-                app_vars.uart_RX_command_idx = 0;
+                app_vars.scum_programmer_state = PROGRAMMER_3WB_BOOT_ST;
+                //app_vars.uart_RX_command_idx = 0;
                 memset(app_vars.uart_RX_command_buf,0,sizeof(app_vars.uart_RX_command_buf));
             }
         }
@@ -434,9 +436,8 @@ void UARTE0_UART0_IRQHandler(void) {
                 }
             }
             // after bootloading - go to print state, command buffer, and index
-            app_vars.scum_programmer_state = PROGRAMMER_3WB_BOOT_DONE;
             print_3wb_done_msg();
-            app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
+            app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
             app_vars.uart_RX_command_idx = 0;
             memset(app_vars.uart_RX_command_buf,0,sizeof(app_vars.uart_RX_command_buf));
         }
