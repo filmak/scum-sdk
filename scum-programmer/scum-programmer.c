@@ -109,7 +109,7 @@ int main(void) {
     // initialize bootloader state
     app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
     bootloader_init();
-    
+
     // main loop
     while(1) {
         
@@ -435,6 +435,27 @@ void UARTE0_UART0_IRQHandler(void) {
                     busy_wait_1us();
                 }
             }
+
+            for (uint32_t i=1; i<10000; i++) {
+                for (uint8_t j=0; j<8; j++) {
+                    NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_DATA_PIN;
+                    busy_wait_1us();
+                    // Every 32 bits need to strobe the enable high for one cycle
+                    if ((i%4 == 0) && (j==7)) {
+                        NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_EN_PIN;
+                    }
+                    else {
+                        NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_EN_PIN;
+                    }
+                    // toggle the clock
+                    busy_wait_1us();
+                    NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_CLK_PIN;
+                    busy_wait_1us();
+                    NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_CLK_PIN;
+                    busy_wait_1us();
+                }
+            }
+
             // after bootloading - go to print state, command buffer, and index
             print_3wb_done_msg();
             app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
