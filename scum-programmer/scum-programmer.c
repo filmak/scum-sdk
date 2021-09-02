@@ -171,19 +171,19 @@ void bootloader_init(void) {
 
 void busy_wait_1us(void) {
     int k=0;
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<3; i++) {
         k++;
     }
 }
 void busy_wait_200us(void) {
     int k=0;
-    for (int i=0; i<800; i++) {
+    for (int i=0; i<600; i++) {
         k++;
     }
 }
 void busy_wait_1ms(void) {
     int k=0;
-    for (int i=0; i<4000; i++) {
+    for (int i=0; i<3000; i++) {
         k++;
     }
 }
@@ -412,12 +412,15 @@ void UARTE0_UART0_IRQHandler(void) {
             NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_CLK_PIN;
             NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_DATA_PIN;
             NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_EN_PIN;
+
+
             for (uint32_t i=1; i<SCUM_MEM_SIZE+1; i++) {
                 for (uint8_t j=0; j<8; j++) {
-                    if ((app_vars.scum_instruction_memory[i-1]>>j)==0x01) {
+
+                    if (((app_vars.scum_instruction_memory[i-1]>>j)&(0x01))==0x01) {
                         NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_DATA_PIN;
                     }
-                    else if ((app_vars.scum_instruction_memory[i-1]>>j)==0x00) {
+                    else if (((app_vars.scum_instruction_memory[i-1]>>j)&(0x01))==0x00) {
                         NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_DATA_PIN;
                     }
                     busy_wait_1us();

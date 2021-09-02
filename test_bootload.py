@@ -9,7 +9,7 @@ import time
 nRF_ser = None
 uart_ser = None
 
-nRF_port="COM17"
+nRF_port="COM27"
 binary_image="./AllGPIOToggle.bin"
 boot_mode='3wb'
 pad_random_payload=False
