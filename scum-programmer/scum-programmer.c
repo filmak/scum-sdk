@@ -156,9 +156,9 @@ void hfclock_start(void) {
 
 void bootloader_init(void) {
     if (PROGRAMMER_PORT == 0) {
-        NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
+        NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003; // 0x03 configures pins as an output pin and disconnects the input buffer
         NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
-        NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000003;
+        NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000; // 0x00 configures the pin as an input, input buffer disconnected, pull up/down disabled (no pull)
         NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
     }
     else if (PROGRAMMER_PORT == 1) {
@@ -252,7 +252,7 @@ void uarts_init(void) {
     NRF_UARTE0->PSEL.TXD               = 0x00000006; // 0x00000006==P0.6
     NRF_UARTE0->PSEL.RXD               = 0x00000008; // 0x00000008==P0.8
     NRF_UARTE0->CONFIG                 = 0x00000000; // 0x00000000==no flow control, no parity bits, 1 stop bit
-    NRF_UARTE0->BAUDRATE               = 0x04000000; // 0x004EA000==19200 baud (actual rate: 19208)
+    NRF_UARTE0->BAUDRATE               = 0x04000000; // 0x004EA000==19200 baud (actual rate: 19208), 0x04000000==250000 baud (actual rate: 250000)
     NRF_UARTE0->TASKS_STARTRX          = 0x00000001; // 0x00000001==start RX state machine; read received byte from RXD register
     NRF_UARTE0->SHORTS                 = 0x00000020; // short end RX to start RX
     //  3           2            1           0
@@ -413,6 +413,37 @@ void UARTE0_UART0_IRQHandler(void) {
             NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_DATA_PIN;
             NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_EN_PIN;
 
+            // execute hard reset (debug for now)
+            NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = 0x00000003; // configure as output, set low
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = 0x00000000; // return to input
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
 
             for (uint32_t i=1; i<SCUM_MEM_SIZE+1; i++) {
                 for (uint8_t j=0; j<8; j++) {
