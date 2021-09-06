@@ -30,10 +30,16 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define PROGRAMMER_ERR_ST           0xFF
 
 #define PROGRAMMER_PORT             0
+#define CALIBRATION_PORT            0UL
 #define PROGRAMMER_EN_PIN           30
 #define PROGRAMMER_HRST_PIN         31
 #define PROGRAMMER_CLK_PIN          28
 #define PROGRAMMER_DATA_PIN         29
+#define CALIBRATION_CLK_PIN         4UL
+#define CALIBRATION_PERIOD          50 // actually a half period - time in ms
+#define CALIBRATION_FUDGE           3
+
+#define GPIOTE_CALIBRATION_CLOCK    0
 
 // https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_nrf52840_dk%2FUG%2Fdk%2Fhw_buttons_leds.html
 // Button 1 P0.11
@@ -64,6 +70,9 @@ void led_enable(void);
 void led_advance(void);
 void uarts_init(void);
 void bootloader_init(void);
+void calibration_gpiote_init(void);
+void calibration_timer2_init(void);
+void calibration_init(void);
 void busy_wait_1us(void);
 void busy_wait_200us(void);
 void busy_wait_1ms(void);
@@ -109,6 +118,11 @@ int main(void) {
     // initialize bootloader state
     app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
     bootloader_init();
+
+    // initialize 100ms clock pin
+    calibration_init();
+
+    busy_wait_1ms();
 
     // main loop
     while(1) {
@@ -164,9 +178,59 @@ void bootloader_init(void) {
     else if (PROGRAMMER_PORT == 1) {
         NRF_P1->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
         NRF_P1->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
-        NRF_P1->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000003;
+        NRF_P1->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000;
         NRF_P1->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
     }
+}
+
+void calibration_gpiote_init(void) {
+    NRF_GPIOTE->CONFIG[GPIOTE_CALIBRATION_CLOCK] =  ((3UL) << (0UL))    |                 // enable GPIOTE task
+                                                    (CALIBRATION_CLK_PIN << (8UL))    |   // set pin #
+                                                    (CALIBRATION_PORT << (13UL))      |   // set port #
+                                                    ((3UL) << (16UL))                 |   // 3UL -> toggle pin on each event
+                                                    ((1UL) << (20UL))                 ;   // 0UL -> initialize pin to LOW
+}
+
+void calibration_timer2_init(void) {
+    NRF_TIMER2->BITMODE = (3UL); // set to 32-bit timer bit width
+    //NRF_TIMER2->PRESCALER = (0UL); // set prescaler to zero - default is pre-scale by 16
+
+    NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 1000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
+
+    //NRF_TIMER2->SHORTS  = ((1UL) << (2UL)) | // short compare[2] event and clear
+    //                      ((1UL) << (10UL));  // short compare[2] event and stop
+
+    NRF_TIMER2->SHORTS  = ((1UL) << (2UL)); // short compare[2] event and clear
+}
+
+void calibration_PPI_init(void) {
+    // endpoint addresses
+    uint32_t calibration_gpiote_task_addr            = (uint32_t)&NRF_GPIOTE->TASKS_OUT[GPIOTE_CALIBRATION_CLOCK];
+    uint32_t timer2_task_start_addr                  = (uint32_t)&NRF_TIMER2->TASKS_START;
+    uint32_t timer2_events_compare_2_addr            = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[2];
+
+    // connect endpoints
+    NRF_PPI->CH[0].EEP      = timer2_events_compare_2_addr;
+    NRF_PPI->CH[0].TEP      = calibration_gpiote_task_addr;
+    NRF_PPI->FORK[0].TEP    = timer2_task_start_addr;
+
+    // enable channels
+    NRF_PPI->CHENSET        = ((1UL) << (0UL)); // enable the 0 PPI channel
+}
+
+void calibration_init(void) {
+   // if (CALIBRATION_PORT == 0) {
+   //     NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
+   // }
+   // else if (CALIBRATION_PORT == 1) {
+   //     NRF_P1->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
+   // }
+
+    calibration_gpiote_init();
+    calibration_timer2_init();
+    calibration_PPI_init();
+
+    NRF_TIMER2->TASKS_START = 1UL;
 }
 
 void busy_wait_1us(void) {
