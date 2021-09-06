@@ -29,12 +29,13 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define PROGRAMMER_DBG_ST           38
 #define PROGRAMMER_ERR_ST           0xFF
 
-#define PROGRAMMER_PORT             0
+#define PROGRAMMER_PORT             0UL
 #define CALIBRATION_PORT            0UL
-#define PROGRAMMER_EN_PIN           30
-#define PROGRAMMER_HRST_PIN         31
-#define PROGRAMMER_CLK_PIN          28
-#define PROGRAMMER_DATA_PIN         29
+#define PROGRAMMER_EN_PIN           30UL
+#define PROGRAMMER_HRST_PIN         31UL
+#define PROGRAMMER_CLK_PIN          28UL
+#define PROGRAMMER_DATA_PIN         29UL
+#define PROGRAMMER_TAP_PIN          3UL
 #define CALIBRATION_CLK_PIN         4UL
 #define CALIBRATION_PULSE_WIDTH     50  // approximate duty cycle (out of 100)
 #define CALIBRATION_PERIOD          100 // period in ms
@@ -175,12 +176,14 @@ void bootloader_init(void) {
         NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
         NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000; // 0x00 configures the pin as an input, input buffer disconnected, pull up/down disabled (no pull)
         NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
+        NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN]     = 0x00000000; // default to hi-Z
     }
     else if (PROGRAMMER_PORT == 1) {
         NRF_P1->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
         NRF_P1->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
         NRF_P1->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000;
         NRF_P1->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
+        NRF_P1->PIN_CNF[PROGRAMMER_TAP_PIN]     = 0x00000000;
     }
 }
 
@@ -237,7 +240,6 @@ void calibration_init(void) {
     calibration_timer2_init();
     calibration_PPI_init();
 
-    NRF_TIMER2->TASKS_START = 1UL;
 }
 
 void busy_wait_1us(void) {
@@ -561,11 +563,25 @@ void UARTE0_UART0_IRQHandler(void) {
                 }
             }
 
-            // after bootloading - go to print state, command buffer, and index
+            // after bootloading - return to "load" state (currently debugging)
             print_3wb_done_msg();
             app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
             app_vars.uart_RX_command_idx = 0;
             memset(app_vars.uart_RX_command_buf,0,sizeof(app_vars.uart_RX_command_buf));
+
+            // experimental - after bootloading, do a tap
+            NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_TAP_PIN; // first set pin high - NEVER CLEAR!!! scum will hate it if you do
+            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = 0x00000003; // then enable output
+            busy_wait_1ms(); // delay
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            busy_wait_1ms();
+            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = 0x00000000; // disable output
+
+            // optional - start the 100ms calibration clock
+            NRF_TIMER2->TASKS_START = 1UL;
+
         }
     }
 }
