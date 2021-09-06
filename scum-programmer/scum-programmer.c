@@ -36,8 +36,9 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define PROGRAMMER_CLK_PIN          28
 #define PROGRAMMER_DATA_PIN         29
 #define CALIBRATION_CLK_PIN         4UL
-#define CALIBRATION_PERIOD          50 // actually a half period - time in ms
-#define CALIBRATION_FUDGE           3
+#define CALIBRATION_PULSE_WIDTH     50  // approximate duty cycle (out of 100)
+#define CALIBRATION_PERIOD          100 // period in ms
+#define CALIBRATION_FUDGE           48   // # of clock cycles of "fudge"
 
 #define GPIOTE_CALIBRATION_CLOCK    0
 
@@ -193,9 +194,10 @@ void calibration_gpiote_init(void) {
 
 void calibration_timer2_init(void) {
     NRF_TIMER2->BITMODE = (3UL); // set to 32-bit timer bit width
-    //NRF_TIMER2->PRESCALER = (0UL); // set prescaler to zero - default is pre-scale by 16
-
-    NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 1000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
+    NRF_TIMER2->PRESCALER = (0UL); // set prescaler to zero - default is pre-scale by 16
+    
+    NRF_TIMER1->CC[1]   = CALIBRATION_PULSE_WIDTH * 8000;
+    NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 8000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
 
     //NRF_TIMER2->SHORTS  = ((1UL) << (2UL)) | // short compare[2] event and clear
     //                      ((1UL) << (10UL));  // short compare[2] event and stop
@@ -207,15 +209,20 @@ void calibration_PPI_init(void) {
     // endpoint addresses
     uint32_t calibration_gpiote_task_addr            = (uint32_t)&NRF_GPIOTE->TASKS_OUT[GPIOTE_CALIBRATION_CLOCK];
     uint32_t timer2_task_start_addr                  = (uint32_t)&NRF_TIMER2->TASKS_START;
-    uint32_t timer2_events_compare_2_addr            = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[2];
+    uint32_t timer2_events_compare_1_addr            = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[1]; // 'half' period
+    uint32_t timer2_events_compare_2_addr            = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[2]; // full period
 
     // connect endpoints
     NRF_PPI->CH[0].EEP      = timer2_events_compare_2_addr;
     NRF_PPI->CH[0].TEP      = calibration_gpiote_task_addr;
     NRF_PPI->FORK[0].TEP    = timer2_task_start_addr;
 
+    NRF_PPI->CH[1].EEP      = timer2_events_compare_2_addr;
+    NRF_PPI->CH[1].TEP      = calibration_gpiote_task_addr;
+
     // enable channels
-    NRF_PPI->CHENSET        = ((1UL) << (0UL)); // enable the 0 PPI channel
+    NRF_PPI->CHENSET        = ((1UL) << (0UL))  |   // enable the 0 PPI channel
+                              ((1UL) << (1UL));     // enable the 1 PPI channel
 }
 
 void calibration_init(void) {
