@@ -36,10 +36,12 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define PROGRAMMER_CLK_PIN          28UL
 #define PROGRAMMER_DATA_PIN         29UL
 #define PROGRAMMER_TAP_PIN          3UL
-#define CALIBRATION_CLK_PIN         4UL
+//#define CALIBRATION_CLK_PIN         4UL
+#define CALIBRATION_CLK_PIN         28UL
 #define CALIBRATION_PULSE_WIDTH     50  // approximate duty cycle (out of 100)
 #define CALIBRATION_PERIOD          100 // period in ms
-#define CALIBRATION_FUDGE           48   // # of clock cycles of "fudge"
+#define CALIBRATION_FUDGE           294   // # of clock cycles of "fudge"
+#define CALIBRATION_NUMBER_OF_PULSES  120 // # of rising edges at 100ms 
 
 #define GPIOTE_CALIBRATION_CLOCK    0
 
@@ -54,7 +56,7 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 // LED 4 P0.16
 
 static uint8_t UART_TRANSFERSRAM[] = "transfersram\n";
-static uint8_t UART_3WB[] = "boot3wb\n"; // TODO: change these to \n once I'm done debugging with putty
+static uint8_t UART_3WB[] = "boot3wb\n";
 
 static uint8_t SRAM_LOAD_START_MSG[] = "SRAM load ready\r\n";
 #define SRAM_LOAD_START_MSG_LEN 17
@@ -73,6 +75,7 @@ void led_advance(void);
 void uarts_init(void);
 void bootloader_init(void);
 void calibration_gpiote_init(void);
+void calibration_gpiote_disable(void);
 void calibration_timer2_init(void);
 void calibration_init(void);
 void busy_wait_1us(void);
@@ -95,6 +98,7 @@ typedef struct {
     uint8_t        scum_instruction_memory[SCUM_MEM_SIZE];
     uint8_t        uart_RX_command_buf[MAX_COMMAND_LEN];
     uint32_t       uart_RX_command_idx;
+    uint32_t       calibration_counter;
 } app_vars_t;
 app_vars_t app_vars;
 
@@ -102,6 +106,8 @@ typedef struct {
     uint32_t       num_task_loops;
     uint32_t       num_ISR_RTC0_IRQHandler;
     uint32_t       num_ISR_RTC0_IRQHandler_COMPARE0;
+    uint32_t       num_TIMER2_IRQHandler;
+    uint32_t       num_TIMER2_IRQHandler_COMPARE2;
     uint32_t       num_ISR_UARTE0_UART0_IRQHandler;
     uint32_t       num_ISR_UARTE0_UART0_IRQHandler_ENDRX;
     uint32_t       num_ISR_UARTE1_IRQHandler;
@@ -120,9 +126,6 @@ int main(void) {
     // initialize bootloader state
     app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
     bootloader_init();
-
-    // initialize 100ms clock pin
-    calibration_init();
 
     busy_wait_1ms();
 
@@ -195,12 +198,20 @@ void calibration_gpiote_init(void) {
                                                     ((1UL) << (20UL))                 ;   // 0UL -> initialize pin to LOW
 }
 
+void calibration_gpiote_disable(void) {
+    NRF_GPIOTE->CONFIG[GPIOTE_CALIBRATION_CLOCK] =  ((0UL) << (0UL))                    |   // disable GPIOTE task
+                                                    ((CALIBRATION_CLK_PIN) << (8UL))    |   // on pin #
+                                                    ((CALIBRATION_PORT) << (13UL))      |   // port #
+                                                    ((0UL) << (16UL))                   |   // do not toggle
+                                                    ((0UL) << (20UL))                   ;   // do not initialize
+}
+
 void calibration_timer2_init(void) {
     NRF_TIMER2->BITMODE = (3UL); // set to 32-bit timer bit width
     NRF_TIMER2->PRESCALER = (0UL); // set prescaler to zero - default is pre-scale by 16
     
-    NRF_TIMER1->CC[1]   = CALIBRATION_PULSE_WIDTH * 8000;
-    NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 8000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
+    NRF_TIMER2->CC[1]   = CALIBRATION_PULSE_WIDTH * 16000;
+    NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 16000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
 
     //NRF_TIMER2->SHORTS  = ((1UL) << (2UL)) | // short compare[2] event and clear
     //                      ((1UL) << (10UL));  // short compare[2] event and stop
@@ -214,31 +225,34 @@ void calibration_PPI_init(void) {
     uint32_t timer2_task_start_addr                  = (uint32_t)&NRF_TIMER2->TASKS_START;
     uint32_t timer2_events_compare_1_addr            = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[1]; // 'half' period
     uint32_t timer2_events_compare_2_addr            = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[2]; // full period
+    uint32_t timer2_task_stop_addr                   = (uint32_t)&NRF_TIMER2->TASKS_STOP;
+    uint32_t timer2_task_clear_addr                  = (uint32_t)&NRF_TIMER2->TASKS_CLEAR;
 
     // connect endpoints
     NRF_PPI->CH[0].EEP      = timer2_events_compare_2_addr;
     NRF_PPI->CH[0].TEP      = calibration_gpiote_task_addr;
     NRF_PPI->FORK[0].TEP    = timer2_task_start_addr;
 
-    NRF_PPI->CH[1].EEP      = timer2_events_compare_2_addr;
+    NRF_PPI->CH[1].EEP      = timer2_events_compare_1_addr;
     NRF_PPI->CH[1].TEP      = calibration_gpiote_task_addr;
 
     // enable channels
     NRF_PPI->CHENSET        = ((1UL) << (0UL))  |   // enable the 0 PPI channel
-                              ((1UL) << (1UL));     // enable the 1 PPI channel
+                              ((1UL) << (1UL))  ;
+ 
 }
 
 void calibration_init(void) {
-   // if (CALIBRATION_PORT == 0) {
-   //     NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
-   // }
-   // else if (CALIBRATION_PORT == 1) {
-   //     NRF_P1->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
-   // }
 
     calibration_gpiote_init();
     calibration_timer2_init();
     calibration_PPI_init();
+
+    NVIC_SetPriority(TIMER2_IRQn, 10);
+    //NVIC_ClearPendingIRQ(TIMER2_IRQn);
+    NVIC_EnableIRQ(TIMER2_IRQn);
+    NRF_TIMER2->INTENCLR = (1UL)<<18;
+    NRF_TIMER2->INTENSET = (1UL)<<18;
 
 }
 
@@ -415,6 +429,36 @@ void RTC0_IRQHandler(void) {
      }
 }
 
+void TIMER2_IRQHandler(void) {
+    // debug
+    app_dbg.num_TIMER2_IRQHandler++;
+    
+    // handle compare[2]
+    if (NRF_TIMER2->EVENTS_COMPARE[2] == 0x00000001 ) {
+        // no need to clear - it is done w/ a short
+        NRF_TIMER2->TASKS_CLEAR = (1UL);
+        NRF_TIMER2->EVENTS_COMPARE[2] =  0x00000000;
+        app_vars.calibration_counter++;
+        app_dbg.num_TIMER2_IRQHandler_COMPARE2++;
+
+        if (app_vars.calibration_counter>(10)) {
+            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = 0x00000000; // turn the tap off after 5 100ms cycles!
+        }
+
+        if (app_vars.calibration_counter>(CALIBRATION_NUMBER_OF_PULSES)) { 
+            app_vars.calibration_counter = 0;
+
+            NRF_TIMER2->TASKS_STOP = (1UL); // stop the count!
+            calibration_gpiote_disable(); // disable gpiote on data pin so a second program can occur :)
+            NRF_GPIOTE->CONFIG[0] = (0UL);
+            NRF_P0->PIN_CNF[CALIBRATION_CLK_PIN]    = 0x00000003;
+            app_vars.uart_RX_command_idx = 0;
+        }
+    }
+
+
+}
+
 void UARTE0_UART0_IRQHandler(void) {
 
     uint8_t uart_rx_byte;
@@ -424,6 +468,8 @@ void UARTE0_UART0_IRQHandler(void) {
 
     // debug
     app_dbg.num_ISR_UARTE0_UART0_IRQHandler++;
+
+    //calibration_gpiote_disable();
 
     if (NRF_UARTE0->EVENTS_ERROR == 0x00000001) {
         // clear the error and continue?
@@ -572,15 +618,22 @@ void UARTE0_UART0_IRQHandler(void) {
             // experimental - after bootloading, do a tap
             NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_TAP_PIN; // first set pin high - NEVER CLEAR!!! scum will hate it if you do
             NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = 0x00000003; // then enable output
+            
+            /*
             busy_wait_1ms(); // delay
             busy_wait_1ms();
             busy_wait_1ms();
             busy_wait_1ms();
             busy_wait_1ms();
-            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = 0x00000000; // disable output
+            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = 0x00000000; // disable output*/
 
             // optional - start the 100ms calibration clock
+            // initialize 100ms clock pin
+            calibration_init();
+            app_vars.calibration_counter = 0;
+            app_dbg.num_TIMER2_IRQHandler = 0;
             NRF_TIMER2->TASKS_START = 1UL;
+
 
         }
     }
