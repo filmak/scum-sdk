@@ -38,9 +38,9 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define PROGRAMMER_TAP_PIN          3UL
 //#define CALIBRATION_CLK_PIN         4UL
 #define CALIBRATION_CLK_PIN         28UL
-#define CALIBRATION_PULSE_WIDTH     50  // approximate duty cycle (out of 100)
+#define CALIBRATION_PULSE_WIDTH     50   // approximate duty cycle (out of 100)
 #define CALIBRATION_PERIOD          100 // period in ms
-#define CALIBRATION_FUDGE           294   // # of clock cycles of "fudge"
+#define CALIBRATION_FUDGE           308   // # of clock cycles of "fudge"
 #define CALIBRATION_NUMBER_OF_PULSES  120 // # of rising edges at 100ms 
 
 #define GPIOTE_CALIBRATION_CLOCK    0
@@ -210,13 +210,14 @@ void calibration_timer2_init(void) {
     NRF_TIMER2->BITMODE = (3UL); // set to 32-bit timer bit width
     NRF_TIMER2->PRESCALER = (0UL); // set prescaler to zero - default is pre-scale by 16
     
-    NRF_TIMER2->CC[1]   = CALIBRATION_PULSE_WIDTH * 16000;
+    //NRF_TIMER2->CC[1]   = CALIBRATION_PULSE_WIDTH * 16000;
+    NRF_TIMER2->CC[1]   = 300;
     NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 16000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
 
     //NRF_TIMER2->SHORTS  = ((1UL) << (2UL)) | // short compare[2] event and clear
     //                      ((1UL) << (10UL));  // short compare[2] event and stop
 
-    NRF_TIMER2->SHORTS  = ((1UL) << (2UL)); // short compare[2] event and clear
+    NRF_TIMER2->SHORTS  =  ((0UL) << (2UL)); // short compare[2] event and clear
 }
 
 void calibration_PPI_init(void) {
@@ -379,7 +380,7 @@ void uarts_init(void) {
     NRF_UARTE1->PSEL.TXD               = 0x0000001a; // 0x0000001a==P0.26
     NRF_UARTE1->PSEL.RXD               = 0x00000002; // 0x00000002==P0.02
     NRF_UARTE1->CONFIG                 = 0x00000000; // 0x00000000==no flow control, no parity bits, 1 stop bit
-    NRF_UARTE1->BAUDRATE               = 0x0075C000; // 0x004EA000==19200 baud (actual rate: 19208)
+    NRF_UARTE1->BAUDRATE               = 0x004EA000; // 0x004EA000==19200 baud (actual rate: 19208)
     NRF_UARTE1->TASKS_STARTRX          = 0x00000001; // 0x00000001==start RX state machine; read received byte from RXD register
     //  3           2            1           0
     // 1098 7654 3210 9876 5432 1098 7654 3210
@@ -432,6 +433,12 @@ void RTC0_IRQHandler(void) {
 void TIMER2_IRQHandler(void) {
     // debug
     app_dbg.num_TIMER2_IRQHandler++;
+
+    // handle compare[1]
+    if (NRF_TIMER2->EVENTS_COMPARE[1] == 0x00000001 ) {
+        NRF_TIMER2->EVENTS_COMPARE[1] = 0x00000000;
+        NRF_TIMER2->CC[1] = 0x00000000; // disable this compare register
+    }
     
     // handle compare[2]
     if (NRF_TIMER2->EVENTS_COMPARE[2] == 0x00000001 ) {
@@ -440,6 +447,9 @@ void TIMER2_IRQHandler(void) {
         NRF_TIMER2->EVENTS_COMPARE[2] =  0x00000000;
         app_vars.calibration_counter++;
         app_dbg.num_TIMER2_IRQHandler_COMPARE2++;
+
+        // re-enable CC[1]
+        NRF_TIMER2->CC[1] = 300;
 
         if (app_vars.calibration_counter>(10)) {
             NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = 0x00000000; // turn the tap off after 5 100ms cycles!

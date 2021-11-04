@@ -10,7 +10,8 @@ nRF_ser = None
 uart_ser = None
 
 nRF_port="COM27"
-binary_image="ble_freq_sweep.bin"
+binary_image="C:/Users/fmaksimo/scum/austin_repo/scum-test-code/scm_v3c/applications/freq_sweep_rx_tx/Objects/freq_sweep_rx_tx.bin"
+#binary_image="C:/Users/fmaksimo/scum/scum-test-code/scm_v3c/applications/ble_freq_sweep/Objects/ble_freq_sweep.bin"
 boot_mode='3wb'
 pad_random_payload=False
 
