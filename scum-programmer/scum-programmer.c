@@ -211,7 +211,7 @@ void calibration_timer2_init(void) {
     NRF_TIMER2->PRESCALER = (0UL); // set prescaler to zero - default is pre-scale by 16
     
     //NRF_TIMER2->CC[1]   = CALIBRATION_PULSE_WIDTH * 16000;
-    NRF_TIMER2->CC[1]   = 300;
+    NRF_TIMER2->CC[1]   = 40;
     NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 16000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
 
     //NRF_TIMER2->SHORTS  = ((1UL) << (2UL)) | // short compare[2] event and clear
@@ -599,7 +599,9 @@ void UARTE0_UART0_IRQHandler(void) {
                 }
             }
 
-            for (uint32_t i=1; i<10000; i++) {
+            //for (uint32_t i=1; i<10000; i++) {
+            /*
+            for (uint32_t i=1; i<1000; i++) {
                 for (uint8_t j=0; j<8; j++) {
                     NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_DATA_PIN;
                     busy_wait_1us();
@@ -617,7 +619,7 @@ void UARTE0_UART0_IRQHandler(void) {
                     NRF_P0->OUTCLR = (0x00000001) << PROGRAMMER_CLK_PIN;
                     busy_wait_1us();
                 }
-            }
+            }*/
 
             // after bootloading - return to "load" state (currently debugging)
             print_3wb_done_msg();
