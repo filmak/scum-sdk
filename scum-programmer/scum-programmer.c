@@ -41,7 +41,10 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define CALIBRATION_PULSE_WIDTH     50   // approximate duty cycle (out of 100)
 #define CALIBRATION_PERIOD          100 // period in ms
 #define CALIBRATION_FUDGE           308   // # of clock cycles of "fudge"
-#define CALIBRATION_NUMBER_OF_PULSES  120 // # of rising edges at 100ms 
+#define CALIBRATION_NUMBER_OF_PULSES  120 // # of rising edges at 100ms
+
+#define PROGRAMMER_VDDD_HI_PIN      27UL
+#define PROGRAMMER_VDDD_LO_PIN      15UL
 
 #define GPIOTE_CALIBRATION_CLOCK    0
 
@@ -180,6 +183,12 @@ void bootloader_init(void) {
         NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000; // 0x00 configures the pin as an input, input buffer disconnected, pull up/down disabled (no pull)
         NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
         NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN]     = 0x00000000; // default to hi-Z
+        NRF_P0->PIN_CNF[PROGRAMMER_VDDD_HI_PIN] = 0x00000303;
+        NRF_P1->PIN_CNF[PROGRAMMER_VDDD_LO_PIN] = 0x00000303;
+
+
+        NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_VDDD_HI_PIN;
+        NRF_P1->OUTCLR = (0x00000001) << PROGRAMMER_VDDD_LO_PIN;
     }
     else if (PROGRAMMER_PORT == 1) {
         NRF_P1->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
