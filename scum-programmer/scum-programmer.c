@@ -263,7 +263,7 @@ void TIMER2_IRQHandler(void) {
             _programmer_vars.calibration_counter = 0;
 
             NRF_TIMER2->TASKS_STOP = 1; // stop the count!
-            NRF_GPIOTE->CONFIG[0] = 0;
+            NRF_GPIOTE->CONFIG[GPIOTE_CALIBRATION_CLOCK] = 0;
             NRF_P0->PIN_CNF[CALIBRATION_CLK_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
                                                     GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
             _programmer_vars.scum_instruction_idx = 0;
