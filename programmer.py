@@ -28,7 +28,7 @@ def get_default_port():
 BINDATA_CHUNK_SIZE = 32
 
 SERIAL_PORT_DEFAULT = get_default_port()
-SERIAL_BAUDRATE_DEFAULT = 250000
+SERIAL_BAUDRATE_DEFAULT = 460800
 
 
 @dataclass
@@ -96,11 +96,10 @@ class ScumProgrammer:
             print(f"[bold red]Error: failed to load firmware to RAM[/]")
             sys.exit(1)
 
-    def boot(self):
+    def wait_for_boot(self):
         """Boot the SCuM."""
         # Execute 3-wire bus bootloader on nRF
         print("[bold]Booting SCuM...[/]", end=" ")
-        self.serial.write(f"{self.settings.boot_mode}\n".encode())
         # Wait for response that writing is complete
         response = self.serial.read_until().decode().strip()
         if response != "OK":
@@ -108,16 +107,24 @@ class ScumProgrammer:
             sys.exit(1)
         print("[bold green]:heavy_check_mark:[/]")
 
+        print("[bold]Calibrating... [/]", end=" ")
+        # Wait for response that writing is complete
+        response = self.serial.read_until().decode().strip()
+        if response != "OK":
+            print(f"[bold red]Error: failed to calibrate SCuM[/]")
+            sys.exit(1)
+        print("[bold green]:heavy_check_mark:[/]")
+
     def run(self):
         """Run the Scum Programmer."""
         print(f"[bold green]Starting Scum Programmer[/]")
-        print(f"[bold]Padding type:[/] {self.settings.padding}")
-        print(f"[bold]Boot mode:[/] {self.settings.boot_mode}")
+        print(f"[bold]Padding type:[/]\t {self.settings.padding}")
+        print(f"[bold]Boot mode:[/]\t {self.settings.boot_mode}")
         start = time.time()
         # Send firmware to nRF
         self.program()
         # Boot the SCuM
-        self.boot()
+        self.wait_for_boot()
         # Close serial port
         self.serial.close()
         print(f"[bold green]Done in {time.time() - start:.3f}s[/]")
