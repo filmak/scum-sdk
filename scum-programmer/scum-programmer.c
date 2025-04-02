@@ -5,8 +5,7 @@ SCuM programmer.
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "string.h"
-#include "uicr_config.h"
+#include <string.h>
 
 #include <nrf.h>
 #include <nrf52840_peripherals.h>
