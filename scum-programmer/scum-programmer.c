@@ -11,8 +11,6 @@ SCuM programmer.
 
 //=========================== defines =========================================
 
-const uint8_t APP_VERSION[]         = {0x00,0x01};
-
 #define UART_BUF_SIZE               1
 #define NUM_LEDS                    4
 #define MAX_COMMAND_LEN             64
@@ -29,7 +27,6 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 #define PROGRAMMER_DBG_ST           38
 #define PROGRAMMER_ERR_ST           0xFF
 
-#define PROGRAMMER_PORT             0UL
 #define CALIBRATION_PORT            0UL
 #define PROGRAMMER_EN_PIN           30UL
 #define PROGRAMMER_HRST_PIN         31UL
@@ -58,16 +55,10 @@ const uint8_t APP_VERSION[]         = {0x00,0x01};
 // LED 3 P0.15
 // LED 4 P0.16
 
-static uint8_t UART_TRANSFERSRAM[] = "transfersram\n";
-static uint8_t UART_3WB[] = "boot3wb\n";
-
-static uint8_t SRAM_LOAD_START_MSG[] = "SRAM load ready\r\n";
-#define SRAM_LOAD_START_MSG_LEN 17
-static uint8_t SRAM_LOAD_DONE_MSG[] = "SRAM load complete\r\n";
-#define SRAM_LOAD_DONE_MSG_LEN 20
-static uint8_t PROG_3WB_DONE_MSG[] = "3WB bootload complete\r\n";
-#define PROG_3WB_DONE_MSG_LEN 23
-static uint8_t PROG_OPT_DONE_MSG[] = "Optical bootload complete\r\n";
+static char *UART_TRANSFERSRAM = "transfersram\n";
+static char *UART_3WB = "boot3wb\n";
+static char *UART_OK = "OK\r\n";
+#define UART_OK_MSG_LEN 4U
 
 //=========================== prototypes ======================================
 
@@ -94,8 +85,6 @@ typedef struct {
     uint32_t       led_counter;
     uint8_t        uart_buf_DK_RX[UART_BUF_SIZE];
     uint8_t        uart_buf_DK_TX[UART_BUF_SIZE];
-    uint8_t        uart_buf_SCuM_RX[UART_BUF_SIZE];
-    uint8_t        uart_buf_SCuM_TX[UART_BUF_SIZE];
 
     uint8_t        scum_programmer_state;
     uint8_t        scum_instruction_memory[SCUM_MEM_SIZE];
@@ -105,33 +94,15 @@ typedef struct {
 } app_vars_t;
 app_vars_t app_vars;
 
-typedef struct {
-    uint32_t       num_task_loops;
-    uint32_t       num_ISR_RTC0_IRQHandler;
-    uint32_t       num_ISR_RTC0_IRQHandler_COMPARE0;
-    uint32_t       num_TIMER2_IRQHandler;
-    uint32_t       num_TIMER2_IRQHandler_COMPARE2;
-    uint32_t       num_ISR_UARTE0_UART0_IRQHandler;
-    uint32_t       num_ISR_UARTE0_UART0_IRQHandler_ENDRX;
-    uint32_t       num_ISR_UARTE1_IRQHandler;
-    uint32_t       num_ISR_UARTE1_IRQHandler_ENDRX;
-} app_dbg_t;
-app_dbg_t app_dbg;
-
-//=========================== main ============================================
-
-
-
-// 
 
 int main(void) {
 
     // initialize bootloader state
-    app_vars.scum_programmer_state = PROGRAMMER_WAIT_4_CMD_ST;
     bootloader_init();
 
     busy_wait_1ms();
 
+    app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
     // main loop
     while(1) {
         
@@ -145,9 +116,6 @@ int main(void) {
         __SEV(); // set event
         __WFE(); // wait for event
         __WFE(); // wait for event
-
-        // debug
-        app_dbg.num_task_loops++;
     }
 }
 
@@ -177,26 +145,16 @@ void hfclock_start(void) {
 //=== led
 
 void bootloader_init(void) {
-    if (PROGRAMMER_PORT == 0) {
-        NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003; // 0x03 configures pins as an output pin and disconnects the input buffer
-        NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
-        NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000; // 0x00 configures the pin as an input, input buffer disconnected, pull up/down disabled (no pull)
-        NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
-        NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN]     = 0x00000000; // default to hi-Z
-        NRF_P0->PIN_CNF[PROGRAMMER_VDDD_HI_PIN] = 0x00000303;
-        NRF_P1->PIN_CNF[PROGRAMMER_VDDD_LO_PIN] = 0x00000303;
+    NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003; // 0x03 configures pins as an output pin and disconnects the input buffer
+    NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
+    NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000; // 0x00 configures the pin as an input, input buffer disconnected, pull up/down disabled (no pull)
+    NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
+    NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN]     = 0x00000000; // default to hi-Z
+    NRF_P0->PIN_CNF[PROGRAMMER_VDDD_HI_PIN] = 0x00000303;
+    NRF_P1->PIN_CNF[PROGRAMMER_VDDD_LO_PIN] = 0x00000303;
 
-
-        NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_VDDD_HI_PIN;
-        NRF_P1->OUTCLR = (0x00000001) << PROGRAMMER_VDDD_LO_PIN;
-    }
-    else if (PROGRAMMER_PORT == 1) {
-        NRF_P1->PIN_CNF[PROGRAMMER_DATA_PIN]    = 0x00000003;
-        NRF_P1->PIN_CNF[PROGRAMMER_CLK_PIN]     = 0x00000003;
-        NRF_P1->PIN_CNF[PROGRAMMER_HRST_PIN]    = 0x00000000;
-        NRF_P1->PIN_CNF[PROGRAMMER_EN_PIN]      = 0x00000003;
-        NRF_P1->PIN_CNF[PROGRAMMER_TAP_PIN]     = 0x00000000;
-    }
+    NRF_P0->OUTSET = (0x00000001) << PROGRAMMER_VDDD_HI_PIN;
+    NRF_P1->OUTCLR = (0x00000001) << PROGRAMMER_VDDD_LO_PIN;
 }
 
 void calibration_gpiote_init(void) {
@@ -259,7 +217,6 @@ void calibration_init(void) {
     calibration_PPI_init();
 
     NVIC_SetPriority(TIMER2_IRQn, 10);
-    //NVIC_ClearPendingIRQ(TIMER2_IRQn);
     NVIC_EnableIRQ(TIMER2_IRQn);
     NRF_TIMER2->INTENCLR = (1UL)<<18;
     NRF_TIMER2->INTENSET = (1UL)<<18;
@@ -374,53 +331,11 @@ void uarts_init(void) {
     NVIC_SetPriority(UARTE0_UART0_IRQn, 1);
     NVIC_ClearPendingIRQ(UARTE0_UART0_IRQn);
     NVIC_EnableIRQ(UARTE0_UART0_IRQn);
-
-    //=== UART1 to SCuM
-    // TX: P0.26
-    // RX: P0.02
-    // FTDI cable:
-    //     - black  GND
-    //     - Orange TXD
-    //     - yellow RXD
-    NRF_UARTE1->RXD.PTR                = (uint32_t)app_vars.uart_buf_SCuM_RX;
-    NRF_UARTE1->RXD.MAXCNT             = UART_BUF_SIZE;
-    NRF_UARTE1->TXD.PTR                = (uint32_t)app_vars.uart_buf_SCuM_TX;
-    NRF_UARTE1->TXD.MAXCNT             = UART_BUF_SIZE;
-    NRF_UARTE1->PSEL.TXD               = 0x0000001a; // 0x0000001a==P0.26
-    NRF_UARTE1->PSEL.RXD               = 0x00000002; // 0x00000002==P0.02
-    NRF_UARTE1->CONFIG                 = 0x00000000; // 0x00000000==no flow control, no parity bits, 1 stop bit
-    NRF_UARTE1->BAUDRATE               = 0x004EA000; // 0x004EA000==19200 baud (actual rate: 19208)
-    NRF_UARTE1->TASKS_STARTRX          = 0x00000001; // 0x00000001==start RX state machine; read received byte from RXD register
-    //  3           2            1           0
-    // 1098 7654 3210 9876 5432 1098 7654 3210
-    // .... .... .... .... .... .... .... ...A A: CTS
-    // .... .... .... .... .... .... .... ..B. B: NCTS
-    // .... .... .... .... .... .... .... .C.. C: RXDRDY
-    // .... .... .... .... .... .... ...D .... D: ENDRX
-    // .... .... .... .... .... .... E... .... E: TXDRDY
-    // .... .... .... .... .... ...F .... .... F: ENDTX
-    // .... .... .... .... .... ..G. .... .... G: ERROR
-    // .... .... .... ..H. .... .... .... .... H: RXTO
-    // .... .... .... I... .... .... .... .... I: RXSTARTED
-    // .... .... ...J .... .... .... .... .... J: TXSTARTED
-    // .... .... .L.. .... .... .... .... .... L: TXSTOPPED
-    // xxxx xxxx x0x0 0x0x xxxx xx00 0xx1 x000 
-    //    0    0    0    0    0    0    1    0 0x00000010
-    NRF_UARTE1->INTENSET               = 0x00000010;
-    NRF_UARTE1->ENABLE                 = 0x00000008; // 0x00000008==enable
-    
-    // enable interrupts
-    NVIC_SetPriority(UARTE1_IRQn, 2);
-    NVIC_ClearPendingIRQ(UARTE1_IRQn);
-    NVIC_EnableIRQ(UARTE1_IRQn);
 }
 
 //=========================== interrupt handlers ==============================
 
 void RTC0_IRQHandler(void) {
-
-    // debug
-    app_dbg.num_ISR_RTC0_IRQHandler++;
 
     // handle compare[0]
     if (NRF_RTC0->EVENTS_COMPARE[0] == 0x00000001 ) {
@@ -431,17 +346,12 @@ void RTC0_IRQHandler(void) {
         // clear COUNTER
         NRF_RTC0->TASKS_CLEAR          = 0x00000001;
 
-        // debug
-        app_dbg.num_ISR_RTC0_IRQHandler_COMPARE0++;
-
         // handle
         led_advance();
      }
 }
 
 void TIMER2_IRQHandler(void) {
-    // debug
-    app_dbg.num_TIMER2_IRQHandler++;
 
     // handle compare[1]
     if (NRF_TIMER2->EVENTS_COMPARE[1] == 0x00000001 ) {
@@ -455,7 +365,6 @@ void TIMER2_IRQHandler(void) {
         NRF_TIMER2->TASKS_CLEAR = (1UL);
         NRF_TIMER2->EVENTS_COMPARE[2] =  0x00000000;
         app_vars.calibration_counter++;
-        app_dbg.num_TIMER2_IRQHandler_COMPARE2++;
 
         // re-enable CC[1]
         NRF_TIMER2->CC[1] = 300;
@@ -481,13 +390,6 @@ void TIMER2_IRQHandler(void) {
 void UARTE0_UART0_IRQHandler(void) {
 
     uint8_t uart_rx_byte;
-    if (app_dbg.num_ISR_UARTE0_UART0_IRQHandler == 0) {
-        app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
-    }
-
-    // debug
-    app_dbg.num_ISR_UARTE0_UART0_IRQHandler++;
-
     //calibration_gpiote_disable();
 
     if (NRF_UARTE0->EVENTS_ERROR == 0x00000001) {
@@ -503,22 +405,19 @@ void UARTE0_UART0_IRQHandler(void) {
         // clear
         NRF_UARTE0->EVENTS_ENDRX = 0x00000000;
 
-        // debug
-        app_dbg.num_ISR_UARTE0_UART0_IRQHandler_ENDRX++;
-
         if(app_vars.scum_programmer_state == PROGRAMMER_WAIT_4_CMD_ST) {
             uart_rx_byte = app_vars.uart_buf_DK_RX[0];
             app_vars.uart_RX_command_buf[app_vars.uart_RX_command_idx++] = uart_rx_byte;
 
             if((uart_rx_byte=='\n')||(uart_rx_byte=='\r')) { // \r for debugging w/ putty, \n for the python scripts
                 app_vars.uart_RX_command_idx = 0; // reset index to receive the next command
-                if(memcmp(app_vars.uart_RX_command_buf,UART_TRANSFERSRAM,sizeof(UART_TRANSFERSRAM))==0) { // enter transfer SRAM state
+                if(memcmp(app_vars.uart_RX_command_buf,UART_TRANSFERSRAM,strlen(UART_TRANSFERSRAM))==0) { // enter transfer SRAM state
                     app_vars.scum_programmer_state = PROGRAMMER_SRAM_LD_ST;
                     app_vars.uart_RX_command_idx = 0;
                     print_sram_started_msg();
                 }
 
-                else if (memcmp(app_vars.uart_RX_command_buf, UART_3WB, sizeof(UART_3WB))==0) { // enter 3WB state
+                else if (memcmp(app_vars.uart_RX_command_buf, UART_3WB, strlen(UART_3WB))==0) { // enter 3WB state
                     app_vars.scum_programmer_state = PROGRAMMER_3WB_BOOT_ST;
                 }
                 // else - erroneous command, clear the buffer and reset to default state
@@ -652,7 +551,6 @@ void UARTE0_UART0_IRQHandler(void) {
             // initialize 100ms clock pin
             calibration_init();
             app_vars.calibration_counter = 0;
-            app_dbg.num_TIMER2_IRQHandler = 0;
             NRF_TIMER2->TASKS_START = 1UL;
 
 
@@ -663,8 +561,8 @@ void UARTE0_UART0_IRQHandler(void) {
 void print_3wb_done_msg(void) {
     uint8_t i;
     uint8_t j=0;
-    for (i=0;i<PROG_3WB_DONE_MSG_LEN;i++) {
-        app_vars.uart_buf_DK_TX[0] = PROG_3WB_DONE_MSG[i];
+    for (i=0;i<UART_OK_MSG_LEN;i++) {
+        app_vars.uart_buf_DK_TX[0] = UART_OK[i];
         NRF_UARTE0->EVENTS_TXSTARTED = 0x00000000;
         NRF_UARTE0->TASKS_STARTTX = 0x00000001;
         busy_wait_1ms(); //TODO: this should not be necessary... but it is?
@@ -673,8 +571,8 @@ void print_3wb_done_msg(void) {
 }
 void print_sram_started_msg(void) {
     uint8_t i;
-    for (i=0;i<SRAM_LOAD_START_MSG_LEN;i++) {
-        app_vars.uart_buf_DK_TX[0] = SRAM_LOAD_START_MSG[i];
+    for (i=0;i<UART_OK_MSG_LEN;i++) {
+        app_vars.uart_buf_DK_TX[0] = UART_OK[i];
         NRF_UARTE0->EVENTS_TXSTARTED = 0x00000000;
         NRF_UARTE0->TASKS_STARTTX = 0x00000001;
         busy_wait_1ms(); //TODO: this should not be necessary... but it is?
@@ -683,36 +581,11 @@ void print_sram_started_msg(void) {
 }
 void print_sram_done_msg(void) {
     uint8_t i;
-    for (i=0;i<SRAM_LOAD_DONE_MSG_LEN;i++) {
-        app_vars.uart_buf_DK_TX[0] = SRAM_LOAD_DONE_MSG[i];
+    for (i=0;i<UART_OK_MSG_LEN;i++) {
+        app_vars.uart_buf_DK_TX[0] = UART_OK[i];
         NRF_UARTE0->EVENTS_TXSTARTED = 0x00000000;
         NRF_UARTE0->TASKS_STARTTX = 0x00000001;
         busy_wait_1ms(); //TODO: this should not be necessary... but it is?
         while (NRF_UARTE0->EVENTS_ENDTX==0x00000000);
     }
 }
-
-void UARTE1_IRQHandler(void) {
-
-    // debug
-    app_dbg.num_ISR_UARTE1_IRQHandler++;
-
-    if (NRF_UARTE1->EVENTS_ENDRX == 0x00000001) {
-        // byte received from SCuM
-
-        // clear
-        NRF_UARTE1->EVENTS_ENDRX = 0x00000000;
-
-        // debug
-        app_dbg.num_ISR_UARTE1_IRQHandler_ENDRX++;
-
-        // send byte to DK
-        app_vars.uart_buf_DK_TX[0] = app_vars.uart_buf_SCuM_RX[0];
-
-        // start sending
-        NRF_UARTE0->EVENTS_TXSTARTED = 0x00000000;
-        NRF_UARTE0->TASKS_STARTTX = 0x00000001;
-        while (NRF_UARTE0->EVENTS_TXSTARTED == 0x00000000);
-    }
-}
-
