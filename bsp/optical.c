@@ -51,6 +51,7 @@ void optical_enable(void) {
 }
 
 void perform_calibration(void) {
+    puts("Performing calibration...");
     // For the LO, calibration for RX channel 11, so turn on AUX, IF, and LO
     // LDOs by calling radio rxEnable
     radio_rxEnable();
@@ -73,7 +74,7 @@ void perform_calibration(void) {
 // the optical register Do not recommend trying to do any CPU intensive actions
 // while trying to receive optical data ex, printf will mess up the received
 // data values
-void optical_32_isr(void) {
+void EXT_OPTICAL_IRQ_IN_Handler(void) {
     // printf("Optical 32-bit interrupt triggered\r\n");
 
     // unsigned int LSBs, MSBs, optical_shiftreg;
@@ -92,7 +93,7 @@ void optical_32_isr(void) {
 // 231, 47} This interrupt can also be used to synchronize to the start of an
 // optical data transfer Need to make sure a new bit has been clocked in prior
 // to returning from this ISR, or else it will immediately execute again
-void optical_sfd_isr(void) {
+void OPTICAL_SFD_Handler(void) {
     // 1.1V/VDDD tap fix
     // helps reorder assembly code
     // Not completely sure why this works

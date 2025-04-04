@@ -42,7 +42,7 @@ void uart_tx_isr(void) {
 }
 
 // UART RX interrupt service routine.
-void uart_rx_isr(void) {
+void UART_Handler(void) {
     if (g_uart_rx_callback != NULL) {
         g_uart_rx_callback(uart_read());
     }

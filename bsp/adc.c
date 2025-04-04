@@ -67,7 +67,7 @@ static uint16_t g_adc_output = 0;
 static bool g_adc_output_valid = false;
 
 // ADC interrupt service routine.
-void adc_isr(void) {
+void ADC_Handler(void) {
     // printf("ADC conversion complete.\n");
     g_adc_output = ADC_REG__DATA;
     g_adc_output_valid = true;

@@ -1,17 +1,16 @@
 #include "lighthouse.h"
 
 #include <math.h>
-#include <rt_misc.h>
+// #include <rt_misc.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#include "Memory_map.h"
-#include "scm3C_hardware_interface.h"
-#include "scm3_hardware_interface.h"
-#include "scum_radio_bsp.h"
+#include "memory_map.h"
+#include "scm3c_hw_interface.h"
+#include "radio.h"
 
 #define QX3_FINE 0
 #define QX3_MID 20

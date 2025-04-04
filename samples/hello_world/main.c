@@ -18,8 +18,8 @@ int main(void) {
     crc_check();
     perform_calibration();
 
-    while (true) {
-        printf("Hello World! %u\n", g_tx_counter);
+    while (1) {
+        printf("Hello World! %lu\n", g_tx_counter);
         ++g_tx_counter;
 
         for (size_t i = 0; i < NUM_CYCLES_BETWEEN_TX; ++i);

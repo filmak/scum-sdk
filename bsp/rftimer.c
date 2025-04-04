@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "Memory_Map.h"
+#include "memory_map.h"
 #include "radio.h"
 #include "scm3c_hw_interface.h"
 
@@ -176,7 +176,7 @@ void delay_milliseconds_synchronous(unsigned int delay_milli, uint8_t id) {
 
 // ========================== interrupt =======================================
 
-void rftimer_isr(void) {
+void RFTIMER_Handler(void) {
     uint16_t interrupt;
     int i = 0;
     int interrupt_id = 1;

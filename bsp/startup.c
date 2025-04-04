@@ -1,70 +1,111 @@
+#include <stdio.h>
 #include <stdint.h>
 
 // linker symbols for memory sections
+extern uint32_t _stext;
 extern uint32_t _etext;
-extern uint32_t _sdata;
-extern uint32_t _edata;
-extern uint32_t _rom_data;
 extern uint32_t _sbss;
 extern uint32_t _ebss;
-extern uint32_t _stack_top;
+extern uint32_t _sdata;
+extern uint32_t _edata;
+extern uint32_t _sstack;
+extern uint32_t _estack;
 
 // the main function
 int main(void);
 
+// Newlib C library initialization
+void __libc_init_array(void);
+
 // exception handlers
 void Reset_Handler(void);
-void NMI_Handler(void)                __attribute__ ((weak, alias("Default_Handler")));
-void HardFault_Handler(void)          __attribute__ ((weak, alias("Default_Handler")));
-void MemoryManagement_Handler(void)   __attribute__ ((weak, alias("Default_Handler")));
-void BusFault_Handler(void)           __attribute__ ((weak, alias("Default_Handler")));
-void UsageFault_Handler(void)         __attribute__ ((weak, alias("Default_Handler")));
-void SVC_Handler(void)                __attribute__ ((weak, alias("Default_Handler")));
-void DebugMon_Handler(void)           __attribute__ ((weak, alias("Default_Handler")));
-void PendSV_Handler(void)             __attribute__ ((weak, alias("Default_Handler")));
-void SysTick_Handler(void)            __attribute__ ((weak, alias("Default_Handler")));
+/* Cortex-M0 core handlers */
+void NMI_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void HardFault_Handler                      (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void SVC_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void PendSV_Handler                         (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void SysTick_Handler                        (void) __attribute__ ((weak, alias("Dummy_Handler")));
+
+/* External interrupts */
+void UART_Handler                           (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void EXT_OPTICAL_IRQ_IN_Handler             (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void ADC_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void RF_Handler                             (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void RFTIMER_Handler                        (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void RAWCHIPS_STARTVAL_Handler              (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void RAWCHIPS_32_Handler                    (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void OPTICAL_SFD_Handler                    (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void EXT_GPIO8_ACTIVEHIGH_Handler           (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void EXT_GPIO9_ACTIVELOW_Handler            (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void EXT_GPIO10_ACTIVELOW_Handler           (void) __attribute__ ((weak, alias("Dummy_Handler")));
 
 // vector table (note that it is missing all interrupt handlers)
 typedef void(*vector_table_t)(void);
-extern const vector_table_t _vectors[16];
-const vector_table_t _vectors[16] __attribute__((used, section(".isr_vector"))) = {
-   (vector_table_t)&_stack_top,
+extern const vector_table_t _vectors[32];
+const vector_table_t _vectors[32] __attribute__((used, section(".vectors"))) = {
+    (vector_table_t)&_estack,
+
     /* Exceptions */
     Reset_Handler,
     NMI_Handler,
     HardFault_Handler,
-    MemoryManagement_Handler,
-    BusFault_Handler,
-    UsageFault_Handler,
+    0,
+    0,
+    0,
     0,
     0,
     0,
     0,
     SVC_Handler,
-    DebugMon_Handler,
+    0,
     0,
     PendSV_Handler,
     SysTick_Handler,
+
+    /* SCUM external interrupts */
+    UART_Handler,
+    EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler,
+    EXT_OPTICAL_IRQ_IN_Handler,
+    ADC_Handler,
+    0,
+    0,
+    RF_Handler,
+    RFTIMER_Handler,
+    RAWCHIPS_STARTVAL_Handler,
+    RAWCHIPS_32_Handler,
+    0,
+    OPTICAL_SFD_Handler,
+    EXT_GPIO8_ACTIVEHIGH_Handler,
+    EXT_GPIO9_ACTIVELOW_Handler,
+    EXT_GPIO10_ACTIVELOW_Handler,
+    0,
 };
 
-void Default_Handler(void) {
+void Dummy_Handler(void) {
+    puts("Dummy handler!");
     while(1);
 }
 
 void Reset_Handler(void) {
-    // copy .data section to RAM
-    uint32_t size = (uint32_t)&_edata - (uint32_t)&_sdata;
-    uint8_t *pDst = (uint8_t*)&_sdata; // RAM
-    uint8_t *pSrc = (uint8_t*)&_rom_data; // ROM
-    while (size--) {
-        *pDst++ = *pSrc++;
+    /* Initialize the data segment */
+    uint32_t *pSrc = &_etext;
+    uint32_t *pDest = &_sdata;
+    if (pSrc != pDest) {
+        for (; pDest < &_edata;) {
+                *pDest++ = *pSrc++;
+        }
     }
 
-    // initialize the .bss section to zero in RAM
-    size = (uint32_t)&_ebss - (uint32_t)&_sbss;
-    pDst = (uint8_t*)&_sbss;
-    while (size--) {
-        *pDst++ = 0;
+    /* Clear the zero segment */
+    for (pDest = &_sbss; pDest < &_ebss;) {
+        *pDest++ = 0;
     }
+
+    // Initialize newlib libc
+    __libc_init_array();
+
     main();
+
+    while (1) {}
 }

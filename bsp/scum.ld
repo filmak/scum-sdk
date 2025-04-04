@@ -1,13 +1,10 @@
-OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
-OUTPUT_ARCH(arm)
-
 MEMORY
 {
   rom      (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00010000
   ram      (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00010000
 }
 
-STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE : DEFINED(__stack_size__) ? __stack_size__ : 0x100;
+STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE : 0x400;
 
 /* Section Definitions */
 SECTIONS

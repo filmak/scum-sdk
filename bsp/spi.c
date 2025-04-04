@@ -1,6 +1,9 @@
+#include <stdio.h>
+#include <stdint.h>
+
 #include "spi.h"
 
-#include "Memory_Map.h"
+#include "memory_map.h"
 
 #define CS_PIN 15
 #define CLK_PIN 14

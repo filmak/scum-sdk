@@ -124,9 +124,9 @@ radio_vars_t radio_vars;
 void setFrequencyTX(uint8_t channel);
 void setFrequencyRX(uint8_t channel);
 
-uint32_t build_RX_channel_table(uint32_t channel_11_LC_code);
-void build_TX_channel_table(uint32_t channel_11_LC_code,
-                            uint32_t count_LC_RX_ch11);
+// uint32_t build_RX_channel_table(uint32_t channel_11_LC_code);
+// void build_TX_channel_table(uint32_t channel_11_LC_code,
+//                             uint32_t count_LC_RX_ch11);
 
 //=========================== public ==========================================
 
@@ -831,7 +831,7 @@ void build_TX_channel_table(unsigned int channel_11_LC_code,
     // }
 }
 
-void radio_build_channel_table(unsigned int channel_11_LC_code) {
+void radio_build_channel_table(uint32_t channel_11_LC_code) {
     unsigned int count_LC_RX_ch11;
 
     // Make sure in RX mode first
@@ -861,7 +861,7 @@ void radio_build_channel_table(unsigned int channel_11_LC_code) {
 
 //=========================== intertupt =======================================
 
-void radio_isr(void) {
+void RF_Handler(void) {
     unsigned int interrupt = RFCONTROLLER_REG__INT;
     unsigned int error = RFCONTROLLER_REG__ERROR;
 
@@ -968,7 +968,7 @@ void radio_isr(void) {
 
 // This ISR goes off when the raw chip shift register interrupt goes high
 // It reads the current 32 bits and then prints them out after N cycles
-void rawchips_32_isr() {
+void RAWCHIPS_32_Handler() {
     unsigned int jj;
     unsigned int rdata_lsb, rdata_msb;
 
@@ -1009,7 +1009,7 @@ void rawchips_32_isr() {
 // With HCLK = 5MHz, data rate of 1.25MHz tested OK
 // For faster data rate, will need to raise the HCLK frequency
 // This ISR goes off when the input register matches the target value
-void rawchips_startval_isr() {
+void RAWCHIPS_STARTVAL_Handler() {
     unsigned int rdata_lsb, rdata_msb;
 
     // Clear all interrupts
