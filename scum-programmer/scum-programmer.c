@@ -12,7 +12,7 @@ SCuM programmer.
 
 //=========================== defines =========================================
 
-#define UART_BUF_SIZE               4
+#define UART_BUF_SIZE               (32U)
 #define SCUM_MEM_SIZE               (1 << 16) // 64KiB
 
 #define CALIBRATION_PORT            0UL
@@ -33,15 +33,13 @@ SCuM programmer.
 
 #define GPIOTE_CALIBRATION_CLOCK    0
 
-#define UART_OK_MSG_LEN 4U
-
 //=========================== variables =======================================
 
 typedef struct {
     bool uart_byte_received;
     bool calibration_done;
     uint8_t uart_rx_byte;
-    uint8_t uart_tx_buf[4];
+    uint8_t uart_tx_buf[UART_BUF_SIZE];
 
     uint8_t scum_programmer_state;
     uint8_t scum_instruction_memory[SCUM_MEM_SIZE];
@@ -169,7 +167,7 @@ static void _handle_byte_received(uint8_t byte) {
         return;
     }
 
-    uart_write((uint8_t *)UART_OK, UART_OK_MSG_LEN);
+    uart_write((uint8_t *)UART_OK, strlen(UART_OK));
     NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
     NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
     NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
@@ -181,7 +179,7 @@ static void _handle_byte_received(uint8_t byte) {
     NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos; // return to input
     busy_wait_ms(14);
 
-    for (uint32_t i = 1; i < SCUM_MEM_SIZE+1; i++) {
+    for (uint32_t i = 1; i <= SCUM_MEM_SIZE; i++) {
         for (uint8_t j = 0; j < 8; j++) {
             if ((_programmer_vars.scum_instruction_memory[i - 1] >> j) & 0x01) {
                 NRF_P0->OUTSET = 1 << PROGRAMMER_DATA_PIN;
@@ -206,7 +204,7 @@ static void _handle_byte_received(uint8_t byte) {
     }
 
     // after bootloading - return to "load" state (currently debugging)
-    uart_write((uint8_t *)UART_OK, UART_OK_MSG_LEN);
+    uart_write((uint8_t *)UART_OK, strlen(UART_OK));
     _programmer_vars.scum_instruction_idx = 0;
 
     // experimental - after bootloading, do a tap
@@ -217,7 +215,7 @@ static void _handle_byte_received(uint8_t byte) {
     // optional - start the 100ms calibration clock
     // initialize 100ms clock pin
     run_calibration();
-    uart_write((uint8_t *)UART_OK, UART_OK_MSG_LEN);
+    uart_write((uint8_t *)UART_OK, strlen(UART_OK));
 }
 
 int main(void) {
