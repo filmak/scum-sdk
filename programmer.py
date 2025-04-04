@@ -38,7 +38,6 @@ class ScumProgrammerSettings:
     port: str
     baudrate: int
     padding: str
-    boot_mode: str
     firmware: str
 
 
@@ -61,6 +60,7 @@ class ScumProgrammer:
     def program(self):
         """Send firmware to nRF."""
         bindata = bytearray(open(self.settings.firmware, "rb").read())
+        print(f"[bold]Firmware size:[/]\t {len(bindata)}B")
         # Pad the firmware to 64kB
         code_length = len(bindata) - 1
         pad_length = 65536 - code_length - 1
@@ -81,7 +81,7 @@ class ScumProgrammer:
             colour="green",
             ncols=100,
         )
-        progress.set_description(f"Loading firmware ({int(data_size / 1024)}kB)")
+        progress.set_description(f"Loading firmware to RAM")
         pos = 0
         while (pos % BINDATA_CHUNK_SIZE) == 0 and pos < len(bindata):
             self.serial.write(bindata[pos : pos + BINDATA_CHUNK_SIZE])
@@ -119,7 +119,6 @@ class ScumProgrammer:
         """Run the Scum Programmer."""
         print(f"[bold green]Starting Scum Programmer[/]")
         print(f"[bold]Padding type:[/]\t {self.settings.padding}")
-        print(f"[bold]Boot mode:[/]\t {self.settings.boot_mode}")
         start = time.time()
         # Send firmware to nRF
         self.program()
@@ -151,20 +150,12 @@ class ScumProgrammer:
     default="zero",
     help="Padding type used to fill the 64kB RAM.",
 )
-@click.option(
-    "-b",
-    "--boot-mode",
-    type=click.Choice(["3wb", "optical"]),
-    default="3wb",
-    help="Boot mode to use.",
-)
 @click.argument("firmware", type=click.File(mode="rb"), required=True)
-def main(port, baudrate, padding, boot_mode, firmware):
+def main(port, baudrate, padding, firmware):
     programmer_settings = ScumProgrammerSettings(
         port=port,
         baudrate=baudrate,
         padding=padding,
-        boot_mode=boot_mode,
         firmware=firmware.name,
     )
     programmer = ScumProgrammer(programmer_settings)
