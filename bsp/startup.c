@@ -19,9 +19,10 @@ void __libc_init_array(void);
 
 // exception handlers
 void Reset_Handler(void);
+void HardFault_Handler(void);
+
 /* Cortex-M0 core handlers */
 void NMI_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void HardFault_Handler                      (void) __attribute__ ((weak, alias("Dummy_Handler")));
 void SVC_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
 void PendSV_Handler                         (void) __attribute__ ((weak, alias("Dummy_Handler")));
 void SysTick_Handler                        (void) __attribute__ ((weak, alias("Dummy_Handler")));
@@ -42,45 +43,56 @@ void EXT_GPIO10_ACTIVELOW_Handler           (void) __attribute__ ((weak, alias("
 
 // vector table (note that it is missing all interrupt handlers)
 typedef void(*vector_table_t)(void);
-extern const vector_table_t _vectors[32];
-const vector_table_t _vectors[32] __attribute__((used, section(".vectors"))) = {
-    (vector_table_t)&_estack,
+typedef struct {
+    void* _estack;
+    vector_table_t table[32];
+} vectors_t;
 
-    /* Exceptions */
-    Reset_Handler,
-    NMI_Handler,
-    HardFault_Handler,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    SVC_Handler,
-    0,
-    0,
-    PendSV_Handler,
-    SysTick_Handler,
+extern const vectors_t _vectors;
+const vectors_t _vectors __attribute__((used, section(".vectors"))) = {
+    &_estack,
+    {
+        /* Exceptions */
+        Reset_Handler,
+        NMI_Handler,
+        HardFault_Handler,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        SVC_Handler,
+        0,
+        0,
+        PendSV_Handler,
+        SysTick_Handler,
 
-    /* SCUM external interrupts */
-    UART_Handler,
-    EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler,
-    EXT_OPTICAL_IRQ_IN_Handler,
-    ADC_Handler,
-    0,
-    0,
-    RF_Handler,
-    RFTIMER_Handler,
-    RAWCHIPS_STARTVAL_Handler,
-    RAWCHIPS_32_Handler,
-    0,
-    OPTICAL_SFD_Handler,
-    EXT_GPIO8_ACTIVEHIGH_Handler,
-    EXT_GPIO9_ACTIVELOW_Handler,
-    EXT_GPIO10_ACTIVELOW_Handler,
-    0,
+        /* SCUM external interrupts */
+        UART_Handler,
+        EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler,
+        EXT_OPTICAL_IRQ_IN_Handler,
+        ADC_Handler,
+        0,
+        0,
+        RF_Handler,
+        RFTIMER_Handler,
+        RAWCHIPS_STARTVAL_Handler,
+        RAWCHIPS_32_Handler,
+        0,
+        OPTICAL_SFD_Handler,
+        EXT_GPIO8_ACTIVEHIGH_Handler,
+        EXT_GPIO9_ACTIVELOW_Handler,
+        EXT_GPIO10_ACTIVELOW_Handler,
+        0,
+    }
 };
+
+void HardFault_Handler(void) {
+    puts("Hard Fault!");
+    while(1);
+}
 
 void Dummy_Handler(void) {
     puts("Dummy handler!");
