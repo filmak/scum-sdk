@@ -25,24 +25,19 @@ typedef struct {
     uint32_t LC_code;
 } optical_vars_t;
 
-optical_vars_t optical_vars;
+static optical_vars_t optical_vars = { 0 };
 
 //=========================== prototypes ======================================
 
 //=========================== public ==========================================
 
 void optical_init(void) {
-    memset(&optical_vars, 0, sizeof(optical_vars_t));
 
     // Target radio LO freq = 2.4025G
     // Divide ratio is currently 480*2
     // Calibration counts for 100ms
     optical_vars.LC_target = REFERENCE_LC_TARGET;
     optical_vars.LC_code = DEFUALT_INIT_LC_CODE;
-}
-
-uint8_t optical_getCalibrationFinshed(void) {
-    return optical_vars.optical_cal_finished;
 }
 
 void optical_enable(void) {
@@ -60,7 +55,9 @@ void perform_calibration(void) {
     optical_enable();
 
     // Wait for optical cal to finish
-    while (optical_getCalibrationFinshed() == 0);
+    while (!optical_vars.optical_cal_finished) {
+        __asm volatile ("wfi");
+    }
 
     // Disable the radio now that it is calibrated
     radio_rfOff();
@@ -156,9 +153,7 @@ void OPTICAL_SFD_Handler(void) {
             } else {
                 HF_CLOCK_fine--;
             }
-        }
-        if (count_HFclock >
-            2003000) {  // new value I picked was 2010000, originally 2003000
+        } else if (count_HFclock > 2003000) {  // new value I picked was 2010000, originally 2003000
             if (HF_CLOCK_fine == 31) {
                 HF_CLOCK_coarse++;
                 HF_CLOCK_fine = 20;
@@ -186,27 +181,19 @@ void OPTICAL_SFD_Handler(void) {
         // Too fast
         if (count_2M > (200600)) {
             RC2M_coarse += 1;
-        } else {
-            if (count_2M > (200080)) {
-                RC2M_fine += 1;
-            } else {
-                if (count_2M > (200015)) {
-                    RC2M_superfine += 1;
-                }
-            }
+        } else if (count_2M > (200080)) {
+            RC2M_fine += 1;
+        } else if (count_2M > (200015)) {
+            RC2M_superfine += 1;
         }
 
         // Too slow
         if (count_2M < (199400)) {
             RC2M_coarse -= 1;
-        } else {
-            if (count_2M < (199920)) {
-                RC2M_fine -= 1;
-            } else {
-                if (count_2M < (199985)) {
-                    RC2M_superfine -= 1;
-                }
-            }
+        } else if (count_2M < (199920)) {
+            RC2M_fine -= 1;
+        } else if (count_2M < (199985)) {
+            RC2M_superfine -= 1;
         }
 
         set_2M_RC_frequency(31, 31, RC2M_coarse, RC2M_fine, RC2M_superfine);
