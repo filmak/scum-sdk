@@ -40,18 +40,20 @@ MKDIR = mkdir
 CFLAGS += \
 	-mcpu=cortex-m0 \
 	-mthumb \
-	-std=c11 \
-	-O0 \
+	-std=c17 \
+	-Os \
 	-fdebug-prefix-map=$(REPO_ROOT)= \
 	-g \
 	-ffunction-sections \
 	-fdata-sections \
+	-fshort-wchar \
 	#
 
 LDFLAGS += \
 	-specs=nano.specs \
 	-Wl,--gc-sections \
 	-Wl,--print-memory-usage \
+	-Wl,--no-wchar-size-warning \
 	-Wl,-Map=$(BUILD_DIR)/$(APPLICATION).map \
 	-T $(BASE_DIR)/bsp/scum.ld \
 	#
