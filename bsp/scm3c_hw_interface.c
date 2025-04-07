@@ -1416,11 +1416,6 @@ void set_asc_bit(unsigned int position) {
     scm3c_hw_interface_vars.ASC[index] |=
         0x80000000 >> (position - (index << 5));
 
-    // 1.1V FIX/VDDD tap fix
-    // Adds delay before trying to restore registers from stack
-    // Without NOP, variable being passed is zero (when it shouldn't be)
-    __asm volatile ("NOP");
-
     // Possibly more efficient
     // scm3c_hw_interface_vars.ASC[position/32] |= 1 << (position%32);
 }
@@ -1432,11 +1427,6 @@ void clear_asc_bit(unsigned int position) {
 
     scm3c_hw_interface_vars.ASC[index] &=
         ~(0x80000000 >> (position - (index << 5)));
-
-    // 1.1V FIX/VDDD tap fix
-    // Adds delay before trying to restore registers from stack
-    // Without NOP, variable being passed is zero (when it shouldn't be)
-    __asm volatile ("NOP");
 
     // Possibly more efficient
     // scm3c_hw_interface_vars.ASC[position/32] &= ~(1 << (position%32));
@@ -1458,22 +1448,16 @@ void LC_FREQCHANGE(int coarse, int mid, int fine) {
     // The NOPs below are for the VDDD tap fix
     // They provide some extra delay so the registers can be loaded properly
     char coarse_m = (char)(coarse & 0x1F);
-    __asm volatile ("NOP");
     char mid_m = (char)(mid & 0x1F);
-    __asm volatile ("NOP");
     char fine_m = (char)(fine & 0x1F);
-    __asm volatile ("NOP");
 
     // flip the bit order to make it fit more easily into the ACFG registers
     // 1.1V (NOP)
     // The NOPs below are for the VDDD tap fix
     // They provide some extra delay so the registers can be loaded properly
     unsigned int coarse_f = (unsigned int)(flipChar(coarse_m));
-    __asm volatile ("NOP");
     unsigned int mid_f = (unsigned int)(flipChar(mid_m));
-    __asm volatile ("NOP");
     unsigned int fine_f = (unsigned int)(flipChar(fine_m));
-    __asm volatile ("NOP");
 
     // initialize registers
     unsigned int fcode =
