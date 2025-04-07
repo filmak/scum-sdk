@@ -1,6 +1,7 @@
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 BASE_DIR ?= $(REPO_ROOT)
 BUILD_DIR ?= $(CURDIR)/build
+FLASHER ?= $(REPO_ROOT)/../SCuM-programmer/programmer.py
 
 ifdef DEBUG
 	NO_ECHO :=
@@ -64,7 +65,7 @@ CFLAGS += $(foreach d,$(DEFINES),-D$(d))
 OBJ_DIR = $(BUILD_DIR)/objs
 OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRCS))
 
-.PHONY: all
+.PHONY: all flash
 all: $(BUILD_DIR)/$(APPLICATION).bin
 
 $(BUILD_DIR):
@@ -87,6 +88,9 @@ $(BUILD_DIR)/$(APPLICATION).lst: $(BUILD_DIR)/$(APPLICATION).elf $(BUILD_DIR)
 
 $(BUILD_DIR)/$(APPLICATION).elf: $(OBJS)
 	$(NO_ECHO)$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+flash: all
+	$(NO_ECHO)$(FLASHER) $(BUILD_DIR)/$(APPLICATION).bin
 
 .PHONY: clean
 clean:
