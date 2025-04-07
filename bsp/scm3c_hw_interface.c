@@ -407,12 +407,8 @@ void init_ldo_control(void) {
 // of Computers 10.1 (1993): 8-14. Only works for DMEM since you must be able to
 // read and write
 unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
-    int i;
-    int j;
-
-    unsigned int* addr;
-    unsigned int num_errors = 0;
-    addr = baseAddress;
+    unsigned int* addr = baseAddress;
+    uint32_t num_errors = 0;
 
     printf("\r\n\r\nStarting SRAM test from 0x%X to 0x%X...\r\n", baseAddress,
            baseAddress + num_dwords);
@@ -420,18 +416,18 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
 
     // Write 0 to all bits, in any address order
     // Outer loop selects 32-bit dword, inner loop does single bit
-    for (i = 0; i < num_dwords; i++) {
-        for (j = 0; j < 32; j++) {
+    for (unsigned int i = 0; i < num_dwords; i++) {
+        for (uint8_t j = 0; j < 32; j++) {
             addr[i] &= ~(1UL << j);
         }
     }
 
     // (r0,w1) (incr addr)
-    for (i = 0; i < num_dwords; i++) {
-        for (j = 0; j < 32; j++) {
+    for (unsigned int i = 0; i < num_dwords; i++) {
+        for (uint8_t j = 0; j < 32; j++) {
             if ((addr[i] & (1UL << j)) != 0x0) {
-                printf("\r\nERROR 1 @ address %X bit %d -- Value is %X", i, j,
-                       addr[i]);
+                printf("\r\nERROR 1 @ address %X bit %d -- Value is %X",
+                        i, j, addr[i]);
                 num_errors++;
             }
             addr[i] |= 1UL << j;
@@ -439,11 +435,11 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
     }
 
     // (r1,w0) (incr addr)
-    for (i = 0; i < num_dwords; i++) {
-        for (j = 0; j < 32; j++) {
+    for (unsigned int i = 0; i < num_dwords; i++) {
+        for (uint8_t j = 0; j < 32; j++) {
             if ((addr[i] & (1UL << j)) != 1UL << j) {
-                printf("\r\nERROR 2 @ address %X bit %d -- Value is %X", i, j,
-                       addr[i]);
+                printf("\r\nERROR 2 @ address %X bit %d -- Value is %X",
+                        i, j, addr[i]);
                 num_errors++;
             }
             addr[i] &= ~(1UL << j);
@@ -451,11 +447,11 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
     }
 
     // (r0,w1) (decr addr)
-    for (i = (num_dwords - 1); i >= 0; i--) {
-        for (j = 31; j >= 0; j--) {
+    for (unsigned int i = (num_dwords - 1); i >= 0; i--) {
+        for (uint8_t j = 31; j >= 0; j--) {
             if ((addr[i] & (1UL << j)) != 0x0) {
-                printf("\r\nERROR 3 @ address %X bit %d -- Value is %X", i, j,
-                       addr[i]);
+                printf("\r\nERROR 3 @ address %X bit %d -- Value is %X",
+                        i, j, addr[i]);
                 num_errors++;
             }
             addr[i] |= 1UL << j;
@@ -463,11 +459,11 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
     }
 
     // (r1,w0) (decr addr)
-    for (i = (num_dwords - 1); i >= 0; i--) {
-        for (j = 31; j >= 0; j--) {
+    for (unsigned int i = (num_dwords - 1); i >= 0; i--) {
+        for (uint8_t j = 31; j >= 0; j--) {
             if ((addr[i] & (1UL << j)) != 1UL << j) {
-                printf("\r\nERROR 4 @ address %X bit %d -- Value is %X", i, j,
-                       addr[i]);
+                printf("\r\nERROR 4 @ address %X bit %d -- Value is %X",
+                        i, j, addr[i]);
                 num_errors++;
             }
             addr[i] &= ~(1UL << j);
@@ -475,11 +471,11 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
     }
 
     // r0 (any order)
-    for (i = 0; i < num_dwords; i++) {
-        for (j = 0; j < 32; j++) {
+    for (unsigned int i = 0; i < num_dwords; i++) {
+        for (uint8_t j = 0; j < 32; j++) {
             if ((addr[i] & (1UL << j)) != 0x0) {
-                printf("\r\nERROR 5 @ address %X bit %d -- Value is %X", i, j,
-                       addr[i]);
+                printf("\r\nERROR 5 @ address %X bit %d -- Value is %X",
+                        i, j, addr[i]);
                 num_errors++;
             }
         }
@@ -493,15 +489,13 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
 // Change the reference voltage for the IF LDO
 // 0 <= code <= 127
 void set_IF_LDO_voltage(int code) {
-    unsigned int j;
-
     // ASC<492:498> = if_ldo_rdac<0:6> (<0:6(MSB)>)
 
-    for (j = 0; j <= 6; j++) {
+    for (uint8_t j = 0; j <= 6; j++) {
         if ((code >> j) & 0x1) {
-            set_asc_bit(492 + j);
+            set_asc_bit((uint32_t)492 + j);
         } else {
-            clear_asc_bit(492 + j);
+            clear_asc_bit((uint32_t)492 + j);
         }
     }
 }
@@ -509,62 +503,56 @@ void set_IF_LDO_voltage(int code) {
 // Change the reference voltage for the VDDD LDO
 // 0 <= code <= 127
 void set_VDDD_LDO_voltage(int code) {
-    unsigned int j;
-
     // ASC(791:1:797) (LSB:MSB)
 
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((code >> j) & 0x1) {
-            set_asc_bit(797 - j);
+            set_asc_bit((uint32_t)797 - j);
         } else {
-            clear_asc_bit(797 - j);
+            clear_asc_bit((uint32_t)797 - j);
         }
     }
 
     // Two MSBs are inverted
-    for (j = 5; j <= 6; j++) {
+    for (uint8_t j = 5; j <= 6; j++) {
         if ((code >> j) & 0x1)
-            clear_asc_bit(797 - j);
+            clear_asc_bit((uint32_t)797 - j);
         else
-            set_asc_bit(797 - j);
+            set_asc_bit((uint32_t)797 - j);
     }
 }
 
 // Change the reference voltage for the AUX LDO
 // 0 <= code <= 127
 void set_AUX_LDO_voltage(int code) {
-    unsigned int j;
-
     // ASC(923:-1:917) (MSB:LSB)
 
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((code >> j) & 0x1)
-            set_asc_bit(917 + j);
+            set_asc_bit((uint32_t)917 + j);
         else
-            clear_asc_bit(917 + j);
+            clear_asc_bit((uint32_t)917 + j);
     }
 
     // Two MSBs are inverted
-    for (j = 5; j <= 6; j++) {
+    for (uint8_t j = 5; j <= 6; j++) {
         if ((code >> j) & 0x1)
-            clear_asc_bit(917 + j);
+            clear_asc_bit((uint32_t)917 + j);
         else
-            set_asc_bit(917 + j);
+            set_asc_bit((uint32_t)917 + j);
     }
 }
 
 // Change the reference voltage for the always-on LDO
 // 0 <= code <= 127
 void set_ALWAYSON_LDO_voltage(int code) {
-    unsigned int j;
-
     // ASC(924:929) (MSB:LSB)
 
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((code >> j) & 0x1)
-            set_asc_bit(929 - j);
+            set_asc_bit((uint32_t)929 - j);
         else
-            clear_asc_bit(929 - j);
+            clear_asc_bit((uint32_t)929 - j);
     }
 
     // MSB of normal DAC is inverted
@@ -583,85 +571,75 @@ void set_ALWAYSON_LDO_voltage(int code) {
 // Must set IF clock frequency AFTER calling this function
 
 void set_zcc_demod_threshold(unsigned int thresh) {
-    int j;
-
     // counter threshold 122:107 MSB:LSB
-    for (j = 0; j <= 15; j++) {
+    for (uint8_t j = 0; j <= 15; j++) {
         if ((thresh >> j) & 0x1)
-            set_asc_bit(107 + j);
+            set_asc_bit((uint32_t)107 + j);
         else
-            clear_asc_bit(107 + j);
+            clear_asc_bit((uint32_t)107 + j);
     }
 }
 
 // Set the divider value for ZCC demod
 // Should be equal to (IF_clock_rate / 2 MHz)
 void set_IF_ZCC_clkdiv(unsigned int div_value) {
-    int j;
-
     // CLK_DIV = ASC<131:124> MSB:LSB
-    for (j = 0; j <= 7; j++) {
+    for (uint8_t j = 0; j <= 7; j++) {
         if ((div_value >> j) & 0x1)
-            set_asc_bit(124 + j);
+            set_asc_bit((uint32_t)124 + j);
         else
-            clear_asc_bit(124 + j);
+            clear_asc_bit((uint32_t)124 + j);
     }
 }
 
 // Set the early decision value for ZCC demod
 void set_IF_ZCC_early(unsigned int early_value) {
-    int j;
-
     // ASC<224:209> MSB:LSB
-    for (j = 0; j <= 15; j++) {
+    for (uint8_t j = 0; j <= 15; j++) {
         if ((early_value >> j) & 0x1)
-            set_asc_bit(209 + j);
+            set_asc_bit((uint32_t)209 + j);
         else
-            clear_asc_bit(209 + j);
+            clear_asc_bit((uint32_t)209 + j);
     }
 }
 
 // Untested function
 void set_IF_stg3gm_ASC(unsigned int Igm, unsigned int Qgm) {
-    int j;
-
     // Set all bits to zero
-    for (j = 0; j < 13; j++) {
-        clear_asc_bit(472 + j);
-        clear_asc_bit(278 + j);
+    for (uint8_t j = 0; j < 13; j++) {
+        clear_asc_bit((uint32_t)472 + j);
+        clear_asc_bit((uint32_t)278 + j);
     }
 
     // 472:484 = I stg3 gm 13:1
-    for (j = 0; j <= Igm; j++) {
-        set_asc_bit(484 - j);
+    for (uint8_t j = 0; j <= Igm; j++) {
+        set_asc_bit((uint32_t)484 - j);
     }
 
     // 278:290 = Q stg3 gm 1:13
-    for (j = 0; j <= Qgm; j++) {
-        clear_asc_bit(278 + j);
+    for (uint8_t j = 0; j <= Qgm; j++) {
+        clear_asc_bit((uint32_t)278 + j);
     }
 }
 
 // Adjust the comparator offset trim for I channel
 // Valid input range 0-31
 void set_IF_comparator_trim_I(unsigned int ptrim, unsigned int ntrim) {
-    int j;
-
     // I comparator N side = 452:456 LSB:MSB
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((ntrim >> j) & 0x1) {
-            set_asc_bit(452 + j);
+            set_asc_bit((uint32_t)452 + j);
         } else {
-            clear_asc_bit(452 + j);
+            clear_asc_bit((uint32_t)452 + j);
         }
     }
 
     // I comparator P side = 457:461 LSB:MSB
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((ptrim >> j) & 0x1) {
-            set_asc_bit(457 + j);
+            set_asc_bit((uint32_t)457 + j);
         } else {
-            clear_asc_bit(457 + j);
+            clear_asc_bit((uint32_t)457 + j);
         }
     }
 }
@@ -669,46 +647,42 @@ void set_IF_comparator_trim_I(unsigned int ptrim, unsigned int ntrim) {
 // Adjust the comparator offset trim for Q channel
 // Valid input range 0-31
 void set_IF_comparator_trim_Q(unsigned int ptrim, unsigned int ntrim) {
-    int j;
-
     // I comparator N side = 340:344 MSB:LSB
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((ntrim >> j) & 0x1) {
-            set_asc_bit(344 - j);
+            set_asc_bit((uint32_t)344 - j);
         } else {
-            clear_asc_bit(344 - +j);
+            clear_asc_bit((uint32_t)344 - +j);
         }
     }
 
     // I comparator P side = 335:339 MSB:LSB
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((ptrim >> j) & 0x1) {
-            set_asc_bit(339 - j);
+            set_asc_bit((uint32_t)339 - j);
         } else {
-            clear_asc_bit(339 - j);
+            clear_asc_bit((uint32_t)339 - j);
         }
     }
 }
 
 // Untested function
 void set_IF_gain_ASC(unsigned int Igain, unsigned int Qgain) {
-    int j;
-
     // 485:490 = I code 0:5
-    for (j = 0; j <= 4; j++) {
+    for (uint8_t j = 0; j <= 4; j++) {
         if ((Igain >> j) & 0x1) {
-            set_asc_bit(485 + j);
+            set_asc_bit((uint32_t)485 + j);
         } else {
-            clear_asc_bit(485 + j);
+            clear_asc_bit((uint32_t)485 + j);
         }
     }
 
     // 272:277 = Q code 5:0
-    for (j = 0; j <= 5; j++) {
+    for (uint8_t j = 0; j <= 5; j++) {
         if ((Qgain >> j) & 0x1) {
-            set_asc_bit(277 - j);
+            set_asc_bit((uint32_t)277 - j);
         } else {
-            clear_asc_bit(277 - j);
+            clear_asc_bit((uint32_t)277 - j);
         }
     }
 }
@@ -1445,7 +1419,7 @@ void set_asc_bit(unsigned int position) {
     // 1.1V FIX/VDDD tap fix
     // Adds delay before trying to restore registers from stack
     // Without NOP, variable being passed is zero (when it shouldn't be)
-    __asm("NOP");
+    __asm volatile ("NOP");
 
     // Possibly more efficient
     // scm3c_hw_interface_vars.ASC[position/32] |= 1 << (position%32);
@@ -1462,7 +1436,7 @@ void clear_asc_bit(unsigned int position) {
     // 1.1V FIX/VDDD tap fix
     // Adds delay before trying to restore registers from stack
     // Without NOP, variable being passed is zero (when it shouldn't be)
-    __asm("NOP");
+    __asm volatile ("NOP");
 
     // Possibly more efficient
     // scm3c_hw_interface_vars.ASC[position/32] &= ~(1 << (position%32));
@@ -1484,22 +1458,22 @@ void LC_FREQCHANGE(int coarse, int mid, int fine) {
     // The NOPs below are for the VDDD tap fix
     // They provide some extra delay so the registers can be loaded properly
     char coarse_m = (char)(coarse & 0x1F);
-    __asm("NOP");
+    __asm volatile ("NOP");
     char mid_m = (char)(mid & 0x1F);
-    __asm("NOP");
+    __asm volatile ("NOP");
     char fine_m = (char)(fine & 0x1F);
-    __asm("NOP");
+    __asm volatile ("NOP");
 
     // flip the bit order to make it fit more easily into the ACFG registers
     // 1.1V (NOP)
     // The NOPs below are for the VDDD tap fix
     // They provide some extra delay so the registers can be loaded properly
     unsigned int coarse_f = (unsigned int)(flipChar(coarse_m));
-    __asm("NOP");
+    __asm volatile ("NOP");
     unsigned int mid_f = (unsigned int)(flipChar(mid_m));
-    __asm("NOP");
+    __asm volatile ("NOP");
     unsigned int fine_f = (unsigned int)(flipChar(fine_m));
-    __asm("NOP");
+    __asm volatile ("NOP");
 
     // initialize registers
     unsigned int fcode =
