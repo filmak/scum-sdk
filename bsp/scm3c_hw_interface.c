@@ -26,8 +26,8 @@
 #define INIT_IF_FINE 18
 
 // CRC
-#define CRC_VALUE (*((unsigned int*)0x0000FFFC))
-#define CODE_LENGTH (*((unsigned int*)0x0000FFF8))
+#define CRC_VALUE (*((volatile unsigned int*)0x0000FFFC))
+#define CODE_LENGTH (*((volatile unsigned int*)0x0000FFF8))
 
 //=========================== variable ========================================
 
@@ -1019,18 +1019,18 @@ void read_counters_3B(unsigned int* count_2M, unsigned int* count_LC,
     ANALOG_CFG_REG__0 = 0x007F;
 
     // Read 2M counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
     *count_2M = rdata_lsb + (rdata_msb << 16);
 
     // Read LC_div counter (via counter4)
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
     *count_LC = rdata_lsb + (rdata_msb << 16);
 
     // Read adc counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x300000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x340000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x300000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x340000);
     *count_adc = rdata_lsb + (rdata_msb << 16);
 
     // Reset all counters
@@ -1254,13 +1254,13 @@ unsigned int estimate_temperature_2M_32k() {
     ANALOG_CFG_REG__0 = 0x007F;
 
     // Read 2M counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
     count_2M = rdata_lsb + (rdata_msb << 16);
 
     // Read 32k counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
     count_32k = rdata_lsb + (rdata_msb << 16);
 
     // printf("%d - %d - %d\r\n",count_2M,count_32k,(count_2M << 13) /
@@ -1400,18 +1400,18 @@ void read_counters(unsigned int* count_2M, unsigned int* count_LC,
     ANALOG_CFG_REG__0 = 0x007F;
 
     // Read 2M counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
     *count_2M = rdata_lsb + (rdata_msb << 16);
 
     // Read LC_div counter (via counter4)
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x200000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x240000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x200000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x240000);
     *count_LC = rdata_lsb + (rdata_msb << 16);
 
     // Read 32k counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
     *count_32k = rdata_lsb + (rdata_msb << 16);
 
     // Reset all counters

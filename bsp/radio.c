@@ -495,7 +495,7 @@ void radio_rxEnable() {
     ANALOG_CFG_REG__16 = 0x1;
 
     // Where packet will be stored in memory
-    DMA_REG__RF_RX_ADDR = radio_vars.radio_rx_buffer;
+    DMA_REG__RF_RX_ADDR = (volatile char *)radio_vars.radio_rx_buffer;
 
     // Reset radio FSM
     RFCONTROLLER_REG__CONTROL = RF_RESET;
@@ -738,8 +738,8 @@ uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
         ANALOG_CFG_REG__0 = 0x007F;
 
         // Read count result
-        rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-        rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
+        rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
+        rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
         count_LC[i] = rdata_lsb + (rdata_msb << 16);
 
         count_targets[i + 1] = ((961 + (i + 1) * 2) * count_LC[0]) / 961;
@@ -807,8 +807,8 @@ void build_TX_channel_table(unsigned int channel_11_LC_code,
         ANALOG_CFG_REG__0 = 0x007F;
 
         // Read count result
-        rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-        rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
+        rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
+        rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
         count_LC[i] = rdata_lsb + (rdata_msb << 16);
 
         // Until figure out why modulation spacing is only 800kHz, only set
@@ -1003,7 +1003,7 @@ void RAWCHIPS_32_Handler() {
         busy_wait_cycles(10000);
 
         // Execute soft reset
-        *(unsigned int*)(0xE000ED0C) = 0x05FA0004;
+        *(volatile unsigned int*)(0xE000ED0C) = 0x05FA0004;
     }
 }
 

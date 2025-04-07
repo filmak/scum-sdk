@@ -97,60 +97,46 @@ void OPTICAL_SFD_Handler(void) {
     // 1.1V/VDDD tap fix
     // helps reorder assembly code
     // Not completely sure why this works
-    uint32_t dummy = 0;
+    optical_vars.optical_cal_iteration++;
 
-    int32_t t;
-    uint32_t rdata_lsb, rdata_msb;
-    uint32_t count_LC, count_32k, count_2M, count_HFclock, count_IF;
-
-    uint32_t HF_CLOCK_fine;
-    uint32_t HF_CLOCK_coarse;
-    uint32_t RC2M_coarse;
-    uint32_t RC2M_fine;
-    uint32_t RC2M_superfine;
-    uint32_t IF_clk_target;
-    uint32_t IF_coarse;
-    uint32_t IF_fine;
-
-    HF_CLOCK_fine = scm3c_hw_interface_get_HF_CLOCK_fine();
-    HF_CLOCK_coarse = scm3c_hw_interface_get_HF_CLOCK_coarse();
-    RC2M_coarse = scm3c_hw_interface_get_RC2M_coarse();
-    RC2M_fine = scm3c_hw_interface_get_RC2M_fine();
-    RC2M_superfine = scm3c_hw_interface_get_RC2M_superfine();
-    IF_clk_target = scm3c_hw_interface_get_IF_clk_target();
-    IF_coarse = scm3c_hw_interface_get_IF_coarse();
-    IF_fine = scm3c_hw_interface_get_IF_fine();
+    uint32_t HF_CLOCK_fine = scm3c_hw_interface_get_HF_CLOCK_fine();
+    uint32_t HF_CLOCK_coarse = scm3c_hw_interface_get_HF_CLOCK_coarse();
+    uint32_t RC2M_coarse = scm3c_hw_interface_get_RC2M_coarse();
+    uint32_t RC2M_fine = scm3c_hw_interface_get_RC2M_fine();
+    uint32_t RC2M_superfine = scm3c_hw_interface_get_RC2M_superfine();
+    uint32_t IF_clk_target = scm3c_hw_interface_get_IF_clk_target();
+    uint32_t IF_coarse = scm3c_hw_interface_get_IF_coarse();
+    uint32_t IF_fine = scm3c_hw_interface_get_IF_fine();
 
     // Disable all counters
     ANALOG_CFG_REG__0 = 0x007F;
 
     // Keep track of how many calibration iterations have been completed
-    optical_vars.optical_cal_iteration++;
 
     // Read 32k counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
-    count_32k = rdata_lsb + (rdata_msb << 16);
+    uint32_t rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
+    uint32_t rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
+    uint32_t count_32k = rdata_lsb + (rdata_msb << 16);
 
     // Read HF_CLOCK counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x100000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x140000);
-    count_HFclock = rdata_lsb + (rdata_msb << 16);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x100000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x140000);
+    uint32_t count_HFclock = rdata_lsb + (rdata_msb << 16);
 
     // Read 2M counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
-    count_2M = rdata_lsb + (rdata_msb << 16);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
+    uint32_t count_2M = rdata_lsb + (rdata_msb << 16);
 
     // Read LC_div counter (via counter4)
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
-    count_LC = rdata_lsb + (rdata_msb << 16);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
+    uint32_t count_LC = rdata_lsb + (rdata_msb << 16);
 
     // Read IF ADC_CLK counter
-    rdata_lsb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x300000);
-    rdata_msb = *(unsigned int*)(APB_ANALOG_CFG_BASE + 0x340000);
-    count_IF = rdata_lsb + (rdata_msb << 16);
+    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x300000);
+    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x340000);
+    uint32_t count_IF = rdata_lsb + (rdata_msb << 16);
 
     // Reset all counters
     ANALOG_CFG_REG__0 = 0x0000;
