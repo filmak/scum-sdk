@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "helpers.h"
 #include "gpio.h"
 #include "memory_map.h"
 #include "rftimer.h"
@@ -731,7 +732,7 @@ uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
         ANALOG_CFG_REG__0 = 0x3FFF;
 
         // Count for some arbitrary amount of time
-        for (t = 1; t < 16000; t++) {}
+        busy_wait_cycles(16000);
 
         // Disable all counters
         ANALOG_CFG_REG__0 = 0x007F;
@@ -800,7 +801,7 @@ void build_TX_channel_table(unsigned int channel_11_LC_code,
         ANALOG_CFG_REG__0 = 0x3FFF;
 
         // Count for some arbitrary amount of time
-        for (t = 1; t < 16000; t++) {}
+        busy_wait_cycles(16000);
 
         // Disable all counters
         ANALOG_CFG_REG__0 = 0x007F;
@@ -999,7 +1000,7 @@ void RAWCHIPS_32_Handler() {
         chip_index = 0;
 
         // Wait for print to complete
-        for (jj = 0; jj < 10000; jj++) {}
+        busy_wait_cycles(10000);
 
         // Execute soft reset
         *(unsigned int*)(0xE000ED0C) = 0x05FA0004;

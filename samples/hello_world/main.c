@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "helpers.h"
 #include "optical.h"
 #include "scm3c_hw_interface.h"
 
 // Number of for loop cycles between Hello World messages.
 // 700000 for loop cycles roughly correspond to 1 second.
-#define NUM_CYCLES_BETWEEN_TX 1000000
+#define NUM_CYCLES_BETWEEN_TX (1000000UL)
 
 // TX counter.
 static uint32_t g_tx_counter = 0;
@@ -19,9 +20,9 @@ int main(void) {
     perform_calibration();
 
     while (1) {
-        printf("Hello World! %lu\n", g_tx_counter);
-        ++g_tx_counter;
+        printf("Hello World! %u\n", g_tx_counter);
+        g_tx_counter++;
 
-        for (size_t i = 0; i < NUM_CYCLES_BETWEEN_TX; ++i);
+        busy_wait_cycles(NUM_CYCLES_BETWEEN_TX);
     }
 }

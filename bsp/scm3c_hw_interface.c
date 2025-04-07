@@ -1,3 +1,4 @@
+#include "helpers.h"
 #include "scm3c_hw_interface.h"
 
 #include <stdio.h>
@@ -1246,7 +1247,8 @@ unsigned int estimate_temperature_2M_32k() {
     ANALOG_CFG_REG__0 = 0x3FFF;
 
     // Count for some arbitrary amount of time
-    for (t = 1; t < 50000; t++);
+    busy_wait_cycles(50000);
+
 
     // Disable all counters
     ANALOG_CFG_REG__0 = 0x007F;
