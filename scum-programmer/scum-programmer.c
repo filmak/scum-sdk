@@ -51,15 +51,11 @@ static programmer_vars_t _programmer_vars = { 0 };
 
 static const char *UART_OK = "OK\r\n";
 
-static void busy_wait_us(uint32_t us) {
-    uint32_t delay = 3 * us;
+static void busy_wait_ms(uint32_t ms) {
+    uint32_t delay = 3000 * ms;
     while (delay--) {
         asm volatile ("":::);
     }
-}
-
-static void busy_wait_ms(uint32_t ms) {
-    busy_wait_us(ms * 1000);
 }
 
 static void setup_clock(void) {
@@ -169,7 +165,6 @@ static void bitband_byte(uint8_t byte, bool latch) {
         else if (!((byte >> j) & 0x01)) {
             NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
         }
-        busy_wait_us(1);
         if (latch && (j == 7)) {
             NRF_P0->OUTSET = 1 << PROGRAMMER_EN_PIN;
         }
@@ -177,11 +172,8 @@ static void bitband_byte(uint8_t byte, bool latch) {
             NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
         }
         // toggle the clock
-        busy_wait_us(1);
         NRF_P0->OUTSET = 1 << PROGRAMMER_CLK_PIN;
-        busy_wait_us(1);
         NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
-        busy_wait_us(1);
     }
 }
 
