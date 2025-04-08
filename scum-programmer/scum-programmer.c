@@ -12,26 +12,26 @@ SCuM programmer.
 
 //=========================== defines =========================================
 
-#define UART_BUF_SIZE               (32U)
-#define SCUM_MEM_SIZE               (1 << 16) // 64KiB
+#define UART_BUF_SIZE                   (32U)
+#define SCUM_MEM_SIZE                   (1 << 16) // 64KiB
 
-#define CALIBRATION_PORT            0UL
-#define PROGRAMMER_EN_PIN           30UL
-#define PROGRAMMER_HRST_PIN         31UL
-#define PROGRAMMER_CLK_PIN          28UL
-#define PROGRAMMER_DATA_PIN         29UL
-#define PROGRAMMER_TAP_PIN          3UL
+#define CALIBRATION_PORT                0UL
+#define PROGRAMMER_EN_PIN               30UL
+#define PROGRAMMER_HRST_PIN             31UL
+#define PROGRAMMER_CLK_PIN              28UL
+#define PROGRAMMER_DATA_PIN             29UL
+#define PROGRAMMER_TAP_PIN              3UL
 
-#define CALIBRATION_CLK_PIN         28UL
-#define CALIBRATION_PULSE_WIDTH     50   // approximate duty cycle (out of 100)
-#define CALIBRATION_PERIOD          100 // period in ms
-#define CALIBRATION_FUDGE           308   // # of clock cycles of "fudge"
-#define CALIBRATION_NUMBER_OF_PULSES  30 // # of rising edges at 100ms
+#define CALIBRATION_CLK_PIN             28UL
+#define CALIBRATION_PULSE_WIDTH         50      // approximate duty cycle (out of 100)
+#define CALIBRATION_PERIOD              100     // period in ms
+#define CALIBRATION_FUDGE               308     // # of clock cycles of "fudge"
+#define CALIBRATION_NUMBER_OF_PULSES    25      // # of rising edges at 100ms
 
-#define PROGRAMMER_VDDD_HI_PIN      27UL
-#define PROGRAMMER_VDDD_LO_PIN      15UL
+#define PROGRAMMER_VDDD_HI_PIN          27UL
+#define PROGRAMMER_VDDD_LO_PIN          15UL
 
-#define GPIOTE_CALIBRATION_CLOCK    0
+#define GPIOTE_CALIBRATION_CLOCK        0
 
 //=========================== variables =======================================
 
@@ -95,10 +95,6 @@ static void uart_write(const uint8_t *buffer, size_t len) {
 }
 
 static void setup_programmer(void) {
-    GPIO_PIN_CNF_DIR_Output;
-    GPIO_PIN_CNF_DIR_Pos;
-    GPIO_PIN_CNF_INPUT_Disconnect;
-    GPIO_PIN_CNF_INPUT_Pos;
     NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
                                                 GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
     NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN]     = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
