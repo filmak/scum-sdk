@@ -1,7 +1,7 @@
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 BASE_DIR ?= $(REPO_ROOT)
 BUILD_DIR ?= $(CURDIR)/build
-FLASHER ?= $(REPO_ROOT)/../SCuM-programmer/programmer.py
+LOADER ?= $(REPO_ROOT)/../SCuM-programmer/programmer.py
 
 ifdef DEBUG
 	NO_ECHO :=
@@ -81,7 +81,7 @@ $(OBJ_DIR)/%.o: %.c $(OBJ_DIR)
 	$(NO_ECHO)$(MKDIR) -p $(dir $@)
 	$(NO_ECHO)$(CC) -c -o $@ $< $(CFLAGS)
 
-$(BUILD_DIR)/$(APPLICATION).bin: $(BUILD_DIR)/$(APPLICATION).elf $(BUILD_DIR)/$(APPLICATION).lst
+$(BUILD_DIR)/$(APPLICATION).bin: $(BUILD_DIR)/$(APPLICATION).elf
 	$(NO_ECHO)$(OBJCOPY) $< $@ -O binary
 	$(NO_ECHO)$(OBJSIZE) $<
 
@@ -91,8 +91,8 @@ $(BUILD_DIR)/$(APPLICATION).lst: $(BUILD_DIR)/$(APPLICATION).elf $(BUILD_DIR)
 $(BUILD_DIR)/$(APPLICATION).elf: $(OBJS)
 	$(NO_ECHO)$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-flash: all
-	$(NO_ECHO)$(FLASHER) $(BUILD_DIR)/$(APPLICATION).bin
+load: $(BUILD_DIR)/$(APPLICATION).bin
+	$(NO_ECHO)$(LOADER) $(BUILD_DIR)/$(APPLICATION).bin
 
 .PHONY: clean
 clean:
