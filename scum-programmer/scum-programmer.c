@@ -53,7 +53,9 @@ static const char *UART_OK = "OK\r\n";
 
 static void busy_wait_us(uint32_t us) {
     uint32_t delay = 3 * us;
-    while (delay--) {}
+    while (delay--) {
+        asm volatile ("":::);
+    }
 }
 
 static void busy_wait_ms(uint32_t ms) {
@@ -156,7 +158,9 @@ static void run_calibration(void) {
     NRF_TIMER2->INTENSET = TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos;
     NRF_TIMER2->TASKS_START = 1;
 
-    while (!_programmer_vars.calibration_done) {}
+    while (!_programmer_vars.calibration_done) {
+        asm volatile ("":::);
+    }
     _programmer_vars.calibration_counter = 0;
     _programmer_vars.calibration_done = false;
 }
