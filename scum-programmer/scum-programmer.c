@@ -161,6 +161,30 @@ static void run_calibration(void) {
     _programmer_vars.calibration_done = false;
 }
 
+static void bitband_byte(uint8_t byte, bool latch) {
+    for (uint8_t j = 0; j < 8; j++) {
+        if ((byte >> j) & 0x01) {
+            NRF_P0->OUTSET = 1 << PROGRAMMER_DATA_PIN;
+        }
+        else if (!((byte >> j) & 0x01)) {
+            NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
+        }
+        busy_wait_us(1);
+        if (latch && (j == 7)) {
+            NRF_P0->OUTSET = 1 << PROGRAMMER_EN_PIN;
+        }
+        else {
+            NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
+        }
+        // toggle the clock
+        busy_wait_us(1);
+        NRF_P0->OUTSET = 1 << PROGRAMMER_CLK_PIN;
+        busy_wait_us(1);
+        NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
+        busy_wait_us(1);
+    }
+}
+
 static void _handle_byte_received(uint8_t byte) {
     _programmer_vars.scum_instruction_memory[_programmer_vars.scum_instruction_idx++] = _programmer_vars.uart_rx_byte;
     if(_programmer_vars.scum_instruction_idx < SCUM_MEM_SIZE) {
@@ -180,27 +204,7 @@ static void _handle_byte_received(uint8_t byte) {
     busy_wait_ms(14);
 
     for (uint32_t i = 1; i <= SCUM_MEM_SIZE; i++) {
-        for (uint8_t j = 0; j < 8; j++) {
-            if ((_programmer_vars.scum_instruction_memory[i - 1] >> j) & 0x01) {
-                NRF_P0->OUTSET = 1 << PROGRAMMER_DATA_PIN;
-            }
-            else if (!((_programmer_vars.scum_instruction_memory[i - 1] >> j) & 0x01)) {
-                NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
-            }
-            busy_wait_us(1);
-            if ((i % 4 == 0) && (j == 7)) {
-                NRF_P0->OUTSET = 1 << PROGRAMMER_EN_PIN;
-            }
-            else {
-                NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
-            }
-            // toggle the clock
-            busy_wait_us(1);
-            NRF_P0->OUTSET = 1 << PROGRAMMER_CLK_PIN;
-            busy_wait_us(1);
-            NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
-            busy_wait_us(1);
-        }
+        bitband_byte(_programmer_vars.scum_instruction_memory[i - 1], (i % 4 == 0));
     }
 
     // after bootloading - return to "load" state (currently debugging)
