@@ -192,6 +192,7 @@ static void _handle_byte_received(uint8_t byte) {
     }
 
     uart_write((uint8_t *)UART_OK, strlen(UART_OK));
+
     NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
     NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
     NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
@@ -277,6 +278,8 @@ void TIMER2_IRQHandler(void) {
 void UARTE0_UART0_IRQHandler(void) {
     if (NRF_UARTE0->EVENTS_ENDRX) {
         NRF_UARTE0->EVENTS_ENDRX = 0;
-        _programmer_vars.uart_byte_received = true;
+        if (NRF_UARTE0->RXD.AMOUNT != 0) {
+            _programmer_vars.uart_byte_received = true;
+        }
     }
 }
