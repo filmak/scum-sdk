@@ -98,11 +98,11 @@ typedef struct {
 
     // How many packets must be received before adjusting RX clock rates
     // Should be at least as long as the FIR filters
-    volatile uint16_t frequency_update_rate;
-    volatile uint16_t frequency_update_cooldown_timer;
+    uint16_t frequency_update_rate;
+    uint16_t frequency_update_cooldown_timer;
 
     // TX parameters
-    volatile bool sendDone;
+    bool sendDone;
 
     // RX parameters
     uint8_t rxPacket[RX_PKT_ANY_LEN];
@@ -110,12 +110,12 @@ typedef struct {
     radio_rx_cbt radio_rx_cb;
     int8_t rxpk_rssi;
     uint8_t rxpk_lqi;
-    volatile bool rxpk_crc;
-    volatile bool receiveDone;
-    volatile bool rxFrameStarted;
-    volatile uint32_t IF_estimate;
-    volatile uint32_t LQI_chip_errors;
-    volatile uint32_t cdr_tau_value;
+    bool rxpk_crc;
+    bool receiveDone;
+    bool rxFrameStarted;
+    uint32_t IF_estimate;
+    uint32_t LQI_chip_errors;
+    uint32_t cdr_tau_value;
 } radio_vars_t;
 
 radio_vars_t radio_vars;
@@ -709,8 +709,6 @@ void setFrequencyTX(uint8_t channel) {
 
 uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
     uint32_t rdata_lsb, rdata_msb;
-    int32_t i;
-    uint32_t t;
     uint32_t count_LC[16];
     uint32_t count_targets[17];
 
@@ -719,7 +717,7 @@ uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
 
     radio_vars.rx_channel_codes[0] = channel_11_LC_code;
 
-    i = 0;
+    int32_t i = 0;
     while (i < 16) {
         LC_monotonic(radio_vars.rx_channel_codes[i]);
         // analog_scan_chain_write_3B_fromFPGA(ASC);
@@ -776,7 +774,7 @@ uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
 void build_TX_channel_table(unsigned int channel_11_LC_code,
                             unsigned int count_LC_RX_ch11) {
     unsigned int rdata_lsb, rdata_msb;
-    int t, i = 0;
+    int i = 0;
     unsigned int count_LC[16] = {0};
     unsigned int count_targets[17] = {0};
 
@@ -970,12 +968,10 @@ void RF_Handler(void) {
 // This ISR goes off when the raw chip shift register interrupt goes high
 // It reads the current 32 bits and then prints them out after N cycles
 void RAWCHIPS_32_Handler() {
-    unsigned int jj;
-    unsigned int rdata_lsb, rdata_msb;
 
     // Read 32bit val
-    rdata_lsb = ANALOG_CFG_REG__17;
-    rdata_msb = ANALOG_CFG_REG__18;
+    unsigned int rdata_lsb = ANALOG_CFG_REG__17;
+    unsigned int rdata_msb = ANALOG_CFG_REG__18;
     chips[chip_index] = rdata_lsb + (rdata_msb << 16);
 
     chip_index++;
@@ -991,7 +987,7 @@ void RAWCHIPS_32_Handler() {
     ANALOG_CFG_REG__3 = acfg3_val;
 
     if (chip_index == 10) {
-        for (jj = 1; jj < 10; jj++) {
+        for (uint8_t jj = 1; jj < 10; jj++) {
             printf("%X\r\n", chips[jj]);
         }
 
