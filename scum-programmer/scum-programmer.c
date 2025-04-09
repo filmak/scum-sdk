@@ -56,7 +56,6 @@ typedef struct {
     uart_command_t uart_command;
 
     uint32_t chunk_idx;
-    uint8_t instructions_buffer[SCUM_MEM_SIZE];
 
     bool calibration_done;
     uint32_t calibration_counter;
@@ -202,7 +201,6 @@ static void _process_byte_received(uint8_t byte) {
         case COMMAND_START:
         {
             puts("START");
-            memset(_programmer_vars.instructions_buffer, 0x00, SCUM_MEM_SIZE);
             _programmer_vars.chunk_idx = 0;
 
             NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
@@ -218,15 +216,19 @@ static void _process_byte_received(uint8_t byte) {
         }
         case COMMAND_CHUNK:
         {
-            memcpy(_programmer_vars.instructions_buffer + _programmer_vars.chunk_idx * COMMAND_BUF_SIZE, _programmer_vars.uart_command.buffer, COMMAND_BUF_SIZE);
+            for (uint32_t idx = 1; idx < COMMAND_BUF_SIZE + 1; idx++) {
+                bitband_byte(_programmer_vars.uart_command.buffer[idx - 1], (idx % 4 == 0));
+            }
             _programmer_vars.chunk_idx++;
             break;
         }
         case COMMAND_BOOT:
         {
             puts("BOOT");
-            for (uint32_t idx = 1; idx < SCUM_MEM_SIZE + 1; idx++) {
-                bitband_byte(_programmer_vars.instructions_buffer[idx - 1], (idx % 4 == 0));
+            uint32_t received_bytes = _programmer_vars.chunk_idx * COMMAND_BUF_SIZE;
+            uint32_t remaining_bytes = SCUM_MEM_SIZE - received_bytes;
+            for (uint32_t idx = 1; idx < remaining_bytes + 1; idx++) {
+                bitband_byte(0x00, (idx % 4 == 0));
             }
 
             NRF_P0->OUTSET = (1 << PROGRAMMER_TAP_PIN); // first set pin high - NEVER CLEAR!!! scum will hate it if you do
