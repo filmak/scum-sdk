@@ -168,10 +168,10 @@ void OPTICAL_SFD_Handler(void) {
         scm3c_hw_interface_set_HF_CLOCK_fine(HF_CLOCK_fine);
 
         // Do correction on LC
-        if (count_LC > (optical_vars.LC_target + 0)) {
+        if (count_LC > optical_vars.LC_target) {
             optical_vars.LC_code -= 1;
         }
-        if (count_LC < (optical_vars.LC_target - 0)) {
+        if (count_LC < optical_vars.LC_target) {
             optical_vars.LC_code += 1;
         }
         LC_monotonic(optical_vars.LC_code);
@@ -179,20 +179,20 @@ void OPTICAL_SFD_Handler(void) {
         // Do correction on 2M RC
         // Coarse step ~1100 counts, fine ~150 counts, superfine ~25
         // Too fast
-        if (count_2M > (200600)) {
+        if (count_2M > 200600) {
             RC2M_coarse += 1;
-        } else if (count_2M > (200080)) {
+        } else if (count_2M > 200080) {
             RC2M_fine += 1;
-        } else if (count_2M > (200015)) {
+        } else if (count_2M > 200015) {
             RC2M_superfine += 1;
         }
 
         // Too slow
-        if (count_2M < (199400)) {
+        if (count_2M < 199400) {
             RC2M_coarse -= 1;
-        } else if (count_2M < (199920)) {
+        } else if (count_2M < 199920) {
             RC2M_fine -= 1;
-        } else if (count_2M < (199985)) {
+        } else if (count_2M < 199985) {
             RC2M_superfine -= 1;
         }
 
@@ -203,10 +203,10 @@ void OPTICAL_SFD_Handler(void) {
 
         // Do correction on IF RC clock
         // Fine DAC step size is ~2800 counts
-        if (count_IF > (1600000 + 1400)) {
+        if (count_IF > (IF_clk_target + 1400)) {
             IF_fine += 1;
         }
-        if (count_IF < (1600000 - 1400)) {
+        if (count_IF < (IF_clk_target - 1400)) {
             IF_fine -= 1;
         }
 
@@ -223,11 +223,20 @@ void OPTICAL_SFD_Handler(void) {
     // The print is now broken down into 3 statements instead of one big
     // print statement
     // doing this prevent a long string of loads back to back
-    printf("HF=%d-%d   2M=%d-%d", count_HFclock, HF_CLOCK_fine, count_2M,
-           RC2M_coarse);
-    printf(",%d,%d   LC=%d-%d   ", RC2M_fine, RC2M_superfine, count_LC,
-           optical_vars.LC_code);
-    printf("IF=%d-%d\r\n", count_IF, IF_fine);
+    printf(
+"HF=%lu-%lu   2M=%lu-%lu",
+        count_HFclock, HF_CLOCK_fine,
+        count_2M, RC2M_coarse
+    );
+    printf(
+",%lu,%lu   LC=%lu-%lu   ",
+        RC2M_fine, RC2M_superfine,
+        count_LC, optical_vars.LC_code
+    );
+    printf(
+"IF=%lu-%lu\r\n",
+        count_IF, IF_fine
+    );
 
     if (optical_vars.optical_cal_iteration == 25) {
         // Disable this ISR

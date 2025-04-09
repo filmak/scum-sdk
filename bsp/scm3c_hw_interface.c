@@ -410,8 +410,8 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
     unsigned int* addr = baseAddress;
     uint32_t num_errors = 0;
 
-    printf("\r\n\r\nStarting SRAM test from 0x%X to 0x%X...\r\n", baseAddress,
-           baseAddress + num_dwords);
+    printf("\r\n\r\nStarting SRAM test from 0x%p to 0x%p...\r\n", (void *)baseAddress,
+    (void *)(baseAddress + num_dwords));
     printf("This takes awhile...\r\n");
 
     // Write 0 to all bits, in any address order
@@ -481,7 +481,7 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
         }
     }
 
-    printf("\r\nSRAM Test Complete -- %d Errors\r\n", num_errors);
+    printf("\r\nSRAM Test Complete -- %lu Errors\r\n", num_errors);
 
     return num_errors;
 }

@@ -232,17 +232,16 @@ void repeat_rx_tx(repeat_rx_tx_params_t repeat_rx_tx_params) {
     uint8_t pkt_len_fix = repeat_rx_tx_params.pkt_len;
 
     int pkt_count = 0;
-    char* radio_mode_string;
-    char* repeat_mode_string;
+    // char* radio_mode_string;
 
     uint8_t i;
 
-    if (repeat_rx_tx_params.radio_mode == TX_MODE) {
-        radio_mode_string = "transmit";
+    // if (repeat_rx_tx_params.radio_mode == TX_MODE) {
+    //     radio_mode_string = "transmit";
 
-    } else {
-        radio_mode_string = "receive";
-    }
+    // } else {
+    //     radio_mode_string = "receive";
+    // }
 
     if (repeat_rx_tx_params.repeat_mode == FIXED) {
         cfg_coarse_start = repeat_rx_tx_params.fixed_lc_coarse;
@@ -383,11 +382,11 @@ void radio_init(void) {
                                    RX_DONE_INT_EN;
 
     // Enable all errors
-    //    RFCONTROLLER_REG__ERROR_CONFIG  = TX_OVERFLOW_ERROR_EN          |   \
-//                                      TX_CUTOFF_ERROR_EN            |   \
-//                                      RX_OVERFLOW_ERROR_EN          |   \
-//                                      RX_CRC_ERROR_EN               |   \
-//                                      RX_CUTOFF_ERROR_EN;
+    //    RFCONTROLLER_REG__ERROR_CONFIG  = (TX_OVERFLOW_ERROR_EN          |
+    //                                       TX_CUTOFF_ERROR_EN            |
+    //                                       RX_OVERFLOW_ERROR_EN          |
+    //                                       RX_CRC_ERROR_EN               |
+    //                                       RX_CUTOFF_ERROR_EN);
 
     RFCONTROLLER_REG__ERROR_CONFIG = RX_CRC_ERROR_EN;
 
@@ -546,20 +545,14 @@ void radio_rfOff(void) {
 void radio_frequency_housekeeping(uint32_t IF_estimate,
                                   uint32_t LQI_chip_errors,
                                   int16_t cdr_tau_value) {
-    signed int sum = 0;
     int jj;
     unsigned int IF_est_filtered;
     signed int chip_rate_error_ppm, chip_rate_error_ppm_filtered;
-    unsigned short packet_len;
-    signed int timing_correction;
 
-    uint32_t IF_coarse;
-    uint32_t IF_fine;
+    uint32_t IF_coarse = scm3c_hw_interface_get_IF_coarse();
+    uint32_t IF_fine = scm3c_hw_interface_get_IF_fine();
 
-    IF_coarse = scm3c_hw_interface_get_IF_coarse();
-    IF_fine = scm3c_hw_interface_get_IF_fine();
-
-    packet_len = radio_vars.radio_rx_buffer[0];
+    uint16_t packet_len = radio_vars.radio_rx_buffer[0];
 
     // When updating LO and IF clock frequncies, must wait long enough for the
     // changes to propagate before changing again Need to receive as many
@@ -567,7 +560,7 @@ void radio_frequency_housekeeping(uint32_t IF_estimate,
     radio_vars.frequency_update_cooldown_timer++;
 
     // FIR filter for cdr tau slope
-    sum = 0;
+    int32_t sum = 0;
 
     // A tau value of 0 indicates there is no rate mistmatch between the TX and
     // RX chip clocks The cdr_tau_value corresponds to the number of samples

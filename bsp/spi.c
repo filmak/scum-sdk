@@ -3,6 +3,7 @@
 
 #include "spi.h"
 
+#include "helpers.h"
 #include "memory_map.h"
 
 #define CS_PIN 15
@@ -11,12 +12,10 @@
 #define DATA_PIN 12  // Used when writing to the IMU thus a SCuM output
 
 void spi_write(unsigned char writeByte) {
-    int j;
-    int t = 0;
     int clk_pin = CLK_PIN;
     int data_pin = DATA_PIN;
 
-    for (j = 7; j >= 0; j--) {
+    for (uint8_t j = 7; j >= 0; j--) {
         if ((writeByte & (0x01 << j)) != 0) {
             GPIO_REG__OUTPUT &= ~(1 << clk_pin);  // clock low
             GPIO_REG__OUTPUT |= 1 << data_pin;    // write a 1
@@ -32,16 +31,13 @@ void spi_write(unsigned char writeByte) {
 }
 
 unsigned char spi_read(void) {
-    unsigned char readByte;
-    int j;
-    int t = 0;
+    unsigned char readByte = 0;
     int clk_pin = CLK_PIN;
     int din_pin = DIN_PIN;
-    readByte = 0;
 
     GPIO_REG__OUTPUT &= ~(1 << clk_pin);  // clock low
 
-    for (j = 7; j >= 0; j--) {
+    for (uint8_t j = 7; j >= 0; j--) {
         GPIO_REG__OUTPUT |= (1 << clk_pin);  // clock high
         readByte |= ((GPIO_REG__INPUT & (1 << din_pin)) >> din_pin) << j;
         GPIO_REG__OUTPUT &= ~(1 << clk_pin);  // clock low
@@ -51,13 +47,13 @@ unsigned char spi_read(void) {
 }
 
 void spi_chip_select(void) {
-    int t = 0;
     int dout_pin = DATA_PIN;
     int cs_pin = CS_PIN;
     // drop chip select low to select the chip
     GPIO_REG__OUTPUT &= ~(1 << cs_pin);
     GPIO_REG__OUTPUT &= ~(1 << dout_pin);
-    for (t = 0; t < 50; t++);
+
+    busy_wait_cycles(50);
 }
 
 void spi_chip_deselect(void) {
@@ -67,20 +63,16 @@ void spi_chip_deselect(void) {
 }
 
 void initialize_imu(void) {
-    int i;
-
     write_imu_register(0x06, 0x41);
-    for (i = 0; i < 50000; i++);
+    busy_wait_cycles(50000);
     write_imu_register(0x06, 0x01);
-    for (i = 0; i < 50000; i++);
+    busy_wait_cycles(50000);
 }
 
 unsigned int read_acc_x(void) {
-    unsigned int acc_x;
-    unsigned char read_byte;
     unsigned char write_byte = 0x2D;
+    unsigned int acc_x = (read_imu_register(write_byte)) << 8;
 
-    acc_x = (read_imu_register(write_byte)) << 8;
     write_byte = 0x2E;
     acc_x |= read_imu_register(write_byte);
 
@@ -88,11 +80,9 @@ unsigned int read_acc_x(void) {
 }
 
 unsigned int read_acc_y(void) {
-    unsigned int acc_y;
-    unsigned char read_byte;
     unsigned char write_byte = 0x2F;
+    unsigned int acc_y = (read_imu_register(write_byte)) << 8;
 
-    acc_y = (read_imu_register(write_byte)) << 8;
     write_byte = 0x30;
     acc_y |= read_imu_register(write_byte);
 
@@ -100,11 +90,9 @@ unsigned int read_acc_y(void) {
 }
 
 unsigned int read_acc_z(void) {
-    unsigned int acc_z;
-    unsigned char read_byte;
     unsigned char write_byte = 0x31;
+    unsigned int acc_z = (read_imu_register(write_byte)) << 8;
 
-    acc_z = (read_imu_register(write_byte)) << 8;
     write_byte = 0x32;
     acc_z |= read_imu_register(write_byte);
 
@@ -112,11 +100,9 @@ unsigned int read_acc_z(void) {
 }
 
 unsigned int read_gyro_x(void) {
-    unsigned int gyro_x;
-    unsigned char read_byte;
     unsigned char write_byte = 0x33;
+    unsigned int gyro_x = (read_imu_register(write_byte)) << 8;
 
-    gyro_x = (read_imu_register(write_byte)) << 8;
     write_byte = 0x34;
     gyro_x |= read_imu_register(write_byte);
 
@@ -124,11 +110,9 @@ unsigned int read_gyro_x(void) {
 }
 
 unsigned int read_gyro_y(void) {
-    unsigned int gyro_y;
-    unsigned char read_byte;
     unsigned char write_byte = 0x35;
+    unsigned int gyro_y = (read_imu_register(write_byte)) << 8;
 
-    gyro_y = (read_imu_register(write_byte)) << 8;
     write_byte = 0x36;
     gyro_y |= read_imu_register(write_byte);
 
@@ -136,11 +120,9 @@ unsigned int read_gyro_y(void) {
 }
 
 unsigned int read_gyro_z(void) {
-    unsigned int gyro_z;
-    unsigned char read_byte;
     unsigned char write_byte = 0x37;
+    unsigned int gyro_z = (read_imu_register(write_byte)) << 8;
 
-    gyro_z = (read_imu_register(write_byte)) << 8;
     write_byte = 0x38;
     gyro_z |= read_imu_register(write_byte);
 
@@ -148,11 +130,8 @@ unsigned int read_gyro_z(void) {
 }
 
 void test_imu_life(void) {
-    int i = 0;
-    unsigned char read_byte;
     unsigned char write_byte = 0x00;
-
-    read_byte = read_imu_register(write_byte);
+    unsigned char read_byte = read_imu_register(write_byte);
 
     if (read_byte == 0xEA) {
         printf("My IMU is alive!!!\n");
@@ -162,14 +141,13 @@ void test_imu_life(void) {
 }
 
 unsigned char read_imu_register(unsigned char reg) {
-    unsigned char read_byte;
     reg &= 0x7F;
     reg |= 0x80;  // guarantee that the function input is a valid input (not
                   // necessarily a valid, and readable, register)
 
     spi_chip_select();       // drop chip select
     spi_write(reg);          // write the selected register to the port
-    read_byte = spi_read();  // clock out the bits and read them
+    unsigned char read_byte = spi_read();  // clock out the bits and read them
     spi_chip_deselect();     // raise chip select
 
     return read_byte;
