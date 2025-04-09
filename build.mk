@@ -49,6 +49,8 @@ CFLAGS += \
 	-fshort-wchar \
 	-pedantic \
 	-Wstrict-prototypes \
+	-Wall \
+	-Werror \
 	#
 
 LDFLAGS += \
