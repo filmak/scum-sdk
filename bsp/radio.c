@@ -444,7 +444,7 @@ void radio_loadPacket(void* packet, uint16_t len) {
     memcpy(radio_vars.radio_tx_buffer, packet, len);
 
     // load packet in TXFIFO
-    RFCONTROLLER_REG__TX_DATA_ADDR = radio_vars.radio_tx_buffer;
+    RFCONTROLLER_REG__TX_DATA_ADDR = (char *)radio_vars.radio_tx_buffer;
     RFCONTROLLER_REG__TX_PACK_LEN = len;
 
     RFCONTROLLER_REG__CONTROL = TX_LOAD;
