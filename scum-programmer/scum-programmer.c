@@ -13,6 +13,7 @@ SCuM programmer.
 //=========================== defines =========================================
 
 #define UART_BUF_SIZE                   (32U)
+#define COMMAND_BUF_SIZE                (256U)
 #define SCUM_MEM_SIZE                   (1 << 16) // 64KiB
 
 #define CALIBRATION_PORT                0UL
@@ -35,25 +36,39 @@ SCuM programmer.
 
 //=========================== variables =======================================
 
+typedef enum {
+    COMMAND_START       = 0x01,
+    COMMAND_CHUNK       = 0x02,
+    COMMAND_BOOT        = 0x03,
+    COMMAND_CALIBRATE   = 0x04,
+} command_type_t;
+
+typedef struct __attribute__((packed)) {
+    command_type_t type;
+    uint8_t buffer[COMMAND_BUF_SIZE];
+} uart_command_t;
+
 typedef struct {
     bool uart_byte_received;
-    bool calibration_done;
     uint8_t uart_rx_byte;
     uint8_t uart_tx_buf[UART_BUF_SIZE];
+    uint16_t uart_command_idx;
+    uart_command_t uart_command;
 
-    uint8_t scum_programmer_state;
-    uint8_t scum_instruction_memory[SCUM_MEM_SIZE];
-    uint32_t scum_instruction_idx;
+    uint32_t chunk_idx;
+    uint8_t instructions_buffer[SCUM_MEM_SIZE];
+
+    bool calibration_done;
     uint32_t calibration_counter;
 } programmer_vars_t;
 
 static programmer_vars_t _programmer_vars = { 0 };
 
-static const char *UART_OK = "OK\r\n";
+static const char *UART_ACK = "ACK\r\n";
 
 static void busy_wait_ms(uint32_t ms) {
-    uint32_t delay = 3000 * ms;
-    while (delay--) {
+    uint32_t cycles = 3000 * ms;
+    while (cycles--) {
         asm volatile ("":::);
     }
 }
@@ -177,42 +192,58 @@ static void bitband_byte(uint8_t byte, bool latch) {
     }
 }
 
-static void _handle_byte_received(uint8_t byte) {
-    _programmer_vars.scum_instruction_memory[_programmer_vars.scum_instruction_idx++] = _programmer_vars.uart_rx_byte;
-    if(_programmer_vars.scum_instruction_idx < SCUM_MEM_SIZE) {
+static void _process_byte_received(uint8_t byte) {
+    ((uint8_t *)&_programmer_vars.uart_command)[_programmer_vars.uart_command_idx++] = _programmer_vars.uart_rx_byte;
+    if (_programmer_vars.uart_command_idx < sizeof(uart_command_t)) {
         return;
     }
 
-    uart_write((uint8_t *)UART_OK, strlen(UART_OK));
+    switch (_programmer_vars.uart_command.type) {
+        case COMMAND_START:
+        {
+            puts("START");
+            memset(_programmer_vars.instructions_buffer, 0x00, SCUM_MEM_SIZE);
+            _programmer_vars.chunk_idx = 0;
 
-    NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
-    NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
-    NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
+            NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
+            NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
+            NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
+            // execute hard reset (debug for now)
+            NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
+                                                    GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos); // configure as output, set low
+            busy_wait_ms(14);
+            NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos; // return to input
+            busy_wait_ms(14);
+            break;
+        }
+        case COMMAND_CHUNK:
+        {
+            memcpy(_programmer_vars.instructions_buffer + _programmer_vars.chunk_idx * COMMAND_BUF_SIZE, _programmer_vars.uart_command.buffer, COMMAND_BUF_SIZE);
+            _programmer_vars.chunk_idx++;
+            break;
+        }
+        case COMMAND_BOOT:
+        {
+            puts("BOOT");
+            for (uint32_t idx = 1; idx < SCUM_MEM_SIZE + 1; idx++) {
+                bitband_byte(_programmer_vars.instructions_buffer[idx - 1], (idx % 4 == 0));
+            }
 
-    // execute hard reset (debug for now)
-    NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos); // configure as output, set low
-    busy_wait_ms(14);
-    NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos; // return to input
-    busy_wait_ms(14);
-
-    for (uint32_t i = 1; i <= SCUM_MEM_SIZE; i++) {
-        bitband_byte(_programmer_vars.scum_instruction_memory[i - 1], (i % 4 == 0));
+            NRF_P0->OUTSET = (1 << PROGRAMMER_TAP_PIN); // first set pin high - NEVER CLEAR!!! scum will hate it if you do
+            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
+                                                    GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos); // then enable output
+            break;
+        }
+        case COMMAND_CALIBRATE:
+            puts("CALIBRATE");
+            run_calibration();
+            break;
+        default:
+            break;
     }
 
-    // after bootloading - return to "load" state (currently debugging)
-    uart_write((uint8_t *)UART_OK, strlen(UART_OK));
-    _programmer_vars.scum_instruction_idx = 0;
-
-    // experimental - after bootloading, do a tap
-    NRF_P0->OUTSET = (1 << PROGRAMMER_TAP_PIN); // first set pin high - NEVER CLEAR!!! scum will hate it if you do
-    NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos); // then enable output
-
-    // optional - start the 100ms calibration clock
-    // initialize 100ms clock pin
-    run_calibration();
-    uart_write((uint8_t *)UART_OK, strlen(UART_OK));
+    _programmer_vars.uart_command_idx = 0;
+    uart_write((uint8_t *)UART_ACK, strlen(UART_ACK));
 }
 
 int main(void) {
@@ -222,7 +253,7 @@ int main(void) {
 
     while (1) {
         if (_programmer_vars.uart_byte_received) {
-            _handle_byte_received(_programmer_vars.uart_rx_byte);
+            _process_byte_received(_programmer_vars.uart_rx_byte);
             _programmer_vars.uart_byte_received = false;
         }
 
@@ -261,7 +292,6 @@ void TIMER2_IRQHandler(void) {
             NRF_GPIOTE->CONFIG[GPIOTE_CALIBRATION_CLOCK] = 0;
             NRF_P0->PIN_CNF[CALIBRATION_CLK_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
                                                     GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-            _programmer_vars.scum_instruction_idx = 0;
             _programmer_vars.calibration_done = true;
         }
     }
