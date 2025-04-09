@@ -210,6 +210,12 @@ void OPTICAL_SFD_Handler(void) {
             IF_fine -= 1;
         }
 
+	// if calibration resulted in tuning overflow, iterate coarse code
+	if (IF_fine >= 32) {
+	    IF_fine -= 8;
+	    IF_coarse += 1;
+	}
+
         set_IF_clock_frequency(IF_coarse, IF_fine, 0);
         scm3c_hw_interface_set_IF_coarse(IF_coarse);
         scm3c_hw_interface_set_IF_fine(IF_fine);
