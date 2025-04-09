@@ -81,17 +81,17 @@ void gpio_15_clr(void) { gpio_set_low(GPIO_15); }
 void gpio_15_toggle(void) { gpio_toggle(GPIO_15); }
 
 // ISRs for external interrupts.
-void EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler() {
+void EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler(void) {
     printf("External Interrupt GPIO3 triggered\r\n");
 }
-void EXT_GPIO8_ACTIVEHIGH_Handler() {
+void EXT_GPIO8_ACTIVEHIGH_Handler(void) {
     // Trigger the interrupt for calibration.
-    extern void OPTICAL_SFD_Handler();
+    extern void OPTICAL_SFD_Handler(void);
     OPTICAL_SFD_Handler();
 }
-void EXT_GPIO9_ACTIVELOW_Handler() {
+void EXT_GPIO9_ACTIVELOW_Handler(void) {
     printf("External Interrupt GPIO9 triggered\r\n");
 }
-void EXT_GPIO10_ACTIVELOW_Handler() {
+void EXT_GPIO10_ACTIVELOW_Handler(void) {
     printf("External Interrupt GPIO10 triggered\r\n");
 }

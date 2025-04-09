@@ -47,6 +47,8 @@ CFLAGS += \
 	-ffunction-sections \
 	-fdata-sections \
 	-fshort-wchar \
+	-pedantic \
+	-Wstrict-prototypes \
 	#
 
 LDFLAGS += \
@@ -67,7 +69,7 @@ CFLAGS += $(foreach d,$(DEFINES),-D$(d))
 OBJ_DIR = $(BUILD_DIR)/objs
 OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRCS))
 
-.PHONY: all flash
+.PHONY: all load $(BUILD_DIR)
 all: $(BUILD_DIR)/$(APPLICATION).bin
 
 $(BUILD_DIR):
@@ -76,22 +78,19 @@ $(BUILD_DIR):
 $(OBJ_DIR):
 	$(NO_ECHO)$(MKDIR) -p $(OBJ_DIR)
 
-$(OBJ_DIR)/%.o: %.c $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.c $(OBJ_DIR) $(MAKEFILE_LIST)
 	@echo "Compiling $<"
 	$(NO_ECHO)$(MKDIR) -p $(dir $@)
 	$(NO_ECHO)$(CC) -c -o $@ $< $(CFLAGS)
+
+$(BUILD_DIR)/$(APPLICATION).elf: $(OBJS)
+	$(NO_ECHO)$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 $(BUILD_DIR)/$(APPLICATION).bin: $(BUILD_DIR)/$(APPLICATION).elf
 	$(NO_ECHO)$(OBJCOPY) $< $@ -O binary
 	$(NO_ECHO)$(OBJSIZE) $<
 
-$(BUILD_DIR)/$(APPLICATION).lst: $(BUILD_DIR)/$(APPLICATION).elf $(BUILD_DIR)
-	$(NO_ECHO)$(OBJDUMP) -D $< > $@
-
-$(BUILD_DIR)/$(APPLICATION).elf: $(OBJS)
-	$(NO_ECHO)$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
-
-load: $(BUILD_DIR)/$(APPLICATION).bin
+load: all
 	$(NO_ECHO)$(LOADER) $(BUILD_DIR)/$(APPLICATION).bin
 
 .PHONY: clean

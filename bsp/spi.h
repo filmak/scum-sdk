@@ -14,25 +14,25 @@ typedef struct imu_data_t {
     int16_buff_t gyro_z;
 } imu_data_t;
 
-unsigned int read_gyro_x();
-unsigned int read_gyro_y();
-unsigned int read_gyro_z();
+unsigned int read_gyro_x(void);
+unsigned int read_gyro_y(void);
+unsigned int read_gyro_z(void);
 
 void spi_write(unsigned char writeByte);
 
-unsigned char spi_read();
+unsigned char spi_read(void);
 
-void spi_chip_select();
+void spi_chip_select(void);
 
-void spi_chip_deselect();
+void spi_chip_deselect(void);
 
 void initialize_imu(void);
 
-unsigned int read_acc_y();
+unsigned int read_acc_y(void);
 
-unsigned int read_acc_z();
+unsigned int read_acc_z(void);
 
-void test_imu_life();
+void test_imu_life(void);
 
 unsigned char read_imu_register(unsigned char reg);
 

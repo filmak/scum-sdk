@@ -31,7 +31,7 @@ void spi_write(unsigned char writeByte) {
     GPIO_REG__OUTPUT &= ~(1 << data_pin);  // set data out to 0
 }
 
-unsigned char spi_read() {
+unsigned char spi_read(void) {
     unsigned char readByte;
     int j;
     int t = 0;
@@ -50,7 +50,7 @@ unsigned char spi_read() {
     return readByte;
 }
 
-void spi_chip_select() {
+void spi_chip_select(void) {
     int t = 0;
     int dout_pin = DATA_PIN;
     int cs_pin = CS_PIN;
@@ -60,7 +60,7 @@ void spi_chip_select() {
     for (t = 0; t < 50; t++);
 }
 
-void spi_chip_deselect() {
+void spi_chip_deselect(void) {
     int cs_pin = CS_PIN;
     // hold chip select high to deselect the chip
     GPIO_REG__OUTPUT |= (1 << cs_pin);
@@ -75,7 +75,7 @@ void initialize_imu(void) {
     for (i = 0; i < 50000; i++);
 }
 
-unsigned int read_acc_x() {
+unsigned int read_acc_x(void) {
     unsigned int acc_x;
     unsigned char read_byte;
     unsigned char write_byte = 0x2D;
@@ -87,7 +87,7 @@ unsigned int read_acc_x() {
     return acc_x;
 }
 
-unsigned int read_acc_y() {
+unsigned int read_acc_y(void) {
     unsigned int acc_y;
     unsigned char read_byte;
     unsigned char write_byte = 0x2F;
@@ -99,7 +99,7 @@ unsigned int read_acc_y() {
     return acc_y;
 }
 
-unsigned int read_acc_z() {
+unsigned int read_acc_z(void) {
     unsigned int acc_z;
     unsigned char read_byte;
     unsigned char write_byte = 0x31;
@@ -111,7 +111,7 @@ unsigned int read_acc_z() {
     return acc_z;
 }
 
-unsigned int read_gyro_x() {
+unsigned int read_gyro_x(void) {
     unsigned int gyro_x;
     unsigned char read_byte;
     unsigned char write_byte = 0x33;
@@ -123,7 +123,7 @@ unsigned int read_gyro_x() {
     return gyro_x;
 }
 
-unsigned int read_gyro_y() {
+unsigned int read_gyro_y(void) {
     unsigned int gyro_y;
     unsigned char read_byte;
     unsigned char write_byte = 0x35;
@@ -135,7 +135,7 @@ unsigned int read_gyro_y() {
     return gyro_y;
 }
 
-unsigned int read_gyro_z() {
+unsigned int read_gyro_z(void) {
     unsigned int gyro_z;
     unsigned char read_byte;
     unsigned char write_byte = 0x37;
@@ -147,7 +147,7 @@ unsigned int read_gyro_z() {
     return gyro_z;
 }
 
-void test_imu_life() {
+void test_imu_life(void) {
     int i = 0;
     unsigned char read_byte;
     unsigned char write_byte = 0x00;

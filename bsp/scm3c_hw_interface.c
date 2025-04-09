@@ -1106,8 +1106,6 @@ void set_sys_clk_secondary_freq(unsigned int coarse, unsigned int fine) {
 }
 
 void initialize_mote() {
-    int t;
-
     scm3c_hw_interface_init();
     optical_init();
     radio_init();
@@ -1177,7 +1175,9 @@ void initialize_mote() {
     // Init counter setup - set all to analog_cfg control
     // scm3c_hw_interface_vars.ASC[0] is leftmost
     // scm3c_hw_interface_vars.ASC[0] |= 0x6F800000;
-    for (t = 2; t < 9; t++) set_asc_bit(t);
+    for (uint8_t t = 2; t < 9; t++) {
+        set_asc_bit(t);
+    }
 
     // Init RX
     radio_init_rx_MF();
@@ -1212,7 +1212,6 @@ void initialize_mote() {
 unsigned int estimate_temperature_2M_32k() {
     unsigned int rdata_lsb, rdata_msb;
     unsigned int count_2M, count_32k;
-    int t;
 
     // Reset all counters
     ANALOG_CFG_REG__0 = 0x0000;

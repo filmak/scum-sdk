@@ -967,7 +967,7 @@ void RF_Handler(void) {
 
 // This ISR goes off when the raw chip shift register interrupt goes high
 // It reads the current 32 bits and then prints them out after N cycles
-void RAWCHIPS_32_Handler() {
+void RAWCHIPS_32_Handler(void) {
 
     // Read 32bit val
     unsigned int rdata_lsb = ANALOG_CFG_REG__17;
@@ -1006,7 +1006,7 @@ void RAWCHIPS_32_Handler() {
 // With HCLK = 5MHz, data rate of 1.25MHz tested OK
 // For faster data rate, will need to raise the HCLK frequency
 // This ISR goes off when the input register matches the target value
-void RAWCHIPS_STARTVAL_Handler() {
+void RAWCHIPS_STARTVAL_Handler(void) {
     unsigned int rdata_lsb, rdata_msb;
 
     // Clear all interrupts
