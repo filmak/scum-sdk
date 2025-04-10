@@ -27,8 +27,11 @@ SRCS += \
 	#
 
 INCLUDES += \
+	$(CURDIR) \
 	$(BASE_DIR)/bsp \
 	#
+
+$(info $(INCLUDES))
 
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-ld
