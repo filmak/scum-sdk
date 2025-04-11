@@ -28,6 +28,7 @@ SRCS += \
 
 INCLUDES += \
 	$(CURDIR) \
+	$(BASE_DIR)/bsp/cmsis \
 	$(BASE_DIR)/bsp \
 	#
 
