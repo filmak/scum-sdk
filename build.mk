@@ -24,6 +24,7 @@ SRCS += \
 	$(BASE_DIR)/bsp/syscalls.c \
 	$(BASE_DIR)/bsp/tuning.c \
 	$(BASE_DIR)/bsp/uart.c \
+	$(addprefix $(CURDIR)/, $(APP_SRCS)) \
 	#
 
 INCLUDES += \
@@ -85,7 +86,7 @@ $(OBJ_DIR):
 	$(NO_ECHO)$(MKDIR) -p $(OBJ_DIR)
 
 $(OBJ_DIR)/%.o: %.c $(OBJ_DIR) $(MAKEFILE_LIST)
-	@echo "Compiling $<"
+	@echo "Building $<"
 	$(NO_ECHO)$(MKDIR) -p $(dir $@)
 	$(NO_ECHO)$(CC) -c -o $@ $< $(CFLAGS)
 

@@ -1,6 +1,6 @@
 APPLICATION = hello_world
 SCUM_SDK_DIR ?= $(CURDIR)/../../
-SRCS = \
+APP_SRCS = \
 	main.c \
 	#
 
