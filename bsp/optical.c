@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "memory_map.h"
+#include "scum.h"
 #include "radio.h"
 #include "scm3c_hw_interface.h"
 #include "scum_defs.h"
@@ -41,8 +41,8 @@ void optical_init(void) {
 }
 
 void optical_enable(void) {
-    ISER = 0x1800;  // 1 is for enabling GPIO8 ext interrupt (3WB cal) and 8 is
-                    // for enabling optical interrupt
+    NVIC_EnableIRQ(EXT_GPIO8_ACTIVEHIGH_IRQn);
+    NVIC_EnableIRQ(OPTICAL_SFD_IRQn);
 }
 
 void perform_calibration(void) {
@@ -78,8 +78,8 @@ void EXT_OPTICAL_IRQ_IN_Handler(void) {
     // int t;
 
     // 32-bit register is analog_rdata[335:304]
-    // LSBs = ANALOG_CFG_REG__19; //16 LSBs
-    // MSBs = ANALOG_CFG_REG__20; //16 MSBs
+    // LSBs = SCUM_ANALOG_CFG_REG_19; //16 LSBs
+    // MSBs = SCUM_ANALOG_CFG_REG_20; //16 MSBs
     // optical_shiftreg = (MSBs << 16) + LSBs;
 
     // Toggle GPIO 0
@@ -106,40 +106,30 @@ void OPTICAL_SFD_Handler(void) {
     uint32_t IF_fine = scm3c_hw_interface_get_IF_fine();
 
     // Disable all counters
-    ANALOG_CFG_REG__0 = 0x007F;
+    SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
     // Keep track of how many calibration iterations have been completed
 
     // Read 32k counter
-    uint32_t rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
-    uint32_t rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
-    uint32_t count_32k = rdata_lsb + (rdata_msb << 16);
+    uint32_t count_32k = SCUM_ANALOG_CFG_REG_0 + (SCUM_ANALOG_CFG_REG_1 << 16);
 
     // Read HF_CLOCK counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x100000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x140000);
-    uint32_t count_HFclock = rdata_lsb + (rdata_msb << 16);
+    uint32_t count_HFclock = SCUM_ANALOG_CFG_REG_4 + (SCUM_ANALOG_CFG_REG_5 << 16);
 
     // Read 2M counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
-    uint32_t count_2M = rdata_lsb + (rdata_msb << 16);
+    uint32_t count_2M = SCUM_ANALOG_CFG_REG_6 + (SCUM_ANALOG_CFG_REG_7 << 16);
 
     // Read LC_div counter (via counter4)
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
-    uint32_t count_LC = rdata_lsb + (rdata_msb << 16);
+    uint32_t count_LC = SCUM_ANALOG_CFG_REG_10 + (SCUM_ANALOG_CFG_REG_11 << 16);
 
     // Read IF ADC_CLK counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x300000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x340000);
-    uint32_t count_IF = rdata_lsb + (rdata_msb << 16);
+    uint32_t count_IF = SCUM_ANALOG_CFG_REG_12 + (SCUM_ANALOG_CFG_REG_13 << 16);
 
     // Reset all counters
-    ANALOG_CFG_REG__0 = 0x0000;
+    SCUM_ANALOG_CFG_REG_0 = 0x0000;
 
     // Enable all counters
-    ANALOG_CFG_REG__0 = 0x3FFF;
+    SCUM_ANALOG_CFG_REG_0 = 0x3FFF;
 
     // Don't make updates on the first two executions of this ISR
     if (optical_vars.optical_cal_iteration > 2) {
@@ -246,7 +236,8 @@ void OPTICAL_SFD_Handler(void) {
 
     if (optical_vars.optical_cal_iteration == 25) {
         // Disable this ISR
-        ICER = 0x1800;
+        NVIC_DisableIRQ(EXT_GPIO8_ACTIVEHIGH_IRQn);
+        NVIC_DisableIRQ(OPTICAL_SFD_IRQn);
         optical_vars.optical_cal_iteration = 0;
         optical_vars.optical_cal_finished = 1;
 
@@ -273,6 +264,6 @@ void OPTICAL_SFD_Handler(void) {
         // radio_disable_all();
 
         // Halt all counters
-        ANALOG_CFG_REG__0 = 0x0000;
+        SCUM_ANALOG_CFG_REG_0 = 0x0000;
     }
 }

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "memory_map.h"
+#include "scum.h"
 #include "scm3c_hw_interface.h"
 
 // Number of ADC outputs to trigger for a single read.
@@ -69,7 +69,7 @@ static bool g_adc_output_valid = false;
 // ADC interrupt service routine.
 void ADC_Handler(void) {
     // printf("ADC conversion complete.\n");
-    g_adc_output = ADC_REG__DATA;
+    g_adc_output = SCUM_ADC_DATA;
     g_adc_output_valid = true;
 }
 
@@ -191,18 +191,18 @@ void adc_config(const adc_config_t* adc_config) {
 }
 
 void adc_enable_interrupt(void) {
-    ISER |= (0x1 << 3);
-    printf("ADC interrupt enabled: 0x%x.\n", ISER);
+    NVIC_EnableIRQ(ADC_IRQn);
+    printf("ADC interrupt enabled: 0x%08lx.\n", *NVIC->ISER);
 }
 
 void adc_disable_interrupt(void) {
-    ICER |= (0x1 << 3);
-    printf("ADC interrupt disabled: 0x%x.\n", ICER);
+    NVIC_DisableIRQ(ADC_IRQn);
+    printf("ADC interrupt disabled: 0x%08lx.\n", *NVIC->ICER);
 }
 
 void adc_trigger(void) {
     g_adc_output_valid = false;
-    ADC_REG__START = 0x1;
+    SCUM_ADC_START = 0x1;
 }
 
 bool adc_output_valid(void) { return g_adc_output_valid; }

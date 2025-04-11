@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "scum.h"
 #include "helpers.h"
 #include "gpio.h"
-#include "memory_map.h"
 #include "rftimer.h"
 #include "scm3c_hw_interface.h"
 
@@ -373,22 +373,22 @@ void radio_init(void) {
     radio_vars.frequency_update_rate = FREQ_UPDATE_RATE;
 
     // Enable radio interrupts in NVIC
-    ISER = 0x40;
+    NVIC_EnableIRQ(RF_IRQn);
 
     // enable sfd done and send done interruptions of tranmission
     // enable sfd done and receiving done interruptions of reception
-    RFCONTROLLER_REG__INT_CONFIG = TX_LOAD_DONE_INT_EN | TX_SFD_DONE_INT_EN |
+    SCUM_RF->INT_CONFIG = TX_LOAD_DONE_INT_EN | TX_SFD_DONE_INT_EN |
                                    TX_SEND_DONE_INT_EN | RX_SFD_DONE_INT_EN |
                                    RX_DONE_INT_EN;
 
     // Enable all errors
-    //    RFCONTROLLER_REG__ERROR_CONFIG  = (TX_OVERFLOW_ERROR_EN          |
+    //    SCUM_RF->ERROR_CONFIG  = (TX_OVERFLOW_ERROR_EN          |
     //                                       TX_CUTOFF_ERROR_EN            |
     //                                       RX_OVERFLOW_ERROR_EN          |
     //                                       RX_CRC_ERROR_EN               |
     //                                       RX_CUTOFF_ERROR_EN);
 
-    RFCONTROLLER_REG__ERROR_CONFIG = RX_CRC_ERROR_EN;
+    SCUM_RF->ERROR_CONFIG = RX_CRC_ERROR_EN;
 
     // Set interrupt callbacks
     radio_setStartFrameTxCb(cb_startFrame_tx_radio);
@@ -420,7 +420,7 @@ void radio_setRxCb(radio_rx_cbt radio_rx_cb) {
 
 void radio_reset(void) {
     // reset SCuM radio module
-    RFCONTROLLER_REG__CONTROL = RF_RESET;
+    SCUM_RF->CONTROL = RF_RESET;
 }
 
 void radio_setFrequency(uint8_t frequency, radio_freq_t tx_or_rx) {
@@ -443,10 +443,10 @@ void radio_loadPacket(void* packet, uint16_t len) {
     memcpy(radio_vars.radio_tx_buffer, packet, len);
 
     // load packet in TXFIFO
-    RFCONTROLLER_REG__TX_DATA_ADDR = (char *)radio_vars.radio_tx_buffer;
-    RFCONTROLLER_REG__TX_PACK_LEN = len;
+    SCUM_RF->TX_DATA_ADDR = (uint32_t)radio_vars.radio_tx_buffer;
+    SCUM_RF->TX_PACK_LEN = len;
 
-    RFCONTROLLER_REG__CONTROL = TX_LOAD;
+    SCUM_RF->CONTROL = TX_LOAD;
 }
 
 // Turn on the radio for transmit
@@ -457,20 +457,20 @@ void radio_txEnable() {
 #ifdef DIV_ON
 
     // Turn on DIV if need read LC_count
-    ANALOG_CFG_REG__10 = 0x0068;
+    SCUM_ANALOG_CFG_REG_10 = 0x0068;
 #else
     // Turn on LO, PA, and AUX LDOs
-    ANALOG_CFG_REG__10 = 0x0028;
+    SCUM_ANALOG_CFG_REG_10 = 0x0028;
 #endif
 
     // Turn off polyphase and disable mixer
-    ANALOG_CFG_REG__16 = 0x6;
+    SCUM_ANALOG_CFG_REG_16 = 0x6;
 }
 
 // Begin modulating the radio output for TX
 // Note that you need some delay before txNow() to allow txLoad() to finish
 // loading the packet
-void radio_txNow() { RFCONTROLLER_REG__CONTROL = TX_SEND; }
+void radio_txNow() { SCUM_RF->CONTROL = TX_SEND; }
 
 // Turn on the radio for receive
 // This should be done at least ~50 us before rxNow()
@@ -481,33 +481,33 @@ void radio_rxEnable() {
 
     // Aux is inverted (0 = on)
     // Memory-mapped LDO control
-    // ANALOG_CFG_REG__10 = AUX_EN | DIV_EN | PA_EN | IF_EN | LO_EN | PA_MUX |
+    // SCUM_ANALOG_CFG_REG_10 = AUX_EN | DIV_EN | PA_EN | IF_EN | LO_EN | PA_MUX |
     // IF_MUX | LO_MUX For MUX signals, '1' = FSM control, '0' = memory mapped
     // control For EN signals, '1' = turn on LDO
 #ifdef DIV_ON
-    ANALOG_CFG_REG__10 = 0x0058;
+    SCUM_ANALOG_CFG_REG_10 = 0x0058;
 #else
-    ANALOG_CFG_REG__10 = 0x0018;
+    SCUM_ANALOG_CFG_REG_10 = 0x0018;
 #endif
 
     // Enable polyphase and mixers via memory-mapped I/O
-    ANALOG_CFG_REG__16 = 0x1;
+    SCUM_ANALOG_CFG_REG_16 = 0x1;
 
     // Where packet will be stored in memory
-    DMA_REG__RF_RX_ADDR = (volatile char *)radio_vars.radio_rx_buffer;
+    SCUM_DMA_RF_RX_ADDR = (uint8_t *)radio_vars.radio_rx_buffer;
 
     // Reset radio FSM
-    RFCONTROLLER_REG__CONTROL = RF_RESET;
+    SCUM_RF->CONTROL = RF_RESET;
 }
 
 // Radio will begin searching for start of packet
 void radio_rxNow() {
     // Reset digital baseband
-    ANALOG_CFG_REG__4 = 0x2000;
-    ANALOG_CFG_REG__4 = 0x2800;
+    SCUM_ANALOG_CFG_REG_4 = 0x2000;
+    SCUM_ANALOG_CFG_REG_4 = 0x2800;
 
     // Start RX FSM
-    RFCONTROLLER_REG__CONTROL = RX_START;
+    SCUM_RF->CONTROL = RX_START;
 }
 
 void radio_getReceivedFrame(uint8_t* pBufRead, uint8_t* pLenRead,
@@ -528,7 +528,7 @@ void radio_getReceivedFrame(uint8_t* pBufRead, uint8_t* pLenRead,
 }
 void radio_rfOn(void) {
     // clear reset pin
-    RFCONTROLLER_REG__CONTROL &= ~RF_RESET;
+    SCUM_RF->CONTROL &= ~RF_RESET;
 }
 
 void radio_rfOff(void) {
@@ -536,10 +536,10 @@ void radio_rfOff(void) {
     radio_reset();
 
     // Hold digital baseband in reset
-    ANALOG_CFG_REG__4 = 0x2000;
+    SCUM_ANALOG_CFG_REG_4 = 0x2000;
 
     // Turn off LDOs
-    ANALOG_CFG_REG__10 = 0x0000;
+    SCUM_ANALOG_CFG_REG_10 = 0x0000;
 }
 
 void radio_frequency_housekeeping(uint32_t IF_estimate,
@@ -670,21 +670,21 @@ void radio_frequency_housekeeping(uint32_t IF_estimate,
 
 void radio_enable_interrupts(void) {
     // Enable radio interrupts in NVIC
-    ISER = 0x40;
+    NVIC_EnableIRQ(RF_IRQn);
 }
 
 void radio_disable_interrupts(void) {
     // Clear radio interrupts in NVIC
-    ICER = 0x40;
+    NVIC_DisableIRQ(RF_IRQn);
 }
 
 bool radio_getCrcOk(void) { return radio_vars.crc_ok; }
 
 uint32_t radio_getIFestimate(void) { return read_IF_estimate(); }
 
-uint32_t radio_getLQIchipErrors(void) { return ANALOG_CFG_REG__21; }
+uint32_t radio_getLQIchipErrors(void) { return SCUM_ANALOG_CFG_REG_21; }
 
-int16_t radio_get_cdr_tau_value(void) { return ANALOG_CFG_REG__25; }
+int16_t radio_get_cdr_tau_value(void) { return SCUM_ANALOG_CFG_REG_25; }
 
 //=========================== private =========================================
 
@@ -701,7 +701,6 @@ void setFrequencyTX(uint8_t channel) {
 }
 
 uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
-    uint32_t rdata_lsb, rdata_msb;
     uint32_t count_LC[16];
     uint32_t count_targets[17];
 
@@ -717,21 +716,19 @@ uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
         // analog_scan_chain_load_3B_fromFPGA();
 
         // Reset all counters
-        ANALOG_CFG_REG__0 = 0x0000;
+        SCUM_ANALOG_CFG_REG_0 = 0x0000;
 
         // Enable all counters
-        ANALOG_CFG_REG__0 = 0x3FFF;
+        SCUM_ANALOG_CFG_REG_0 = 0x3FFF;
 
         // Count for some arbitrary amount of time
         busy_wait_cycles(16000);
 
         // Disable all counters
-        ANALOG_CFG_REG__0 = 0x007F;
+        SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
         // Read count result
-        rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-        rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
-        count_LC[i] = rdata_lsb + (rdata_msb << 16);
+        count_LC[i] = SCUM_ANALOG_CFG_REG_10 + (SCUM_ANALOG_CFG_REG_11 << 16);
 
         count_targets[i + 1] = ((961 + (i + 1) * 2) * count_LC[0]) / 961;
 
@@ -766,7 +763,6 @@ uint32_t build_RX_channel_table(uint32_t channel_11_LC_code) {
 
 void build_TX_channel_table(unsigned int channel_11_LC_code,
                             unsigned int count_LC_RX_ch11) {
-    unsigned int rdata_lsb, rdata_msb;
     int i = 0;
     unsigned int count_LC[16] = {0};
     unsigned int count_targets[17] = {0};
@@ -786,21 +782,19 @@ void build_TX_channel_table(unsigned int channel_11_LC_code,
         // analog_scan_chain_load_3B_fromFPGA();
 
         // Reset all counters
-        ANALOG_CFG_REG__0 = 0x0000;
+        SCUM_ANALOG_CFG_REG_0 = 0x0000;
 
         // Enable all counters
-        ANALOG_CFG_REG__0 = 0x3FFF;
+        SCUM_ANALOG_CFG_REG_0 = 0x3FFF;
 
         // Count for some arbitrary amount of time
         busy_wait_cycles(16000);
 
         // Disable all counters
-        ANALOG_CFG_REG__0 = 0x007F;
+        SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
         // Read count result
-        rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-        rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
-        count_LC[i] = rdata_lsb + (rdata_msb << 16);
+        count_LC[i] = SCUM_ANALOG_CFG_REG_10 + (SCUM_ANALOG_CFG_REG_11 << 16);
 
         // Until figure out why modulation spacing is only 800kHz, only set
         // 400khz above RF channel
@@ -854,8 +848,8 @@ void radio_build_channel_table(uint32_t channel_11_LC_code) {
 //=========================== intertupt =======================================
 
 void RF_Handler(void) {
-    unsigned int interrupt = RFCONTROLLER_REG__INT;
-    unsigned int error = RFCONTROLLER_REG__ERROR;
+    unsigned int interrupt = SCUM_RF->INT;
+    unsigned int error = SCUM_RF->ERROR;
 
     gpio_2_set();
     gpio_6_set();
@@ -894,14 +888,14 @@ void RF_Handler(void) {
 #endif
         }
     }
-    RFCONTROLLER_REG__ERROR_CLEAR = error;
+    SCUM_RF->ERROR_CLEAR = error;
 
     if (interrupt & 0x00000001) {
 #ifdef ENABLE_PRINTF
         printf("TX LOAD DONE\r\n");
 #endif
 
-        RFCONTROLLER_REG__INT_CLEAR |= 0x00000001;
+        SCUM_RF->INT_CLEAR |= 0x00000001;
     }
 
     if (interrupt & 0x00000002) {
@@ -910,10 +904,10 @@ void RF_Handler(void) {
 #endif
 
         if (radio_vars.startFrame_tx_cb != 0) {
-            radio_vars.startFrame_tx_cb(RFTIMER_REG__COUNTER);
+            radio_vars.startFrame_tx_cb(SCUM_RFTIMER->COUNTER);
         }
 
-        RFCONTROLLER_REG__INT_CLEAR |= 0x00000002;
+        SCUM_RF->INT_CLEAR |= 0x00000002;
     }
 
     if (interrupt & 0x00000004) {
@@ -922,10 +916,10 @@ void RF_Handler(void) {
 #endif
 
         if (radio_vars.endFrame_tx_cb != 0) {
-            radio_vars.endFrame_tx_cb(RFTIMER_REG__COUNTER);
+            radio_vars.endFrame_tx_cb(SCUM_RFTIMER->COUNTER);
         }
 
-        RFCONTROLLER_REG__INT_CLEAR |= 0x00000004;
+        SCUM_RF->INT_CLEAR |= 0x00000004;
     }
 
     if (interrupt & 0x00000008) {
@@ -934,10 +928,10 @@ void RF_Handler(void) {
 #endif
 
         if (radio_vars.startFrame_rx_cb != 0) {
-            radio_vars.startFrame_rx_cb(RFTIMER_REG__COUNTER);
+            radio_vars.startFrame_rx_cb(SCUM_RFTIMER->COUNTER);
         }
 
-        RFCONTROLLER_REG__INT_CLEAR |= 0x00000008;
+        SCUM_RF->INT_CLEAR |= 0x00000008;
     }
 
     if (interrupt & 0x00000010) {
@@ -946,13 +940,13 @@ void RF_Handler(void) {
 #endif
 
         if (radio_vars.endFrame_rx_cb != 0) {
-            radio_vars.endFrame_rx_cb(RFTIMER_REG__COUNTER);
+            radio_vars.endFrame_rx_cb(SCUM_RFTIMER->COUNTER);
         }
 
-        RFCONTROLLER_REG__INT_CLEAR |= 0x00000010;
+        SCUM_RF->INT_CLEAR |= 0x00000010;
     }
 
-    //    RFCONTROLLER_REG__INT_CLEAR = interrupt;
+    //    SCUM_RF->INT_CLEAR = interrupt;
 
     gpio_2_clr();
     gpio_6_clr();
@@ -963,8 +957,8 @@ void RF_Handler(void) {
 void RAWCHIPS_32_Handler(void) {
 
     // Read 32bit val
-    unsigned int rdata_lsb = ANALOG_CFG_REG__17;
-    unsigned int rdata_msb = ANALOG_CFG_REG__18;
+    unsigned int rdata_lsb = SCUM_ANALOG_CFG_REG_17;
+    unsigned int rdata_msb = SCUM_ANALOG_CFG_REG_18;
     chips[chip_index] = rdata_lsb + (rdata_msb << 16);
 
     chip_index++;
@@ -972,20 +966,20 @@ void RAWCHIPS_32_Handler(void) {
     // printf("x1\r\n");
 
     // Clear the interrupt
-    // ANALOG_CFG_REG__0 = 1;
-    // ANALOG_CFG_REG__0 = 0;
+    // SCUM_ANALOG_CFG_REG_0 = 1;
+    // SCUM_ANALOG_CFG_REG_0 = 0;
     acfg3_val |= 0x20;
-    ANALOG_CFG_REG__3 = acfg3_val;
+    SCUM_ANALOG_CFG_REG_3 = acfg3_val;
     acfg3_val &= ~(0x20);
-    ANALOG_CFG_REG__3 = acfg3_val;
+    SCUM_ANALOG_CFG_REG_3 = acfg3_val;
 
     if (chip_index == 10) {
         for (uint8_t jj = 1; jj < 10; jj++) {
             printf("%X\r\n", chips[jj]);
         }
 
-        ICER = 0x0100;
-        ISER = 0x0200;
+        NVIC_DisableIRQ(RAWCHIPS_STARTVAL_IRQn);
+        NVIC_EnableIRQ(RAWCHIPS_32_IRQn);
         chip_index = 0;
 
         // Wait for print to complete
@@ -1004,18 +998,18 @@ void RAWCHIPS_STARTVAL_Handler(void) {
 
     // Clear all interrupts
     acfg3_val |= 0x60;
-    ANALOG_CFG_REG__3 = acfg3_val;
+    SCUM_ANALOG_CFG_REG_3 = acfg3_val;
     acfg3_val &= ~(0x60);
-    ANALOG_CFG_REG__3 = acfg3_val;
+    SCUM_ANALOG_CFG_REG_3 = acfg3_val;
 
     // Enable the interrupt for the 32bit
-    ISER = 0x0200;
-    ICER = 0x0100;
-    ICPR = 0x0200;
+    NVIC_EnableIRQ(RAWCHIPS_32_IRQn);
+    NVIC_DisableIRQ(RAWCHIPS_STARTVAL_IRQn);
+    NVIC_ClearPendingIRQ(RAWCHIPS_32_IRQn);
 
     // Read 32bit val
-    rdata_lsb = ANALOG_CFG_REG__17;
-    rdata_msb = ANALOG_CFG_REG__18;
+    rdata_lsb = SCUM_ANALOG_CFG_REG_17;
+    rdata_msb = SCUM_ANALOG_CFG_REG_18;
     chips[chip_index] = rdata_lsb + (rdata_msb << 16);
     chip_index++;
 

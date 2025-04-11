@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "scum.h"
+
 // linker symbols for memory sections
 extern uint32_t _stext;
 extern uint32_t _etext;
@@ -114,8 +116,14 @@ void Reset_Handler(void) {
         *pDest++ = 0;
     }
 
-    // Initialize newlib libc
-    __libc_init_array();
+    // Initialize constructors (but calling it triggers a Hard Fault)
+    // __libc_init_array();
+
+    puts("");
+    puts("-------------------");
+    puts("-- Booting SCUM! --");
+    puts("-------------------");
+    puts("");
 
     main();
 

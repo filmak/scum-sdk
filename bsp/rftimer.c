@@ -1,9 +1,8 @@
-#include "rftimer.h"
-
 #include <stdio.h>
 #include <string.h>
 
-#include "memory_map.h"
+#include "scum.h"
+#include "rftimer.h"
 #include "radio.h"
 #include "scm3c_hw_interface.h"
 
@@ -33,18 +32,6 @@ unsigned int timer_durations[NUM_INTERRUPTS];  // indicates length each COMPARE
                                                // interrupt was set to run for.
                                                // Used for repeating delay.
 
-unsigned int* RF_TIMER_REG_ADDRESSES[] = {
-    RFTIMER_REG__COMPARE0_ADDR, RFTIMER_REG__COMPARE1_ADDR,
-    RFTIMER_REG__COMPARE2_ADDR, RFTIMER_REG__COMPARE3_ADDR,
-    RFTIMER_REG__COMPARE4_ADDR, RFTIMER_REG__COMPARE5_ADDR,
-    RFTIMER_REG__COMPARE6_ADDR, RFTIMER_REG__COMPARE7_ADDR};
-
-unsigned int* RF_TIMER_REG_CONTROL_ADDRESES[] = {
-    RFTIMER_REG__COMPARE0_CONTROL_ADDR, RFTIMER_REG__COMPARE1_CONTROL_ADDR,
-    RFTIMER_REG__COMPARE2_CONTROL_ADDR, RFTIMER_REG__COMPARE3_CONTROL_ADDR,
-    RFTIMER_REG__COMPARE4_CONTROL_ADDR, RFTIMER_REG__COMPARE5_CONTROL_ADDR,
-    RFTIMER_REG__COMPARE6_CONTROL_ADDR, RFTIMER_REG__COMPARE7_CONTROL_ADDR};
-
 // ========================== prototype =======================================
 
 void handle_interrupt(uint8_t id);
@@ -55,9 +42,9 @@ void rftimer_init(void) {
     memset(&rftimer_vars, 0, sizeof(rftimer_vars_t));
 
     // set period of radiotimer
-    RFTIMER_REG__MAX_COUNT = RFTIMER_MAX_COUNT;
+    SCUM_RFTIMER->MAX_COUNT = RFTIMER_MAX_COUNT;
     // enable timer and interrupt
-    RFTIMER_REG__CONTROL = 0x07;
+    SCUM_RFTIMER->CONTROL = 0x07;
 }
 
 void rftimer_set_callback(rftimer_cbt cb) { rftimer_set_callback_by_id(cb, 0); }
@@ -86,21 +73,21 @@ void rftimer_setCompareIn_by_id(uint32_t val, uint8_t id) {
     //           manually trigger an interrupt
     //       LARGEST_INTERVAL is application defined value.
 
-    if ((val & RFTIMER_MAX_COUNT) - RFTIMER_REG__COUNTER < LARGEST_INTERVAL) {
+    if ((val & RFTIMER_MAX_COUNT) - SCUM_RFTIMER->COUNTER < LARGEST_INTERVAL) {
     } else {
         // seems doesn't work?
-        RFTIMER_REG__INT = 0x0001;
+        SCUM_RFTIMER->INT = 0x0001;
     }
 
-    *RF_TIMER_REG_ADDRESSES[id] = val & RFTIMER_MAX_COUNT;
+    SCUM_RFTIMER->COMPARE[id] = val & RFTIMER_MAX_COUNT;
 }
 
-uint32_t rftimer_readCounter(void) { return RFTIMER_REG__COUNTER; }
+uint32_t rftimer_readCounter(void) { return SCUM_RFTIMER->COUNTER; }
 
 // Enables the RF timer interrupt, which is required for individually enabled
 // timer registers to fire. Any calls to rftimer_enable_interrupts_by_id must
 // be followed (or preceded) by a call to this function.
-void rftimer_enable_interrupts(void) { ISER = 0x80; }
+void rftimer_enable_interrupts(void) { NVIC_EnableIRQ(RFTIMER_IRQn);}
 
 // Enables the RF timer interrupt for a specific timer register. The RF timer
 // interrupt must be enabled for any timer compare registers to fire the
@@ -110,7 +97,7 @@ void rftimer_enable_interrupts_by_id(uint8_t id) {
     rftimer_clear_interrupts_by_id(id);
 
     // enable compare interrupt (this also cancels any pending interrupts)
-    *RF_TIMER_REG_CONTROL_ADDRESES[id] =
+    SCUM_RFTIMER->COMPARE_CONTROL[id] =
         RFTIMER_COMPARE_ENABLE | RFTIMER_COMPARE_INTERRUPT_ENABLE;
 }
 
@@ -118,18 +105,18 @@ void rftimer_enable_interrupts_by_id(uint8_t id) {
 // registers from firing the interrupt, but will not disable the registers
 // themselves. To disable a specific timer compare register, use
 // rftimer_disable_interrupts_by_id.
-void rftimer_disable_interrupts(void) { ICER = 0x80; }
+void rftimer_disable_interrupts(void) { NVIC_DisableIRQ(RFTIMER_IRQn); }
 
 // Disables the RF timer interrupt for a specific timer register.
 void rftimer_disable_interrupts_by_id(uint8_t id) {
     // disable compare interrupt
-    *RF_TIMER_REG_CONTROL_ADDRESES[id] = 0x0000;
+    SCUM_RFTIMER->COMPARE_CONTROL[id] = 0x0000;
 }
 
 void rftimer_clear_interrupts(void) { rftimer_clear_interrupts_by_id(0); }
 
 void rftimer_clear_interrupts_by_id(uint8_t id) {
-    RFTIMER_REG__INT_CLEAR = (uint32_t)(((uint32_t)0x0001) << id);
+    SCUM_RFTIMER->INT_CLEAR = (uint32_t)(((uint32_t)0x0001) << id);
 }
 
 // Sets a flag indicating whether to make the desired interrupt repeat right
@@ -148,8 +135,8 @@ void rftimer_set_repeat(bool should_repeat, uint8_t id) {
  */
 void delay_milliseconds_asynchronous(unsigned int delay_milli, uint8_t id) {
     // RF TIMER is derived from HF timer (20MHz) through a divide ratio of 40,
-    // thus it is 500kHz. the count defined by RFTIMER_REG__MAX_COUNT and
-    // RFTIMER_REG__COMPARE1 indicate how many counts the timer should go
+    // thus it is 500kHz. the count defined by SCUM_RFTIMER->MAX_COUNT and
+    // SCUM_RFTIMER->COMPARE1 indicate how many counts the timer should go
     // through before triggering an interrupt. This is the basis for the
     // following calculation. For example a count of 0x0000C350 corresponds to
     // 100ms.
@@ -181,7 +168,7 @@ void RFTIMER_Handler(void) {
     int i = 0;
     int interrupt_id = 1;
 
-    interrupt = RFTIMER_REG__INT;
+    interrupt = SCUM_RFTIMER->INT;
 
     for (i = 0; i < 8; i++) {
         if (interrupt & interrupt_id) {
@@ -197,53 +184,53 @@ void RFTIMER_Handler(void) {
 
     if (interrupt & 0x00000100) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE0 TRIGGERED AT: 0x%x\r\n", RFTIMER_REG__CAPTURE0);
+        printf("CAPTURE0 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[0]);
 #endif
     }
 
     if (interrupt & 0x00000200) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE1 TRIGGERED AT: 0x%x\r\n", RFTIMER_REG__CAPTURE1);
+        printf("CAPTURE1 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[1]);
 #endif
     }
 
     if (interrupt & 0x00000400) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE2 TRIGGERED AT: 0x%x\r\n", RFTIMER_REG__CAPTURE2);
+        printf("CAPTURE2 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[2]);
 #endif
     }
 
     if (interrupt & 0x00000800) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE3 TRIGGERED AT: 0x%x\r\n", RFTIMER_REG__CAPTURE3);
+        printf("CAPTURE3 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[3]);
 #endif
     }
 
     if (interrupt & 0x00001000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE0 OVERFLOW AT: 0x%x\r\n", RFTIMER_REG__CAPTURE0);
+        printf("CAPTURE0 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[0]);
 #endif
     }
 
     if (interrupt & 0x00002000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE1 OVERFLOW AT: 0x%x\r\n", RFTIMER_REG__CAPTURE1);
+        printf("CAPTURE1 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[1]);
 #endif
     }
 
     if (interrupt & 0x00004000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE2 OVERFLOW AT: 0x%x\r\n", RFTIMER_REG__CAPTURE2);
+        printf("CAPTURE2 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[2]);
 #endif
     }
 
     if (interrupt & 0x00008000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE3 OVERFLOW AT: 0x%x\r\n", RFTIMER_REG__CAPTURE3);
+        printf("CAPTURE3 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[3]);
 #endif
     }
 
-    RFTIMER_REG__INT_CLEAR = interrupt;
+    SCUM_RFTIMER->INT_CLEAR = interrupt;
 }
 
 void handle_interrupt(uint8_t id) {

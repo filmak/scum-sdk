@@ -1,10 +1,9 @@
-#include "helpers.h"
-#include "scm3c_hw_interface.h"
-
 #include <stdio.h>
 #include <string.h>
 
-#include "memory_map.h"
+#include "scum.h"
+#include "helpers.h"
+#include "scm3c_hw_interface.h"
 #include "optical.h"
 #include "radio.h"
 #include "rftimer.h"
@@ -344,7 +343,7 @@ void init_ldo_control(void) {
     set_asc_bit(516);    // = master_ldo_en_div
 
     // Initialize all radio LDOs off but leave AUX on
-    ANALOG_CFG_REG__10 = 0x0000;
+    SCUM_ANALOG_CFG_REG_10 = 0x0000;
 
     // AUX LDO Control:
     // ASC<914> chooses whether ASC<916> or analog_cfg<167> controls LDO
@@ -355,12 +354,12 @@ void init_ldo_control(void) {
     // set_asc_bit(916);
 
     // Initialize all radio LDOs and AUX to off
-    // ANALOG_CFG_REG__10 = 0x0000;
+    // SCUM_ANALOG_CFG_REG_10 = 0x0000;
 
     // Examples of controlling AUX LDO:
 
     // Turn on aux ldo from analog_cfg<167>
-    // ANALOG_CFG_REG__10 = 0x0080;
+    // SCUM_ANALOG_CFG_REG_10 = 0x0080;
 
     // Aux LDO  = off via ASC
     // clear_asc_bit(914);
@@ -371,7 +370,7 @@ void init_ldo_control(void) {
     // clear_asc_bit(916);
 
     // Memory-mapped LDO control
-    // ANALOG_CFG_REG__10 = AUX_EN | DIV_EN | PA_EN | IF_EN | LO_EN | PA_MUX |
+    // SCUM_ANALOG_CFG_REG_10 = AUX_EN | DIV_EN | PA_EN | IF_EN | LO_EN | PA_MUX |
     // IF_MUX | LO_MUX For MUX signals, '1' = FSM control, '0' = memory mapped
     // control For EN signals, '1' = turn on LDO (except for AUX which is
     // inverted)
@@ -379,16 +378,16 @@ void init_ldo_control(void) {
     // Some examples:
 
     // Assert all PON_XX signals for the radio via memory mapped register
-    // ANALOG_CFG_REG__10 = 0x0078;
+    // SCUM_ANALOG_CFG_REG_10 = 0x0078;
 
     // Turn off all PON_XX signals for the radio via memory mapped register
-    // ANALOG_CFG_REG__10 = 0x0000;
+    // SCUM_ANALOG_CFG_REG_10 = 0x0000;
 
     // Turn on only LO via memory mapped register
-    // ANALOG_CFG_REG__10 = 0x0008;
+    // SCUM_ANALOG_CFG_REG_10 = 0x0008;
 
     // Give FSM control of all radio PON signals
-    // ANALOG_CFG_REG__10 = 0x0007;
+    // SCUM_ANALOG_CFG_REG_10 = 0x0007;
 
     // Debug visibility
     // PON signals are available on GPIO<4-7> on bank 5
@@ -768,17 +767,17 @@ void radio_init_rx_MF() {
 
     // Memory mapped config registers
     // analog_cfg[239:224]    AGC        {gain_imbalance_select 1, gain_offset
-    // 3, vga_ctrl_Q_analogcfg 6, vga_ctrl_I_analogcfg 6} ANALOG_CFG_REG__14
+    // 3, vga_ctrl_Q_analogcfg 6, vga_ctrl_I_analogcfg 6} SCUM_ANALOG_CFG_REG_14
     // analog_cfg[255:240]    AGC        {envelope_threshold 4, wait_time 12}
-    // ANALOG_CFG_REG__15
+    // SCUM_ANALOG_CFG_REG_15
     // gain_imbalance_select
     // '0' = subtract 'gain_offset' from Q channel
     // '1' = subtract 'gain_offset' from I channel
     // envelope_threshold = the max-min value of signal that will cause gain
     // reduction wait_time = how long FSM waits for settling before making
     // another adjustment
-    ANALOG_CFG_REG__14 = 0x0000;
-    ANALOG_CFG_REG__15 = 0xA00F;
+    SCUM_ANALOG_CFG_REG_14 = 0x0000;
+    SCUM_ANALOG_CFG_REG_15 = 0xA00F;
 
     // Matched Filter/Clock & Data Recovery
     // Choose output polarity of demod
@@ -790,13 +789,13 @@ void radio_init_rx_MF() {
     // Determined experimentally - unlikely to need to ever change
     tau_shift = 11;
     e_k_shift = 2;
-    ANALOG_CFG_REG__3 = (tau_shift << 11) | (e_k_shift << 7);
+    SCUM_ANALOG_CFG_REG_3 = (tau_shift << 11) | (e_k_shift << 7);
 
     // Threshold used for packet detection
     // This number corresponds to the Hamming distance threshold for determining
     // if incoming 15.4 chip stream is a packet
     correlation_threshold = 5;
-    ANALOG_CFG_REG__9 = correlation_threshold;
+    SCUM_ANALOG_CFG_REG_9 = correlation_threshold;
 
     // Mux select bits to choose internal demod or external clk/data from gpio
     // '0' = on chip, '1' = external from GPIO
@@ -820,14 +819,14 @@ void radio_init_rx_MF() {
     // For polyphase (1=enabled),
     //     mux select signal ASC<746>=0 gives control to ASC<971>
     //    mux select signal ASC<746>=1 gives control to analog_cfg<256> (bit 0
-    //    of ANALOG_CFG_REG__16)
+    //    of SCUM_ANALOG_CFG_REG_16)
     // --
     // For mixers (0=enabled), both I and Q should be enabled for matched filter
     // mode
     //     mux select signals ASC<744>=0 and ASC<745>=0 give control to ASC<298>
     //     and ASC<307>
     //    mux select signals ASC<744>=1 and ASC<745>=1 give control to
-    //    analog_cfg<257> analog_cfg<258> (bits 1 and 2 in ANALOG_CFG_REG__16)
+    //    analog_cfg<257> analog_cfg<258> (bits 1 and 2 in SCUM_ANALOG_CFG_REG_16)
 
     // Set mixer and polyphase control signals to memory mapped I/O
     set_asc_bit(744);
@@ -836,7 +835,7 @@ void radio_init_rx_MF() {
 
     // Enable both polyphase and mixers via memory mapped IO (...001 = 0x1)
     // To disable both you would invert these values (...110 = 0x6)
-    ANALOG_CFG_REG__16 = 0x1;
+    SCUM_ANALOG_CFG_REG_16 = 0x1;
 }
 
 // Must set IF clock frequency AFTER calling this function
@@ -892,7 +891,7 @@ void radio_init_rx_ZCC() {
 
     // Threshold used for packet detection
     correlation_threshold = 5;
-    ANALOG_CFG_REG__9 = correlation_threshold;
+    SCUM_ANALOG_CFG_REG_9 = correlation_threshold;
 
     // Trim comparator offset
     set_IF_comparator_trim_I(0, 10);
@@ -905,8 +904,8 @@ void radio_init_rx_ZCC() {
 
     // Leave baseband held in reset until RX activated
     // RST_B = 0 (it is active low)
-    ANALOG_CFG_REG__4 = 0x2000;
-    ANALOG_CFG_REG__4 = 0x2800;
+    SCUM_ANALOG_CFG_REG_4 = 0x2000;
+    SCUM_ANALOG_CFG_REG_4 = 0x2800;
 }
 
 void radio_init_tx() {
@@ -956,7 +955,7 @@ void radio_init_tx() {
     // -----------------
 
     // Need to set analog_cfg<183> to 1 to select 15.4 for chips out
-    ANALOG_CFG_REG__11 = 0x0080;
+    SCUM_ANALOG_CFG_REG_11 = 0x0080;
 
     // Set current in LC tank
     set_LC_current(127);
@@ -987,31 +986,23 @@ void radio_init_divider(unsigned int div_value) {
 
 void read_counters_3B(unsigned int* count_2M, unsigned int* count_LC,
                       unsigned int* count_adc) {
-    unsigned int rdata_lsb, rdata_msb;  //, count_LC, count_32k;
-
     // Disable all counters
-    ANALOG_CFG_REG__0 = 0x007F;
+    SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
     // Read 2M counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
-    *count_2M = rdata_lsb + (rdata_msb << 16);
+    *count_2M = SCUM_ANALOG_CFG_REG_6 + (SCUM_ANALOG_CFG_REG_7 << 16);
 
     // Read LC_div counter (via counter4)
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x280000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x2C0000);
-    *count_LC = rdata_lsb + (rdata_msb << 16);
+    *count_LC = SCUM_ANALOG_CFG_REG_10 + (SCUM_ANALOG_CFG_REG_11 << 16);
 
     // Read adc counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x300000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x340000);
-    *count_adc = rdata_lsb + (rdata_msb << 16);
+    *count_adc = SCUM_ANALOG_CFG_REG_12 + (SCUM_ANALOG_CFG_REG_12 << 16);
 
     // Reset all counters
-    ANALOG_CFG_REG__0 = 0x0000;
+    SCUM_ANALOG_CFG_REG_0 = 0x0000;
 
     // Enable all counters
-    ANALOG_CFG_REG__0 = 0x3FFF;
+    SCUM_ANALOG_CFG_REG_0 = 0x3FFF;
 
     // printf("LC_count=%X\r\n",*count_LC);
     // printf("2M_count=%X\r\n",*count_2M);
@@ -1021,19 +1012,19 @@ void read_counters_3B(unsigned int* count_2M, unsigned int* count_LC,
 // read IF estimate
 unsigned int read_IF_estimate() {
     // Check valid flag
-    if (ANALOG_CFG_REG__16 & 0x400) {
-        return ANALOG_CFG_REG__16 & 0x3FF;
+    if (SCUM_ANALOG_CFG_REG_16 & 0x400) {
+        return SCUM_ANALOG_CFG_REG_16 & 0x3FF;
     } else {
         return 0;
     }
 }
 
 // Read Link Quality Indicator
-unsigned int read_LQI() { return ANALOG_CFG_REG__21 & 0xFF; }
+unsigned int read_LQI() { return SCUM_ANALOG_CFG_REG_21 & 0xFF; }
 
 // Read RSSI - the gain control settings
 
-unsigned int read_RSSI() { return ANALOG_CFG_REG__15 & 0xF; }
+unsigned int read_RSSI() { return SCUM_ANALOG_CFG_REG_15 & 0xF; }
 
 // set IF clock frequency
 void set_IF_clock_frequency(int coarse, int fine, int high_range) {
@@ -1210,31 +1201,25 @@ void initialize_mote() {
 }
 
 unsigned int estimate_temperature_2M_32k() {
-    unsigned int rdata_lsb, rdata_msb;
-    unsigned int count_2M, count_32k;
 
     // Reset all counters
-    ANALOG_CFG_REG__0 = 0x0000;
+    SCUM_ANALOG_CFG_REG_0 = 0x0000;
 
     // Enable all counters
-    ANALOG_CFG_REG__0 = 0x3FFF;
+    SCUM_ANALOG_CFG_REG_0 = 0x3FFF;
 
     // Count for some arbitrary amount of time
     busy_wait_cycles(50000);
 
 
     // Disable all counters
-    ANALOG_CFG_REG__0 = 0x007F;
+    SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
     // Read 2M counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
-    count_2M = rdata_lsb + (rdata_msb << 16);
+    unsigned int count_2M = SCUM_ANALOG_CFG_REG_6 + (SCUM_ANALOG_CFG_REG_7 << 16);
 
     // Read 32k counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
-    count_32k = rdata_lsb + (rdata_msb << 16);
+    unsigned int count_32k = SCUM_ANALOG_CFG_REG_0 + (SCUM_ANALOG_CFG_REG_1 << 16);
 
     // printf("%d - %d - %d\r\n",count_2M,count_32k,(count_2M << 13) /
     // count_32k);
@@ -1280,31 +1265,31 @@ void analog_scan_chain_write(void) {
             }
 
             // Write asc_reg to analog_cfg
-            ANALOG_CFG_REG__22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 = asc_reg;
 
             // Lower phi1
             asc_reg &= ~(0x2);
-            ANALOG_CFG_REG__22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 = asc_reg;
 
             // Toggle phi2
             asc_reg |= 0x4;
-            ANALOG_CFG_REG__22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 = asc_reg;
             asc_reg &= ~(0x4);
-            ANALOG_CFG_REG__22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 = asc_reg;
 
             // Raise phi1
             asc_reg |= 0x2;
-            ANALOG_CFG_REG__22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 = asc_reg;
         }
     }
 }
 
 void analog_scan_chain_load() {
     // Assert load signal (and cfg<357>)
-    ANALOG_CFG_REG__22 = 0x0028;
+    SCUM_ANALOG_CFG_REG_22 = 0x0028;
 
     // Lower load signal
-    ANALOG_CFG_REG__22 = 0x0020;
+    SCUM_ANALOG_CFG_REG_22 = 0x0020;
 }
 /* sets the 2 MHz RC DAC frequency.
 -updates the local dac settings array
@@ -1367,31 +1352,23 @@ void initialize_2M_DAC(void) {
 
 void read_counters(unsigned int* count_2M, unsigned int* count_LC,
                    unsigned int* count_32k) {
-    unsigned int rdata_lsb, rdata_msb;  //, count_LC, count_32k;
-
     // Disable all counters
-    ANALOG_CFG_REG__0 = 0x007F;
+    SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
     // Read 2M counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x180000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x1C0000);
-    *count_2M = rdata_lsb + (rdata_msb << 16);
+    *count_2M = SCUM_ANALOG_CFG_REG_6 + (SCUM_ANALOG_CFG_REG_7 << 16);
 
     // Read LC_div counter (via counter4)
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x200000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x240000);
-    *count_LC = rdata_lsb + (rdata_msb << 16);
+    *count_LC = SCUM_ANALOG_CFG_REG_8 + (SCUM_ANALOG_CFG_REG_9 << 16);
 
     // Read 32k counter
-    rdata_lsb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x000000);
-    rdata_msb = *(volatile unsigned int*)(APB_ANALOG_CFG_BASE + 0x040000);
-    *count_32k = rdata_lsb + (rdata_msb << 16);
+    *count_32k = SCUM_ANALOG_CFG_REG_0 + (SCUM_ANALOG_CFG_REG_1 << 16);
 
     // Reset all counters
-    ANALOG_CFG_REG__0 = 0x0000;
+    SCUM_ANALOG_CFG_REG_0 = 0x0000;
 
     // Enable all counters
-    ANALOG_CFG_REG__0 = 0x3FFF;
+    SCUM_ANALOG_CFG_REG_0 = 0x3FFF;
 
     // printf("LC_count=%X\r\n",count_LC);
     // printf("2M_count=%X\r\n",count_2M);
@@ -1485,8 +1462,8 @@ void LC_FREQCHANGE(int coarse, int mid, int fine) {
     // xx | xx | xx | xx | xx | xx | xx | xx | fd | f0 ]
 
     // set the memory and prevent any overwriting of other analog config
-    ANALOG_CFG_REG__7 = fcode;
-    ANALOG_CFG_REG__8 = fcode2;
+    SCUM_ANALOG_CFG_REG_7 = fcode;
+    SCUM_ANALOG_CFG_REG_8 = fcode2;
 }
 void LC_monotonic(int LC_code) {
     // int coarse_divs = 440;
@@ -1681,6 +1658,6 @@ void divProgram(unsigned int div_ratio, unsigned int reset,
     div_code_2 |= ((div_ratio & 0x0000000F) << 12);
 
     // also every bit needs to be inverted, hooray
-    ANALOG_CFG_REG__5 = ~div_code_1;
-    ANALOG_CFG_REG__6 = ~div_code_2;
+    SCUM_ANALOG_CFG_REG_5 = ~div_code_1;
+    SCUM_ANALOG_CFG_REG_6 = ~div_code_2;
 }

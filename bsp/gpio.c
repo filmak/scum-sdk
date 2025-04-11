@@ -2,18 +2,18 @@
 
 #include <stdio.h>
 
-#include "memory_map.h"
+#include "scum.h"
 #include "optical.h"
 
-void gpio_set_high(const gpio_e gpio) { GPIO_REG__OUTPUT |= (1 << gpio); }
+void gpio_set_high(const gpio_e gpio) { SCUM_GPIO_INPUT |= (1 << gpio); }
 
-void gpio_set_low(const gpio_e gpio) { GPIO_REG__OUTPUT &= ~(1 << gpio); }
+void gpio_set_low(const gpio_e gpio) { SCUM_GPIO_INPUT &= ~(1 << gpio); }
 
-void gpio_toggle(const gpio_e gpio) { GPIO_REG__OUTPUT ^= (1 << gpio); }
+void gpio_toggle(const gpio_e gpio) { SCUM_GPIO_INPUT ^= (1 << gpio); }
 
 void gpio_init(void) {
     // Initialize all pins to be low.
-    GPIO_REG__OUTPUT &= ~0xFFFF;
+    SCUM_GPIO_INPUT &= ~0xFFFF;
 }
 
 void gpio_0_set(void) { gpio_set_high(GPIO_0); }

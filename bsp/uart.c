@@ -1,10 +1,9 @@
-#include "uart.h"
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "memory_map.h"
+#include "scum.h"
+#include "uart.h"
 
 // Flow control constants.
 // XOFF, XON, and XONXOFF_ESCAPE are transmitted as two bytes: {XONXOFF_ESCAPE,
@@ -32,7 +31,7 @@ static char g_uart_xon_xoff_escaped_char = 0;
 // UART TX interrupt service routine.
 void uart_tx_isr(void) {
     if (g_uart_xon_xoff_escaping) {
-        UART_REG__RX_DATA = g_uart_xon_xoff_escaped_char ^ XONXOFF_MASK;
+        SCUM_UART->DATA = g_uart_xon_xoff_escaped_char ^ XONXOFF_MASK;
         g_uart_xon_xoff_escaping = false;
     }
 
@@ -57,20 +56,20 @@ void uart_set_rx_callback(const uart_rx_callback_t callback) {
 }
 
 void uart_enable_interrupt(void) {
-    ISER |= (0x1 << 0);
-    printf("UART interrupt enabled: 0x%x.\n", ISER);
+    NVIC_EnableIRQ(UART_IRQn);
+    printf("UART interrupt enabled: 0x%08lx.\n", *NVIC->ISER);
 }
 
 void uart_disable_interrupt(void) {
-    ICER |= (0x1 << 0);
-    printf("UART interrupt disabled: 0x%x.\n", ICER);
+    NVIC_DisableIRQ(UART_IRQn);
+    printf("UART interrupt disabled: 0x%08lx.\n", *NVIC->ICER);
 }
 
 void uart_set_cts(const bool state) {
     if (state) {
-        UART_REG__TX_DATA = XON;
+        SCUM_UART->DATA = XON;
     } else {
-        UART_REG__TX_DATA = XOFF;
+        SCUM_UART->DATA = XOFF;
     }
 }
 
@@ -78,13 +77,13 @@ void uart_write(const char data) {
     if (data == XOFF || data == XON || data == XONXOFF_MASK) {
         g_uart_xon_xoff_escaping = true;
         g_uart_xon_xoff_escaped_char = data;
-        UART_REG__TX_DATA = XONXOFF_ESCAPE;
+        SCUM_UART->DATA = XONXOFF_ESCAPE;
     } else {
-        UART_REG__TX_DATA = data;
+        SCUM_UART->DATA = data;
     }
 
     // There is no TX done interrupt, so call the interrupt handler directly.
     uart_tx_isr();
 }
 
-char uart_read(void) { return UART_REG__RX_DATA; }
+char uart_read(void) { return SCUM_UART->DATA; }

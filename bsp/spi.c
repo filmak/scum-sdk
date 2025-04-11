@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "scum.h"
 #include "spi.h"
 
 #include "helpers.h"
-#include "memory_map.h"
 
 #define CS_PIN 15
 #define CLK_PIN 14
@@ -17,17 +17,17 @@ void spi_write(unsigned char writeByte) {
 
     for (uint8_t j = 7; j >= 0; j--) {
         if ((writeByte & (0x01 << j)) != 0) {
-            GPIO_REG__OUTPUT &= ~(1 << clk_pin);  // clock low
-            GPIO_REG__OUTPUT |= 1 << data_pin;    // write a 1
-            GPIO_REG__OUTPUT |= 1 << clk_pin;     // clock high
+            SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);  // clock low
+            SCUM_GPIO_OUTPUT |= 1 << data_pin;    // write a 1
+            SCUM_GPIO_OUTPUT |= 1 << clk_pin;     // clock high
         } else {
-            GPIO_REG__OUTPUT &= ~(1 << clk_pin);   // clock low
-            GPIO_REG__OUTPUT &= ~(1 << data_pin);  // write a 0
-            GPIO_REG__OUTPUT |= (1 << clk_pin);    // clock high
+            SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);   // clock low
+            SCUM_GPIO_OUTPUT &= ~(1 << data_pin);  // write a 0
+            SCUM_GPIO_OUTPUT |= (1 << clk_pin);    // clock high
         }
     }
 
-    GPIO_REG__OUTPUT &= ~(1 << data_pin);  // set data out to 0
+    SCUM_GPIO_OUTPUT &= ~(1 << data_pin);  // set data out to 0
 }
 
 unsigned char spi_read(void) {
@@ -35,12 +35,12 @@ unsigned char spi_read(void) {
     int clk_pin = CLK_PIN;
     int din_pin = DIN_PIN;
 
-    GPIO_REG__OUTPUT &= ~(1 << clk_pin);  // clock low
+    SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);  // clock low
 
     for (uint8_t j = 7; j >= 0; j--) {
-        GPIO_REG__OUTPUT |= (1 << clk_pin);  // clock high
-        readByte |= ((GPIO_REG__INPUT & (1 << din_pin)) >> din_pin) << j;
-        GPIO_REG__OUTPUT &= ~(1 << clk_pin);  // clock low
+        SCUM_GPIO_OUTPUT |= (1 << clk_pin);  // clock high
+        readByte |= ((SCUM_GPIO_OUTPUT & (1 << din_pin)) >> din_pin) << j;
+        SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);  // clock low
     }
 
     return readByte;
@@ -50,8 +50,8 @@ void spi_chip_select(void) {
     int dout_pin = DATA_PIN;
     int cs_pin = CS_PIN;
     // drop chip select low to select the chip
-    GPIO_REG__OUTPUT &= ~(1 << cs_pin);
-    GPIO_REG__OUTPUT &= ~(1 << dout_pin);
+    SCUM_GPIO_OUTPUT &= ~(1 << cs_pin);
+    SCUM_GPIO_OUTPUT &= ~(1 << dout_pin);
 
     busy_wait_cycles(50);
 }
@@ -59,7 +59,7 @@ void spi_chip_select(void) {
 void spi_chip_deselect(void) {
     int cs_pin = CS_PIN;
     // hold chip select high to deselect the chip
-    GPIO_REG__OUTPUT |= (1 << cs_pin);
+    SCUM_GPIO_OUTPUT |= (1 << cs_pin);
 }
 
 void initialize_imu(void) {

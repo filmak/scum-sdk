@@ -3,7 +3,8 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include "memory_map.h"
+
+#include "scum.h"
 
 extern int _end;
 
@@ -53,9 +54,8 @@ int _write (int file, char * ptr, int len) {
         return -1;
     }
 
-    unsigned char *UARTPtr = (unsigned char*)APB_UART_BASE;
     for (; len != 0; --len) {
-        *UARTPtr = (char)*ptr++;
+        SCUM_UART->DATA = (char)*ptr++;
         ++written;
     }
     return written;
@@ -68,9 +68,8 @@ int _read (int file, char * ptr, int len) {
     return -1;
   }
 
-  unsigned char *UARTPtr = (unsigned char*)APB_UART_BASE;
   for (; len > 0; --len) {
-    *ptr++ = *UARTPtr;
+    *ptr++ = SCUM_UART->DATA;
     // TODO: proper read input
     read++;
   }
