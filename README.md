@@ -1,5 +1,8 @@
 # A proprietary free SCuM SDK
 
+[![CI][ci-badge]][ci-link]
+[![License][license-badge]][license-link]
+
 This repository is an attempt to provide a proprietary free support for the
 SCuM chip.
 Most of the drivers (UART, Radio, Timer, SPI) are taken from the
@@ -41,3 +44,8 @@ SCuM programmer script available at https://github.com/aabadie/SCuM-programmer/t
 ```
 <path to scum_programmer>/programmer.py samples/hello_world/build/hello_world.bin
 ```
+
+[ci-badge]: https://github.com/aabadie/scum-sdk/workflows/CI/badge.svg
+[ci-link]: https://github.com/aabadie/scum-sdk/actions?query=workflow%3ACI+branch%3Amain
+[license-badge]: https://img.shields.io/github/license/aabadie/scum-sdk
+[license-link]: https://github.com/aabadie/scum-sdk/blob/main/LICENSE.txt
