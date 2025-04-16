@@ -13,9 +13,6 @@ _Note_: you only need to do this once.
 - download `scum-programmer.hex` from the https://github.com/openwsn-berkeley/SCuM-programmer/releases/latest/
 - plug in your nRF52840-DK into your computer, drive "JLINK" appears
 - drag-and-drop `scum-programmer.hex` onto this drive
-- when the LEDs of the board go round-and-round, you're set!
-
-![](static/round_and_round.gif)
 
 ### interact with SCuM's serial port
 
