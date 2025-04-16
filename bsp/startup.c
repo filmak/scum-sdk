@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "scum.h"
+#include "scm3c_hw_interface.h"
 
 // linker symbols for memory sections
 extern uint32_t _stext;
@@ -101,6 +102,13 @@ void Dummy_Handler(void) {
     while(1);
 }
 
+static void scum_init(void) {
+    initialize_mote();
+#ifndef NDEBUG
+    crc_check();
+#endif
+}
+
 void Reset_Handler(void) {
     /* Initialize the data segment */
     uint32_t *pSrc = &_etext;
@@ -124,6 +132,9 @@ void Reset_Handler(void) {
     puts("-- Booting SCUM! --");
     puts("-------------------");
     puts("");
+
+    // Initialize the system
+    scum_init();
 
     main();
 

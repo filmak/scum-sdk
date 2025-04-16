@@ -46,7 +46,9 @@ void optical_enable(void) {
 }
 
 void perform_calibration(void) {
+#ifndef NDEBUG
     puts("Performing calibration...");
+#endif
     // For the LO, calibration for RX channel 11, so turn on AUX, IF, and LO
     // LDOs by calling radio rxEnable
     radio_rxEnable();
@@ -62,7 +64,9 @@ void perform_calibration(void) {
     // Disable the radio now that it is calibrated
     radio_rfOff();
 
+#ifndef NDEBUG
     printf("Calibration complete\r\n");
+#endif
 }
 
 //=========================== interrupt =======================================

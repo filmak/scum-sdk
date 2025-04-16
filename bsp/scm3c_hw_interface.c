@@ -183,9 +183,11 @@ unsigned int crc32c(unsigned char* message, unsigned int length) {
 void crc_check(void) {
     uint32_t calc_crc;
 
+#ifndef NDEBUG
     // Check CRC to ensure there were no errors during optical programming
     printf("\r\n-------------------\r\n");
     printf("Validating program integrity...");
+#endif
 
     calc_crc = crc32c(0x0000, CODE_LENGTH);
 
