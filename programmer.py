@@ -47,6 +47,7 @@ class ScumProgrammerSettings:
 
     port: str
     baudrate: int
+    calibrate: bool
     firmware: str
 
 
@@ -160,8 +161,9 @@ class ScumProgrammer:
         self.program()
         # Boot SCuM
         self.boot()
-        # Calibrate SCuM
-        self.calibrate()
+        if self.settings.calibrate:
+            # Calibrate SCuM
+            self.calibrate()
         # Close serial port
         self.serial.close()
         print(f"[bold green]Done in {time.time() - start:.3f}s[/]")
@@ -181,11 +183,19 @@ class ScumProgrammer:
     default=SERIAL_BAUDRATE_DEFAULT,
     help="Baudrate to use for nRF.",
 )
+@click.option(
+    "-c",
+    "--calibrate",
+    is_flag=True,
+    default=False,
+    help="Calibrate SCuM after flashing.",
+)
 @click.argument("firmware", type=click.File(mode="rb"), required=True)
-def main(port, baudrate, firmware):
+def main(port, baudrate, calibrate, firmware):
     programmer_settings = ScumProgrammerSettings(
         port=port,
         baudrate=baudrate,
+        calibrate=calibrate,
         firmware=firmware.name,
     )
     programmer = ScumProgrammer(programmer_settings)
