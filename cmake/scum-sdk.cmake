@@ -2,7 +2,7 @@ cmake_path(GET CMAKE_CURRENT_LIST_DIR PARENT_PATH SCUM_SDK_BASE_DIR)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
 
-# Include build flags
+# Include build and linker flags
 include(scum-build)
 
 find_program(
@@ -27,7 +27,9 @@ function(add_scum_application)
     set(app_single APPLICATION)
     set(app_multi FILES INCLUDES DEPENDS)
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${app_single}" "${app_multi}")
+
     set(TARGET ${arg_APPLICATION}.elf CACHE INTERNAL "APPLICATION")
+
     add_subdirectory(${SCUM_SDK_BASE_DIR}/bsp libs)
     add_executable(${TARGET}
         ${arg_FILES}

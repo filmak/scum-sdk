@@ -13,10 +13,11 @@ Most of the drivers (UART, Radio, Timer, SPI) are taken from the
 So far this repository has only been tested on Linux.
 
 What is needed to build a firmware for SCuM:
-- GNU Make
+- [CMake](https://cmake.org/)
+- [Ninja](https://ninja-build.org/)
 - [GNU ARM Embedded toolchain](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
 
-Make sure that the ARM toolchain is available in your PATH.
+Make sure that the ARM toolchain GCC program is available in your PATH.
 
 ### Get the code
 
@@ -28,21 +29,34 @@ git clone https://github.com/aabadie/scum-sdk.git
 ### Usage
 
 So far, only the original `hello_world` example application is available. To
-build this application, from the repository base directory, simply run:
+build this application, from the repository base directory, simply run
+(for Windows users adapt the path separators to "\"):
 
 ```
-make -C samples/hello_world
+cmake -S samples/hello_world -B samples/hello_world/build -GNinja -DCMAKE_BUILD_TYPE=MinSizeRel
+ninja -C samples/hello_world/build
 ```
 
-The generated firmware are located in the `samples/hello_world/build` directory.
+The generated firmwares (elf, hex, bin) are located in the `samples/hello_world/build` directory.
 
-### Flash the firmware
+### Load the firmware on SCuM
 
 Once the SCuM chip is properly connected to an nRF52840-DK programmer, use the
-SCuM programmer script available at https://github.com/aabadie/SCuM-programmer/tree/develop_12_refactor:
+SCuM programmer script available at https://github.com/aabadie/SCuM-programmer/tree/develop_12_refactor.
+
+The build system proposes a `load` target to automatically call the SCuM programmer
+script.
+If not found automatically by CMake, the path to the programmer script can be set
+manually using CMake:
 
 ```
-<path to scum_programmer>/programmer.py samples/hello_world/build/hello_world.bin
+cmake -DSCUM_PROGRAMMER=path/to/programmer.py samples/hello_world/build/
+```
+
+Then the programmer can be called using:
+
+```
+ninja -C samples/hello_world/build load
 ```
 
 [ci-badge]: https://github.com/aabadie/scum-sdk/workflows/CI/badge.svg
