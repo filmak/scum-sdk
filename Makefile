@@ -1,16 +1,24 @@
-PROJECTS := \
-		hello_world \
-		#
+GENERATOR ?= Ninja
+BUILD_TYPE ?= MinSizeRel
+SAMPLES ?= \
+	hello_world \
+	calibration \
+	#
 
 RM := rm
-BUILD_DIR := $(CURDIR)/build
+MKDIR := mkdir
 
-$(PROJECTS):
-	$(MAKE) -C $@ BUILD_DIR=$(BUILD_DIR)/$@
+SAMPLES_BUILD_DIRS ?= $(foreach project,$(SAMPLES),samples/$(project)/build)
 
-all: $(PROJECTS)
+.PHONY: all clean $(SAMPLES)
+.DEFAULT_GOAL := all
+
+$(SAMPLES):
+	@echo "Building $@"
+	cmake -S samples/$@ -B samples/$@/build -G$(GENERATOR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
+	ninja -C samples/$@/build
+
+all: $(SAMPLES)
 
 clean:
-	$(RM) -r build 2>/dev/null || true
-
-.PHONY: clean all $(PROJECTS)
+	rm -rf $(SAMPLES_BUILD_DIRS)
