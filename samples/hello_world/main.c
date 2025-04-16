@@ -10,7 +10,7 @@
 #define NUM_CYCLES_BETWEEN_TX (1000000UL)
 
 int main(void) {
-    puts("Welcome to SCuM!");
+    puts("\nWelcome to SCuM!\n");
     uint32_t g_tx_counter = 0;
 
     while (1) {

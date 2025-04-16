@@ -127,11 +127,13 @@ void Reset_Handler(void) {
     // Initialize constructors (but calling it triggers a Hard Fault)
     // __libc_init_array();
 
+#ifndef NDEBUG
     puts("");
     puts("-------------------");
     puts("-- Booting SCUM! --");
     puts("-------------------");
     puts("");
+#endif
 
     // Initialize the system
     scum_init();
