@@ -28,13 +28,30 @@ _Note_: you only need to do this once.
 
 ### load code onto SCuM
 
-_Coming soon!_
+The programmer.py script only takes firmware files in .bin format.
+Use it as following:
+
+```
+programmer.py path/to/scum-firmware.bin
+```
+
+On Windows, the nRF J-Link TTY port cannot be detected automatically and needs
+to be set manually using the `--port` option. For example:
+
+```
+programmer.py --port COM42 path/to/scum-firmware.bin
+```
 
 ### calibrate SCuM
 
-_Coming soon!_
+If the application requires calibration, use the `--calibrate` option to trigger
+the calibration after booting SCuM:
 
-# Build
+```
+programmer.py --calibrate path/to/scum-firmware.bin
+```
+
+## Build
 
 - install SEGGER Embedded Studio for ARM (Nordic Edition)
 - open `scum-programmer/scum-programmer.emProject`
