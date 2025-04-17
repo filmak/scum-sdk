@@ -16,7 +16,7 @@ SAMPLES_BUILD_DIRS ?= $(foreach project,$(SAMPLES),samples/$(project)/build)
 $(SAMPLES):
 	@echo "Building $@"
 	cmake -S samples/$@ -B samples/$@/build -G$(GENERATOR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
-	ninja -C samples/$@/build
+	cmake --build samples/$@/build --target all --
 
 all: $(SAMPLES)
 
