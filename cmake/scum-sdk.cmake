@@ -39,21 +39,34 @@ function(add_scum_application)
 
     set_property(TARGET ${TARGET} PROPERTY C_STANDARD 17)
 
-    target_include_directories(${TARGET} PRIVATE
-        ${arg_INCLUDES}
-        ${SCUM_SDK_BASE_DIR}/bsp/cmsis
-        ${SCUM_SDK_BASE_DIR}/bsp
-    )
-    target_link_libraries(${TARGET} PRIVATE
-        ${arg_DEPENDS}
+    set(CORE_DEPS
         init
         scm3c_hw_interface
         sys
         uart
     )
-    set_target_properties(${TARGET} PROPERTIES
-        LINK_FLAGS ${CMAKE_APPLICATION_LINKER_FLAGS}
+
+    set(APP_DEPS
+        ${CORE_DEPS}
+        ${arg_DEPENDS}
     )
+
+    foreach(dep ${APP_DEPS})
+        string(TOUPPER "MODULE_${dep}" _module_define)
+        list(APPEND _compile_defines "${_module_define}")
+    endforeach()
+
+    foreach(dep ${APP_DEPS})
+        set_target_properties(${dep} PROPERTIES COMPILE_DEFINITIONS "${_compile_defines}")
+    endforeach()
+    set_target_properties(${TARGET} PROPERTIES COMPILE_DEFINITIONS "${_compile_defines}")
+
+    target_include_directories(${TARGET} PRIVATE
+        ${arg_INCLUDES}
+        ${SCUM_SDK_BASE_DIR}/bsp/cmsis
+        ${SCUM_SDK_BASE_DIR}/bsp
+    )
+    target_link_libraries(${TARGET} PRIVATE ${APP_DEPS})
 
     add_custom_command(
         TARGET ${TARGET}
@@ -95,6 +108,7 @@ function(add_scum_application)
             DEPENDS ${TARGET}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             USES_TERMINAL
+            COMMENT "Loading ${CMAKE_CURRENT_BINARY_DIR}/${arg_APPLICATION}.bin"
         )
     endif()
 endfunction()

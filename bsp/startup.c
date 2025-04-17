@@ -93,12 +93,16 @@ const vectors_t _vectors __attribute__((used, section(".vectors"))) = {
 };
 
 void HardFault_Handler(void) {
+#ifndef NDEBUG
     puts("Hard Fault!");
+#endif
     while(1);
 }
 
 void Dummy_Handler(void) {
+#ifndef NDEBUG
     puts("Dummy handler!");
+#endif
     while(1);
 }
 

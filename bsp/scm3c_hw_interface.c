@@ -183,11 +183,9 @@ unsigned int crc32c(unsigned char* message, unsigned int length) {
 void crc_check(void) {
     uint32_t calc_crc;
 
-#ifndef NDEBUG
     // Check CRC to ensure there were no errors during optical programming
     printf("\r\n-------------------\r\n");
     printf("Validating program integrity...");
-#endif
 
     calc_crc = crc32c(0x0000, CODE_LENGTH);
 
@@ -1100,9 +1098,17 @@ void set_sys_clk_secondary_freq(unsigned int coarse, unsigned int fine) {
 
 void initialize_mote() {
     scm3c_hw_interface_init();
+#if defined(MODULE_OPTICAL)
     optical_init();
+#endif
+
+#if defined(MODULE_RADIO)
     radio_init();
+#endif
+
+#if defined(MODULE_RFTIMER)
     rftimer_init();
+#endif
 
     //--------------------------------------------------------
     // SCM3C Analog Scan Chain Initialization
@@ -1172,11 +1178,13 @@ void initialize_mote() {
         set_asc_bit(t);
     }
 
+#if defined(MODULE_RADIO)
     // Init RX
     radio_init_rx_MF();
 
     // Init TX
     radio_init_tx();
+#endif
 
     // Set initial IF ADC clock frequency
     set_IF_clock_frequency(scm3c_hw_interface_vars.IF_coarse,
@@ -1193,8 +1201,10 @@ void initialize_mote() {
     // Set initial LO frequency
     LC_monotonic(DEFUALT_INIT_LC_CODE);
 
+#if defined(MODULE_RADIO)
     // Init divider settings
     radio_init_divider(2000);
+#endif
 
     // Program analog scan chain
     analog_scan_chain_write();

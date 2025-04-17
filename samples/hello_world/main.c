@@ -1,8 +1,6 @@
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-
+#include <assert.h>
 #include "helpers.h"
 
 // Number of for loop cycles between Hello World messages.
@@ -15,6 +13,12 @@ int main(void) {
 
     while (1) {
         printf("Hello World! %lu\n", g_tx_counter++);
+
+        // Configure the cmake build with -DCMAKE_BUILD_TYPE=Debug to trigger this
+        // assert which will print the line and file and then cause a hard fault.
+        // The default build type is MinSizeRel, which will not trigger this assert.
+        assert(g_tx_counter < 10);
+
         busy_wait_cycles(NUM_CYCLES_BETWEEN_TX);
     }
 }

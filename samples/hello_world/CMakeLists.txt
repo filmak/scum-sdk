@@ -12,9 +12,4 @@ add_scum_application(
         main.c
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS
-        gpio
-        optical
-        radio
-        rftimer
 )
