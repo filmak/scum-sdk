@@ -59,7 +59,7 @@ Then the programmer can be called using:
 ninja -C samples/hello_world/build load
 ```
 
-[ci-badge]: https://github.com/aabadie/scum-sdk/workflows/CI/badge.svg
-[ci-link]: https://github.com/aabadie/scum-sdk/actions?query=workflow%3ACI+branch%3Amain
-[license-badge]: https://img.shields.io/github/license/aabadie/scum-sdk
-[license-link]: https://github.com/aabadie/scum-sdk/blob/main/LICENSE.txt
+[ci-badge]: https://github.com/pisterlab/scum-sdk/workflows/CI/badge.svg
+[ci-link]: https://github.com/pisterlab/scum-sdk/actions?query=workflow%3ACI+branch%3Amain
+[license-badge]: https://img.shields.io/github/license/pisterlab/scum-sdk
+[license-link]: https://github.com/pisterlab/scum-sdk/blob/main/LICENSE.txt
