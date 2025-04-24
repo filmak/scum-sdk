@@ -1,6 +1,7 @@
 build/
 .cache/
 .vscode/
+.DS_Store
 
 # Segger Embedded Studio artifacts
 Output/
