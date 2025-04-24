@@ -148,15 +148,15 @@ void OPTICAL_SFD_Handler(void) {
             if (HF_CLOCK_fine == 0) {
                 HF_CLOCK_coarse--;
                 HF_CLOCK_fine = 10;
-                optical_vars.optical_cal_iteration = 3;
+                //optical_vars.optical_cal_iteration = 3;
             } else {
                 HF_CLOCK_fine--;
             }
         } else if (count_HFclock > 2003000) {  // new value I picked was 2010000, originally 2003000
             if (HF_CLOCK_fine == 31) {
                 HF_CLOCK_coarse++;
-                HF_CLOCK_fine = 20;
-                optical_vars.optical_cal_iteration = 3;
+                HF_CLOCK_fine = 23;
+                //optical_vars.optical_cal_iteration = 3;
             } else {
                 HF_CLOCK_fine++;
             }
@@ -244,6 +244,7 @@ void OPTICAL_SFD_Handler(void) {
     );
 
     if (optical_vars.optical_cal_iteration == 25) {
+
         // Disable this ISR
         NVIC_DisableIRQ(EXT_GPIO8_ACTIVEHIGH_IRQn);
         NVIC_DisableIRQ(OPTICAL_SFD_IRQn);
@@ -256,6 +257,9 @@ void OPTICAL_SFD_Handler(void) {
         optical_vars.num_IFclk_ticks_in_100ms = count_IF;
         optical_vars.num_LC_ch11_ticks_in_100ms = count_LC;
         optical_vars.num_HFclock_ticks_in_100ms = count_HFclock;
+
+	// DEBUG: program one last time... some chips don't work?
+
 
         // Debug prints
         // printf("LC_code=%d\r\n", optical_vars.LC_code);
