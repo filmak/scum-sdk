@@ -2,8 +2,11 @@ build/
 .cache/
 .vscode/
 .DS_Store
+<<<<<<< HEAD
 
 # Segger Embedded Studio artifacts
 Output/
 *.emSession
 *.jlink
+=======
+>>>>>>> dcb0f28 (add DS store to gitignore for mac developers)
