@@ -12,17 +12,20 @@
 // 700000 for loop cycles roughly correspond to 1 second.
 #define NUM_CYCLES_BETWEEN_TX (1000000UL)
 #define NUM_CYCLES_BETWEEN_PACKET (100UL)
+#define TX_PACKET_LEN (64UL)
 
 void tx_endframe_callback(uint32_t timestamp);
+
+uint8_t packet[TX_PACKET_LEN] = {0};
+
 
 int main(void) {
     perform_calibration();
 
-    radio_setEndFrameTxCb(cb_endFrame_tx_radio);
-
     LC_FREQCHANGE(0,0,0);
     radio_txEnable();
-    radio_txNow();
+    radio_setEndFrameTxCb(tx_endframe_callback);
+    send_packet(packet, TX_PACKET_LEN + 2);
 
     uint32_t g_tx_counter = 0;
     while (1) {
@@ -32,7 +35,7 @@ int main(void) {
 }
 
 void tx_endframe_callback(uint32_t timestamp) {
-    busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
-    radio_txEnable();
-    radio_txNow();
+
+    printf("sent a packet\r\n");
+    send_packet(packet, TX_PACKET_LEN + 2);
 }
