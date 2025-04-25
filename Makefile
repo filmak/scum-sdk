@@ -3,6 +3,7 @@ BUILD_TYPE ?= MinSizeRel
 SAMPLES ?= \
 	hello_world \
 	calibration \
+	radio_example \
 	#
 
 RM := rm
