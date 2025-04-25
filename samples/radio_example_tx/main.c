@@ -11,6 +11,9 @@
 // Number of for loop cycles between Hello World messages.
 // 700000 for loop cycles roughly correspond to 1 second.
 #define NUM_CYCLES_BETWEEN_TX (1000000UL)
+#define NUM_CYCLES_BETWEEN_PACKET (100UL)
+
+void tx_endframe_callback(uint32_t timestamp);
 
 int main(void) {
     perform_calibration();
@@ -28,6 +31,8 @@ int main(void) {
     }
 }
 
-void cb_endFrame_tx_radio(void) {
-
+void tx_endframe_callback(uint32_t timestamp) {
+    busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
+    radio_txEnable();
+    radio_txNow();
 }
