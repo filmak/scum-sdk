@@ -33,11 +33,11 @@ build this application, from the repository base directory, simply run
 (for Windows users adapt the path separators to "\"):
 
 ```
-cmake -S samples/hello_world -B samples/hello_world/build -GNinja -DCMAKE_BUILD_TYPE=MinSizeRel
-ninja -C samples/hello_world/build
+cmake -S sdk/samples/hello_world -B sdk/samples/hello_world/build -GNinja -DCMAKE_BUILD_TYPE=MinSizeRel
+ninja -C sdk/samples/hello_world/build
 ```
 
-The generated firmwares (elf, hex, bin) are located in the `samples/hello_world/build` directory.
+The generated firmwares (elf, hex, bin) are located in the `sdk/samples/hello_world/build` directory.
 
 ### Load the firmware on SCuM
 
@@ -50,13 +50,13 @@ If not found automatically by CMake, the path to the programmer script can be se
 manually using CMake:
 
 ```
-cmake -DSCUM_PROGRAMMER=path/to/programmer.py samples/hello_world/build/
+cmake -DSCUM_PROGRAMMER=path/to/programmer.py sdk/samples/hello_world/build/
 ```
 
 Then the programmer can be called using:
 
 ```
-ninja -C samples/hello_world/build load
+ninja -C sdk/samples/hello_world/build load
 ```
 
 [ci-badge]: https://github.com/pisterlab/scum-sdk/workflows/CI/badge.svg
