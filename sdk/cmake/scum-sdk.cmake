@@ -8,7 +8,7 @@ include(scum-build)
 find_program(
     SCUM_PROGRAMMER
     NAMES programmer.py
-    HINTS ${SCUM_SDK_BASE_DIR}/../SCuM-programmer
+    HINTS ${SCUM_SDK_BASE_DIR}/../programmer
 )
 
 function(add_scum_library)
