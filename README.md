@@ -42,18 +42,10 @@ The generated firmwares (elf, hex, bin) are located in the `sdk/samples/hello_wo
 ### Load the firmware on SCuM
 
 Once the SCuM chip is properly connected to an nRF52840-DK programmer, use the
-SCuM programmer script available at https://github.com/aabadie/SCuM-programmer/tree/develop_12_refactor.
+SCuM programmer script available in the [./programmer](programmer) directory.
 
 The build system proposes a `load` target to automatically call the SCuM programmer
-script.
-If not found automatically by CMake, the path to the programmer script can be set
-manually using CMake:
-
-```
-cmake -DSCUM_PROGRAMMER=path/to/programmer.py sdk/samples/hello_world/build/
-```
-
-Then the programmer can be called using:
+script:
 
 ```
 ninja -C sdk/samples/hello_world/build load
