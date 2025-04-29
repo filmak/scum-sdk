@@ -23,7 +23,7 @@ Make sure that the ARM toolchain GCC program is available in your PATH.
 
 Use Git:
 ```
-git clone https://github.com/aabadie/scum-sdk.git
+git clone https://github.com/PisterLab/scum-sdk.git
 ```
 
 ### Usage
