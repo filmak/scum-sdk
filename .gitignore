@@ -1,3 +1,8 @@
 build/
 .cache/
 .vscode/
+
+# Segger Embedded Studio artifacts
+Output/
+*.emSession
+*.jlink
