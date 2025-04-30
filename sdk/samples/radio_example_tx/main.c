@@ -17,11 +17,11 @@
 
 void tx_endframe_callback(uint32_t timestamp);
 uint8_t packet[TX_PACKET_LEN] = {0};
+<<<<<<< HEAD
 uint8_t fine_code = 0;
 uint8_t mid_code = 0;
 
 int main(void) {
-    perform_calibration();
 
     printf("Radio Transmitter Example\n");
     radio_init();

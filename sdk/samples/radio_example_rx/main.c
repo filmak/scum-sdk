@@ -17,7 +17,6 @@ uint8_t rxpk_lqi = 0;
 void rx_endframe_callback(uint32_t timestamp);
 
 int main(void) {
-    perform_calibration();
 
     printf("Radio Receiver Example\n");
 
