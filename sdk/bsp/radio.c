@@ -135,12 +135,12 @@ void setFrequencyRX(uint8_t channel);
 void send_packet(void* packet, uint8_t pkt_len) {
     radio_vars.radio_mode = TX_MODE;
 
-    rftimer_set_callback(cb_timer_radio);
+    rftimer_set_callback_by_id(cb_timer_radio,2);
 
     radio_loadPacket(packet, pkt_len);
     radio_txEnable();
 
-    rftimer_setCompareIn(rftimer_readCounter() + TIMER_PERIOD_TX);
+    rftimer_setCompareIn_by_id(SCUM_RFTIMER->COUNTER + TIMER_PERIOD_TX, 2);
     radio_vars.sendDone = false;
 
     while (!radio_vars.sendDone) {}
@@ -850,6 +850,8 @@ void radio_build_channel_table(uint32_t channel_11_LC_code) {
 void RF_Handler(void) {
     unsigned int interrupt = SCUM_RF->INT;
     unsigned int error = SCUM_RF->ERROR;
+
+    printf("%08x\r\n",interrupt);
 
     gpio_2_set();
     gpio_6_set();
