@@ -21,11 +21,13 @@ uint8_t packet[TX_PACKET_LEN] = {0};
 
 int main(void) {
     perform_calibration();
-
+    radio_init();
     LC_FREQCHANGE(0,0,0);
-    radio_txEnable();
     radio_setEndFrameTxCb(tx_endframe_callback);
-    send_packet(packet, TX_PACKET_LEN + 2);
+    radio_loadPacket(packet, TX_PACKET_LEN + 2);
+    radio_txEnable();
+    busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
+    radio_txNow();
 
     uint32_t g_tx_counter = 0;
     while (1) {
@@ -35,7 +37,10 @@ int main(void) {
 }
 
 void tx_endframe_callback(uint32_t timestamp) {
-
+    radio_rfOff();
     printf("sent a packet\r\n");
-    send_packet(packet, TX_PACKET_LEN + 2);
+    radio_loadPacket(packet, TX_PACKET_LEN + 2);
+    radio_txEnable();
+    busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
+    radio_txNow();
 }
