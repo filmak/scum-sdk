@@ -3,6 +3,9 @@
 
 #include "scum.h"
 #include "scm3c_hw_interface.h"
+#if defined(MODULE_OPTICAL)
+#include "optical.h"
+#endif
 
 // linker symbols for memory sections
 extern uint32_t _stext;
@@ -111,6 +114,9 @@ static void scum_init(void) {
     initialize_mote();
 #ifndef NDEBUG
     crc_check();
+#endif
+#if defined(MODULE_OPTICAL)
+    perform_calibration();
 #endif
 }
 

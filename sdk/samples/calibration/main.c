@@ -3,15 +3,12 @@
 #include <stdlib.h>
 
 #include "helpers.h"
-#include "optical.h"
 
 // Number of for loop cycles between Hello World messages.
 // 700000 for loop cycles roughly correspond to 1 second.
 #define NUM_CYCLES_BETWEEN_TX (1000000UL)
 
 int main(void) {
-    perform_calibration();
-
     uint32_t g_tx_counter = 0;
     while (1) {
         printf("Hello World! %lu\n", g_tx_counter++);

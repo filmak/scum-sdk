@@ -18,9 +18,7 @@ void tx_endframe_callback(uint32_t timestamp);
 
 uint8_t packet[TX_PACKET_LEN] = {0};
 
-
 int main(void) {
-    perform_calibration();
     radio_init();
     LC_FREQCHANGE(0,0,0);
     radio_setEndFrameTxCb(tx_endframe_callback);
