@@ -5,7 +5,7 @@ SAMPLES ?= \
 	calibration \
 	radio_example_tx \
 	radio_example_rx \
-	rftimer_example \
+	rftimer \
 	#
 
 RM := rm
