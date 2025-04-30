@@ -21,14 +21,14 @@ typedef struct {
     uint8_t noNeedClearFlag;
 } rftimer_vars_t;
 
-rftimer_vars_t rftimer_vars;
+static rftimer_vars_t rftimer_vars = { 0 };
 
-bool delay_completed[NUM_INTERRUPTS];  // flag indicating whether the delay has
+static bool delay_completed[NUM_INTERRUPTS] = { 0 };  // flag indicating whether the delay has
                                        // completed. For use by
                                        // delay_milliseoncds_synchronous method
-bool is_repeating[NUM_INTERRUPTS];     // flag indicating whethere each COMPARE
+static bool is_repeating[NUM_INTERRUPTS] = { 0 };     // flag indicating whethere each COMPARE
                                        // will repeat at a fixed rate
-unsigned int timer_durations[NUM_INTERRUPTS];  // indicates length each COMPARE
+static unsigned int timer_durations[NUM_INTERRUPTS] = { 0 };  // indicates length each COMPARE
                                                // interrupt was set to run for.
                                                // Used for repeating delay.
 
@@ -39,8 +39,6 @@ void handle_interrupt(uint8_t id);
 // ========================== public ==========================================
 
 void rftimer_init(void) {
-    memset(&rftimer_vars, 0, sizeof(rftimer_vars_t));
-
     // set period of radiotimer
     SCUM_RFTIMER->MAX_COUNT = RFTIMER_MAX_COUNT;
     // enable timer and interrupt
@@ -169,6 +167,8 @@ void RFTIMER_Handler(void) {
     int interrupt_id = 1;
 
     interrupt = SCUM_RFTIMER->INT;
+
+    printf("cnt: %ld", rftimer_readCounter());
 
     for (i = 0; i < 8; i++) {
         if (interrupt & interrupt_id) {
