@@ -75,6 +75,13 @@ list(APPEND SPI_SRCS
 )
 add_scum_library(TARGET spi FILES ${SPI_SRCS})
 
+# SYSTICK
+list(APPEND SYSTICK_SRCS
+    systick.c
+    systick.h
+)
+add_scum_library(TARGET systick FILES ${SYSTICK_SRCS})
+
 # INIT
 list(APPEND INIT_SRCS
     startup.c
