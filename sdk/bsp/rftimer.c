@@ -11,7 +11,7 @@
 #define MINIMUM_COMPAREVALE_ADVANCE 5
 #define LARGEST_INTERVAL 0xffff
 #define NUM_INTERRUPTS 8
-
+#define ENABLE_PRINTF
 // ========================== variable ========================================
 
 typedef struct {
@@ -95,7 +95,7 @@ void rftimer_enable_interrupts_by_id(uint8_t id) {
     rftimer_clear_interrupts_by_id(id);
 
     // enable compare interrupt (this also cancels any pending interrupts)
-    SCUM_RFTIMER->COMPARE_CONTROL[id] =
+    SCUM_RFTIMER->COMPARE_CONTROL[id] = 
         RFTIMER_COMPARE_ENABLE | RFTIMER_COMPARE_INTERRUPT_ENABLE;
 }
 
@@ -108,13 +108,13 @@ void rftimer_disable_interrupts(void) { NVIC_DisableIRQ(RFTIMER_IRQn); }
 // Disables the RF timer interrupt for a specific timer register.
 void rftimer_disable_interrupts_by_id(uint8_t id) {
     // disable compare interrupt
-    SCUM_RFTIMER->COMPARE_CONTROL[id] = 0x0000;
+    SCUM_RFTIMER->COMPARE_CONTROL[id] = 0;
 }
 
 void rftimer_clear_interrupts(void) { rftimer_clear_interrupts_by_id(0); }
 
 void rftimer_clear_interrupts_by_id(uint8_t id) {
-    SCUM_RFTIMER->INT_CLEAR = (uint32_t)(((uint32_t)0x0001) << id);
+    SCUM_RFTIMER->INT_CLEAR = (uint32_t)(1 << id);
 }
 
 // Sets a flag indicating whether to make the desired interrupt repeat right
@@ -162,71 +162,64 @@ void delay_milliseconds_synchronous(unsigned int delay_milli, uint8_t id) {
 // ========================== interrupt =======================================
 
 void RFTIMER_Handler(void) {
-    uint16_t interrupt;
-    int i = 0;
-    int interrupt_id = 1;
+    uint32_t interrupt = SCUM_RFTIMER->INT;
 
-    interrupt = SCUM_RFTIMER->INT;
+    printf("interrupt: %08lx - compare0: %ld\n", interrupt, SCUM_RFTIMER->COMPARE[0]);
 
-    printf("cnt: %ld", rftimer_readCounter());
-
-    for (i = 0; i < 8; i++) {
-        if (interrupt & interrupt_id) {
+    for (uint8_t i = 0; i < 8; i++) {
+        if ((interrupt & (1 << i)) && SCUM_RFTIMER->COMPARE[i]) {
 #ifdef ENABLE_PRINTF
             printf("COMPARE%d MATCH\r\n", i);
 #endif
-
             handle_interrupt(i);
         }
-
-        interrupt_id = interrupt_id << 1;
     }
 
     if (interrupt & 0x00000100) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE0 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[0]);
+        printf("CAPTURE0 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[0]);
 #endif
     }
 
     if (interrupt & 0x00000200) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE1 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[1]);
+        printf("CAPTURE1 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[1]);
 #endif
     }
 
     if (interrupt & 0x00000400) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE2 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[2]);
+        printf("CAPTURE2 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[2]);
 #endif
     }
 
     if (interrupt & 0x00000800) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE3 TRIGGERED AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[3]);
+        printf("CAPTURE3 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[3]);
 #endif
     }
 
     if (interrupt & 0x00001000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE0 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[0]);
+        printf("CAPTURE0 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[0]);
 #endif
     }
 
     if (interrupt & 0x00002000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE1 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[1]);
+        printf("CAPTURE1 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[1]);
 #endif
     }
 
     if (interrupt & 0x00004000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE2 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[2]);
+        printf("CAPTURE2 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[2]);
 #endif
     }
 
     if (interrupt & 0x00008000) {
 #ifdef ENABLE_PRINTF
-        printf("CAPTURE3 OVERFLOW AT: 0x%x\r\n", SCUM_RFTIMER->CAPTURE[3]);
+        printf("CAPTURE3 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[3]);
 #endif
     }
 

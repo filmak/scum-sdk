@@ -23,6 +23,7 @@ void __libc_init_array(void);
 // exception handlers
 void Reset_Handler(void);
 void HardFault_Handler(void);
+void NMI_Handler(void);
 
 /* Cortex-M0 core handlers */
 void NMI_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));

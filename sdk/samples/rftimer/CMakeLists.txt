@@ -17,4 +17,6 @@ add_scum_application(
         gpio
         optical
 	rftimer
+        radio
 )
+
