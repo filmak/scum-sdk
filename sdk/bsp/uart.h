@@ -2,10 +2,13 @@
 #define __UART_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 // UART callback function definitions.
 typedef void (*uart_tx_callback_t)(void);
 typedef void (*uart_rx_callback_t)(char data);
+
+typedef void (*uart_rx_cb_t)(uint8_t byte);
 
 // Set the UART TX callback.
 void uart_set_tx_callback(uart_tx_callback_t callback);
@@ -27,5 +30,7 @@ void uart_write(char data);
 
 // Read a character over UART.
 char uart_read(void);
+
+void uart_init(uart_rx_cb_t cb);
 
 #endif  // __UART_H
