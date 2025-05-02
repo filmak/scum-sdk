@@ -28,3 +28,11 @@ jobs:
         run: ninja --version
       - name: Build
         run: make all BUILD_TYPE=${{ matrix.build-type }}
+  build-programmer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Build SCuM nRF programmer
+        run:
+          make scum-programmer-in-docker

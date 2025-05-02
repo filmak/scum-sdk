@@ -25,3 +25,24 @@ all: $(SAMPLES)
 
 clean:
 	rm -rf $(SAMPLES_BUILD_DIRS)
+
+
+DOCKER_IMAGE ?= aabadie/dotbot:latest
+PACKAGES_DIR_OPT ?=
+SEGGER_DIR ?= /opt/segger
+BUILD_CONFIG ?= Release
+
+.PHONY: scum-programmer scum-programmer-in-docker
+
+scum-programmer:
+	@echo "\e[1mBuilding $@ application\e[0m"
+	"$(SEGGER_DIR)/bin/emBuild" programmer/nrf-fw/scum-programmer.emProject -project $@ -config $(BUILD_CONFIG) $(PACKAGES_DIR_OPT) -rebuild -verbose
+	@echo "\e[1mDone\e[0m\n"
+
+scum-programmer-in-docker:
+	docker run --rm -i \
+		-e BUILD_CONFIG="$(BUILD_CONFIG)" \
+		-e PACKAGES_DIR_OPT="-packagesdir $(SEGGER_DIR)/packages" \
+		-e SEGGER_DIR="$(SEGGER_DIR)" \
+		-v $(PWD):/dotbot $(DOCKER_IMAGE) \
+		make scum-programmer
