@@ -3,6 +3,8 @@ build/
 .vscode/
 .DS_Store
 
+*.swp
+
 # Segger Embedded Studio artifacts
 Output/
 *.emSession
