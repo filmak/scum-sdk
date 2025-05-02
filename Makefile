@@ -7,6 +7,7 @@ SAMPLES ?= \
 	radio_example_rx \
 	rftimer \
 	systick \
+	uart \
 	#
 
 RM := rm
