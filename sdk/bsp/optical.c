@@ -243,7 +243,7 @@ void OPTICAL_SFD_Handler(void) {
         count_IF, IF_fine
     );
 
-    if (optical_vars.optical_cal_iteration == 25) {
+    if (optical_vars.optical_cal_iteration == 10) {
 
         // Disable this ISR
         NVIC_DisableIRQ(EXT_GPIO8_ACTIVEHIGH_IRQn);

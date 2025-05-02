@@ -27,7 +27,7 @@ SCuM programmer.
 #define CALIBRATION_PULSE_WIDTH         50      // approximate duty cycle (out of 100)
 #define CALIBRATION_PERIOD              100     // period in ms
 #define CALIBRATION_FUDGE               308     // # of clock cycles of "fudge"
-#define CALIBRATION_NUMBER_OF_PULSES    25      // # of rising edges at 100ms
+#define CALIBRATION_NUMBER_OF_PULSES    10      // # of rising edges at 100ms
 
 #define PROGRAMMER_VDDD_HI_PIN          27UL
 #define PROGRAMMER_VDDD_LO_PIN          15UL
