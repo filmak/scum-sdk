@@ -59,11 +59,11 @@ void rftimer_setCompareIn_by_id(uint32_t val, uint8_t id) {
     rftimer_enable_interrupts_by_id(id);
     rftimer_enable_interrupts();
 
-    // A timer scheudled in the past
+    // A timer scheduled in the past
 
     // Note: this is a hack!!
     //   since the timer counter overflow after hitting the MAX_COUNT,
-    //       theoritically, there is no way to find a timer is scheduled
+    //       theoretically, there is no way to find a timer is scheduled
     //       in the past or in the future. However, if we know the
     //       LARGEST_INTERVAL between each two adjacent timers: if the val -
     //       current count < largest interval:
@@ -127,7 +127,7 @@ void rftimer_set_repeat(bool should_repeat, uint8_t id) {
 
 /* Delays the chip for a period of time in milliseconds based off the rate
  * of the 500kHz RF TIMER. Internally, this function uses RFTIMER COMPARE 7.
- * This is an asynchronous delay, so the program can continue executation and
+ * This is an asynchronous delay, so the program can continue execution and
  * eventually the interrupt will be called indicating the end of the delay.
  * You will need to set callback if desired.
  *
