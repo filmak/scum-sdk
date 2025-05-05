@@ -63,17 +63,16 @@ int _write (int file, char * ptr, int len) {
 }
 
 int _read (int file, char * ptr, int len) {
-  int read = 0;
+    int read = 0;
 
-  if (file != 0) {
-    return -1;
-  }
+    if (file != 0) {
+        return -1;
+    }
 
-  for (; len > 0; --len) {
-    *ptr++ = SCUM_UART->DATA;
-    // TODO: proper read input
-    read++;
-  }
-  return read;
+    for (; len > 0; --len) {
+        *ptr++ = SCUM_UART->DATA;
+        read++;
+    }
+    return read;
 }
 

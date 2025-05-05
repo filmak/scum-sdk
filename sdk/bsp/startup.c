@@ -44,7 +44,7 @@ void EXT_GPIO8_ACTIVEHIGH_Handler           (void) __attribute__ ((weak, alias("
 void EXT_GPIO9_ACTIVELOW_Handler            (void) __attribute__ ((weak, alias("Dummy_Handler")));
 void EXT_GPIO10_ACTIVELOW_Handler           (void) __attribute__ ((weak, alias("Dummy_Handler")));
 
-// vector table (note that it is missing all interrupt handlers)
+// vector table
 typedef void(*vector_table_t)(void);
 typedef struct {
     void* _estack;
