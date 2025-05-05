@@ -37,7 +37,7 @@ void optical_init(void) {
     // Divide ratio is currently 480*2
     // Calibration counts for 100ms
     optical_vars.LC_target = REFERENCE_LC_TARGET;
-    optical_vars.LC_code = DEFUALT_INIT_LC_CODE;
+    optical_vars.LC_code = DEFAULT_INIT_LC_CODE;
 }
 
 void optical_enable(void) {

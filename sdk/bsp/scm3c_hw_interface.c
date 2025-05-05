@@ -1199,7 +1199,7 @@ void initialize_mote() {
     set_asc_bit(1114);
 
     // Set initial LO frequency
-    LC_monotonic(DEFUALT_INIT_LC_CODE);
+    LC_monotonic(DEFAULT_INIT_LC_CODE);
 
 #if defined(MODULE_RADIO)
     // Init divider settings
