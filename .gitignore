@@ -2,6 +2,7 @@ build/
 .cache/
 .vscode/
 .DS_Store
+*.swp
 
 # Python pyc
 *.pyc
