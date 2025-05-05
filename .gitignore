@@ -3,6 +3,9 @@ build/
 .vscode/
 .DS_Store
 
+# Python pyc
+*.pyc
+
 # Segger Embedded Studio artifacts
 Output/
 *.emSession

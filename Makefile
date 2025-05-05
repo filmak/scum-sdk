@@ -36,7 +36,7 @@ BUILD_CONFIG ?= Release
 
 scum-programmer:
 	@echo "\e[1mBuilding $@ application\e[0m"
-	"$(SEGGER_DIR)/bin/emBuild" programmer/nrf-fw/scum-programmer.emProject -project $@ -config $(BUILD_CONFIG) $(PACKAGES_DIR_OPT) -rebuild -verbose
+	"$(SEGGER_DIR)/bin/emBuild" scum_programmer/nrf-fw/scum-programmer.emProject -project $@ -config $(BUILD_CONFIG) $(PACKAGES_DIR_OPT) -rebuild -verbose
 	@echo "\e[1mDone\e[0m\n"
 
 scum-programmer-in-docker:

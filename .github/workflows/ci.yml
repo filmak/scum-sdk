@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  build-sdk:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -28,7 +28,7 @@ jobs:
         run: ninja --version
       - name: Build
         run: make all BUILD_TYPE=${{ matrix.build-type }}
-  build-programmer:
+  build-programmer-nrf-fw:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -36,3 +36,24 @@ jobs:
       - name: Build SCuM nRF programmer
         run:
           make scum-programmer-in-docker
+  check-programmer-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install hatch
+        run:
+          pip install -U pip hatch
+      - name: Check formatting
+        run:
+          hatch fmt -f --check
+      - name: Check linting
+        run:
+          hatch fmt -l --check
+      - name: Check installation
+        run:
+          hatch run scum-programmer --help
