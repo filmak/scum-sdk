@@ -1,0 +1,77 @@
+[build-system]
+requires = [
+    "hatchling>=1.4.1",
+]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "*.py"
+]
+exclude = [
+    "sdk/",
+    "programmer/nrf-fw/",
+]
+
+[tool.hatch.version]
+path = "scum_programmer/programmer/__init__.py"
+
+[project]
+name = "scum-programmer"
+dynamic = ["version"]
+authors = [
+    { name="Alexandre Abadie", email="alexandre.abadie@inria.fr" },
+]
+dependencies = [
+    "click          >= 8.1.7",
+    "pyserial       >= 3.5",
+    "rich           >= 14.0.0",
+    "tqdm           >= 4.66.5",
+]
+description = "SCuM programmer script."
+readme = "scum_programmer/README.md"
+license = { text="BSD" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/PisterLab/scum-sdk"
+"Bug Tracker" = "https://github.com/PisterLab/scum-sdk/issues"
+
+[project.scripts]
+scum-programmer = "scum_programmer.main:main"
+
+[tool.hatch.envs.hatch-static-analysis]
+dependencies = ["isort", "ruff"]
+
+[tool.hatch.envs.hatch-static-analysis.scripts]
+format-check = [
+  "ruff format --check --diff {args:.}",
+  "isort --check-only --diff {args:.}",
+]
+format-fix = [
+  "isort {args:.}",
+  "ruff format --diff {args:.}",
+]
+lint-check = "ruff check {args:.}"
+lint-fix = "ruff check --fix {args:.}"
+
+[tool.ruff]
+lint.select = ["E", "F"]
+line-length = 88
+lint.ignore = ["E501", "E722"]
+exclude = ["sdk", "programmer/nrf-fw"]
+
+[tool.isort]
+multi_line_output = 3  # Use Vertical Hanging Indent
+profile = "black"
+
+[tool.black]
+line-length = 79
+skip-string-normalization = true

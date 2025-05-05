@@ -1,35 +1,16 @@
-#!/usr/bin/env python
-
 import sys
 import time
 from dataclasses import dataclass
 from enum import IntEnum
 
-import click
 import serial
 from rich import print
 from rich.console import Console
-from serial.tools import list_ports
 from tqdm import tqdm
-
-
-def get_default_port():
-    """Return default serial port."""
-    ports = [port for port in list_ports.comports()]
-    if sys.platform != "win32":
-        ports = [port for port in ports if "J-Link" == port.product]
-    if not ports:
-        return "/dev/ttyACM0"
-    # return first JLink port available
-    return ports[0].device
-
 
 # Constants
 USB_CHUNK_SIZE = 64
 CHUNK_SIZE = 256
-
-SERIAL_PORT_DEFAULT = get_default_port()
-SERIAL_BAUDRATE_DEFAULT = 460800
 
 
 class Command(IntEnum):
@@ -123,7 +104,7 @@ class ScumProgrammer:
             colour="green",
             ncols=100,
         )
-        progress.set_description(f"Loading firmware to RAM")
+        progress.set_description("Loading firmware to RAM")
         for chunk in chunks:
             command = bytearray()
             command += Command.CHUNK.to_bytes(1)
@@ -153,7 +134,7 @@ class ScumProgrammer:
 
     def run(self):
         """Run the Scum Programmer."""
-        print(f"[bold green]Starting Scum Programmer[/]")
+        print("[bold green]Starting Scum Programmer[/]")
         start = time.time()
         # Triggers hard reset on SCuM
         self.start()
@@ -167,40 +148,3 @@ class ScumProgrammer:
         # Close serial port
         self.serial.close()
         print(f"[bold green]Done in {time.time() - start:.3f}s[/]")
-
-
-@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.version_option("0.1.0", "-v", "--version")
-@click.option(
-    "-p",
-    "--port",
-    default=SERIAL_PORT_DEFAULT,
-    help="Serial port to use for nRF.",
-)
-@click.option(
-    "-b",
-    "--baudrate",
-    default=SERIAL_BAUDRATE_DEFAULT,
-    help="Baudrate to use for nRF.",
-)
-@click.option(
-    "-c",
-    "--calibrate",
-    is_flag=True,
-    default=False,
-    help="Calibrate SCuM after flashing.",
-)
-@click.argument("firmware", type=click.File(mode="rb"), required=True)
-def main(port, baudrate, calibrate, firmware):
-    programmer_settings = ScumProgrammerSettings(
-        port=port,
-        baudrate=baudrate,
-        calibrate=calibrate,
-        firmware=firmware.name,
-    )
-    programmer = ScumProgrammer(programmer_settings)
-    programmer.run()
-
-
-if __name__ == "__main__":
-    main()
