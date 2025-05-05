@@ -103,9 +103,10 @@ typedef struct {
   __IOM uint32_t  CONTROL;                /* Offset: 0x000 (R/W) Control Register */
   __IM  uint32_t  COUNTER;                /* Offset: 0x004 (R/ ) Counter Register */
   __IOM uint32_t  MAX_COUNT;              /* Offset: 0x008 (R/W) Max Count Register */
+  __IM  uint32_t  RESERVED;               /* Offset: 0x00C (R/ ) Reserved */
   __IOM uint32_t  COMPARE[8];             /* Offset: 0x010 (R/W) Compare Register */
   __IOM uint32_t  COMPARE_CONTROL[8];     /* Offset: 0x030 (R/W) Compare Control Register */
-  __IM  uint32_t  CAPTURE[4];             /* Offset: 0x050 (R/ ) Capture Register */
+  __IOM uint32_t  CAPTURE[4];             /* Offset: 0x050 (R/ ) Capture Register */
   __IOM uint32_t  CAPTURE_CONTROL[4];     /* Offset: 0x060 (R/W) Capture Control Register */
   __IOM uint32_t  INT;                    /* Offset: 0x070 (R/ ) Interrupt Register */
   __IOM uint32_t  INT_CLEAR;              /* Offset: 0x074 (R/W) Interrupt Clear Register */
