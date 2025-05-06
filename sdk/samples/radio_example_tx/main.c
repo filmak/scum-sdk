@@ -22,6 +22,13 @@ uint8_t fine_code = 0;
 uint8_t mid_code = 0;
 
 int main(void) {
+<<<<<<< HEAD
+=======
+uint8_t fine_code = 0;
+uint8_t mid_code = 0;
+
+int main(void) {
+>>>>>>> ddcf2bb (radio tx example sweeps over a larger range to increase chance that rx example receives it - this may be chip-specific)
 
     printf("Radio Transmitter Example\n");
     radio_init();
