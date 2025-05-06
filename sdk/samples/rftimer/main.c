@@ -6,12 +6,12 @@
 #include "optical.h"
 #include "rftimer.h"
 
-#define RFTIMER_CHANNEL     (0U)
+#define RFTIMER_CHANNEL     (1U)
 #define RFTIMER_DELAY       (1000000UL)
 
 static void rftimer_cb2( void ) {
-    printf("RFTimer callback %d triggered - %lu\n\n", RFTIMER_CHANNEL, rftimer_readCounter());
     rftimer_setCompareIn_by_id(rftimer_readCounter() + RFTIMER_DELAY, RFTIMER_CHANNEL);
+    printf("RFTimer callback %d triggered - %lu\n\n", RFTIMER_CHANNEL, rftimer_readCounter());
 }
 
 int main(void) {
@@ -22,7 +22,7 @@ int main(void) {
     rftimer_init();
     rftimer_set_callback_by_id(rftimer_cb2, RFTIMER_CHANNEL);
     rftimer_setCompareIn_by_id(rftimer_readCounter() + RFTIMER_DELAY, RFTIMER_CHANNEL);
- 
+
     while (1) {
         puts("Waiting for interrupt...");
         __WFI();
