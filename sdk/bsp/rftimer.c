@@ -32,10 +32,6 @@ static unsigned int timer_durations[NUM_INTERRUPTS] = { 0 };  // indicates lengt
                                                // interrupt was set to run for.
                                                // Used for repeating delay.
 
-// ========================== prototype =======================================
-
-void handle_interrupt(uint8_t id);
-
 // ========================== public ==========================================
 
 void rftimer_init(void) {
@@ -172,76 +168,7 @@ void delay_milliseconds_synchronous(unsigned int delay_milli, uint8_t id) {
 
 // ========================== interrupt =======================================
 
-void RFTIMER_Handler(void) {
-    uint32_t interrupt = SCUM_RFTIMER->INT;
-    SCUM_RFTIMER->INT_CLEAR = interrupt;
-
-    if (interrupt == 0) {
-#ifdef ENABLE_PRINTF
-        printf("COMPARE%d MATCH\r\n", 0);
-#endif
-        handle_interrupt(0);
-    } else {
-       for (uint8_t i = 0; i <= 7; i++) {
-            if ((interrupt & (1 << i))) {
-#ifdef ENABLE_PRINTF
-                printf("COMPARE%d MATCH\r\n", i + 1);
-#endif
-                handle_interrupt(i);
-            }
-        }
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE0_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE0 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[0]);
-#endif
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE1_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE1 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[1]);
-#endif
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE2_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE2 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[2]);
-#endif
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE3_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE3 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[3]);
-#endif
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE0_OVERFLOW_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE0 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[0]);
-#endif
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE1_OVERFLOW_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE1 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[1]);
-#endif
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE2_OVERFLOW_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE2 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[2]);
-#endif
-    }
-
-    if (interrupt & RFTIMER_REG__INT_CAPTURE3_OVERFLOW_INT) {
-#ifdef ENABLE_PRINTF
-        printf("CAPTURE3 OVERFLOW AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[3]);
-#endif
-    }
-}
-
-void handle_interrupt(uint8_t id) {
+void handle_compare_interrupt(uint8_t id) {
     delay_completed[id] = true;  // used for delay synchronous function
 
     if (is_repeating[id]) {
@@ -250,5 +177,53 @@ void handle_interrupt(uint8_t id) {
 
     if (rftimer_vars.rftimer_cbs[id]) {
         rftimer_vars.rftimer_cbs[id]();
+    }
+}
+
+void RFTIMER_Handler(void) {
+    uint32_t interrupt = SCUM_RFTIMER->INT;
+    SCUM_RFTIMER->INT_CLEAR = interrupt;
+
+    switch (interrupt) {
+        case RFTIMER_REG__INT_COMPARE0_INT:
+            handle_compare_interrupt(0);
+            break;
+        case RFTIMER_REG__INT_COMPARE1_INT:
+            handle_compare_interrupt(1);
+            break;
+        case RFTIMER_REG__INT_COMPARE2_INT:
+            handle_compare_interrupt(2);
+            break;
+        case RFTIMER_REG__INT_COMPARE3_INT:
+            handle_compare_interrupt(3);
+            break;
+        case RFTIMER_REG__INT_COMPARE4_INT:
+            handle_compare_interrupt(4);
+            break;
+        case RFTIMER_REG__INT_COMPARE5_INT:
+            handle_compare_interrupt(5);
+            break;
+        case RFTIMER_REG__INT_COMPARE6_INT:
+            handle_compare_interrupt(6);
+            break;
+        case RFTIMER_REG__INT_COMPARE7_INT:
+            handle_compare_interrupt(7);
+            break;
+#ifdef ENABLE_PRINTF
+        case RFTIMER_REG__INT_CAPTURE0_INT:
+            printf("CAPTURE0 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[0]);
+            break;
+        case RFTIMER_REG__INT_CAPTURE1_INT:
+            printf("CAPTURE0 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[1]);
+            break;
+        case RFTIMER_REG__INT_CAPTURE2_INT:
+            printf("CAPTURE0 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[2]);
+            break;
+        case RFTIMER_REG__INT_CAPTURE3_INT:
+            printf("CAPTURE0 TRIGGERED AT: 0x%lx\r\n", SCUM_RFTIMER->CAPTURE[3]);
+            break;
+#endif
+        default:
+            break;
     }
 }
