@@ -16,10 +16,12 @@ enum {
 };
 
 // UART TX callback function.
-static uart_tx_callback_t g_uart_tx_callback;
+static uart_tx_callback_t g_uart_tx_callback = NULL;
 
 // UART RX callback function.
-static uart_rx_callback_t g_uart_rx_callback;
+static uart_rx_callback_t g_uart_rx_callback = NULL;
+
+static uart_rx_cb_t g_uart_rx_cb = NULL;
 
 // UART XON/XOFF escaping. If true, the current data character is being escaped
 // and has to be transmitted after the escape character.
@@ -35,15 +37,8 @@ void uart_tx_isr(void) {
         g_uart_xon_xoff_escaping = false;
     }
 
-    if (g_uart_tx_callback != NULL) {
+    if (g_uart_tx_callback) {
         g_uart_tx_callback();
-    }
-}
-
-// UART RX interrupt service routine.
-void UART_Handler(void) {
-    if (g_uart_rx_callback != NULL) {
-        g_uart_rx_callback(uart_read());
     }
 }
 
@@ -57,15 +52,13 @@ void uart_set_rx_callback(const uart_rx_callback_t callback) {
 
 void uart_enable_interrupt(void) {
     NVIC_EnableIRQ(UART_IRQn);
-    printf("UART interrupt enabled: 0x%08lx.\n", *NVIC->ISER);
 }
 
 void uart_disable_interrupt(void) {
     NVIC_DisableIRQ(UART_IRQn);
-    printf("UART interrupt disabled: 0x%08lx.\n", *NVIC->ICER);
 }
 
-void uart_set_cts(const bool state) {
+void uart_set_cts(bool state) {
     if (state) {
         SCUM_UART->DATA = XON;
     } else {
@@ -73,7 +66,7 @@ void uart_set_cts(const bool state) {
     }
 }
 
-void uart_write(const char data) {
+void uart_write(char data) {
     if (data == XOFF || data == XON || data == XONXOFF_MASK) {
         g_uart_xon_xoff_escaping = true;
         g_uart_xon_xoff_escaped_char = data;
@@ -86,4 +79,27 @@ void uart_write(const char data) {
     uart_tx_isr();
 }
 
-char uart_read(void) { return SCUM_UART->DATA; }
+char uart_read(void) {
+    return SCUM_UART->DATA;
+}
+
+void uart_init(uart_rx_cb_t cb) {
+    // Set the RX callback.
+    g_uart_rx_cb = cb;
+
+    // Enable the RX interrupt if cb is not NULL.
+    if (cb) {
+        NVIC_EnableIRQ(UART_IRQn);
+    }
+}
+
+// UART RX interrupt service routine.
+void UART_Handler(void) {
+    if (g_uart_rx_callback) {
+        g_uart_rx_callback(SCUM_UART->DATA);
+    }
+
+    if (g_uart_rx_cb) {
+        g_uart_rx_cb(SCUM_UART->DATA);
+    }
+}

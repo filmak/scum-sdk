@@ -44,6 +44,8 @@ function(add_scum_application)
 
     set(CORE_DEPS
         init
+        gpio
+        optical
         scm3c_hw_interface
         sys
         uart
