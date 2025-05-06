@@ -238,10 +238,13 @@ void OPTICAL_SFD_Handler(void) {
         RC2M_fine, RC2M_superfine,
         count_LC, optical_vars.LC_code
     );
+#if defined(MODULE_RADIO)
     printf(
-"IF=%lu-%lu\r\n",
+"IF=%lu-%lu",
         count_IF, IF_fine
     );
+#endif
+    puts("");
 
     if (optical_vars.optical_cal_iteration == 10) {
 

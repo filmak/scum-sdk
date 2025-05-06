@@ -3,6 +3,7 @@ build/
 .vscode/
 .DS_Store
 *.swp
+*.orig
 
 # Python pyc
 *.pyc

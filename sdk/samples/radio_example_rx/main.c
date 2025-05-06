@@ -13,7 +13,6 @@
 #define NUM_CYCLES_BETWEEN_TX (1000000UL)
 
 int main(void) {
-    perform_calibration();
 
     LC_FREQCHANGE(0,0,0);
     radio_txEnable();
