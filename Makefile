@@ -14,6 +14,7 @@ RM := rm
 MKDIR := mkdir
 
 SAMPLES_SRC_DIR := sdk/samples
+SAMPLES_SRC_DIRS ?= $(foreach project,$(SAMPLES),$(SAMPLES_SRC_DIR)/$(project))
 SAMPLES_BUILD_DIRS ?= $(foreach project,$(SAMPLES),$(SAMPLES_SRC_DIR)/$(project)/build)
 
 .PHONY: all clean $(SAMPLES)
@@ -49,3 +50,22 @@ scum-programmer-in-docker:
 		-e SEGGER_DIR="$(SEGGER_DIR)" \
 		-v $(PWD):/dotbot $(DOCKER_IMAGE) \
 		make scum-programmer
+
+EXCLUDED_DIRS := \
+	./sdk/bsp \
+	./sdk/bsp/cmsis \
+	./sdk/samples/* \
+	./sdk/samples/*/build \
+	./scum_programmer/nrf-fw/nRF \
+	#
+EXCLUDE_OPTS := $(foreach dir,$(EXCLUDED_DIRS),-not -path "$(dir)/*")
+SRCS ?= $(shell find . -name "*.[c|h]" $(EXCLUDE_OPTS))
+CLANG_FORMAT ?= clang-format
+CLANG_FORMAT_TYPE ?= file
+.PHONY: format
+
+format:
+	@$(CLANG_FORMAT) -i --style=$(CLANG_FORMAT_TYPE) $(SRCS)
+
+check-format:
+	@$(CLANG_FORMAT) --dry-run --Werror --style=$(CLANG_FORMAT_TYPE) $(SRCS)
