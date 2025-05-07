@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="104.14529mm"
+   height="26.44973mm"
+   viewBox="0 0 104.14529 26.44973"
+   version="1.1"
+   id="svg5"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2">
+    <linearGradient
+       xlink:href="#linearGradient4689"
+       id="linearGradient1478"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.05088387,0,0,0.05137519,55.33512,73.752315)"
+       x1="26.648937"
+       y1="20.603781"
+       x2="135.66525"
+       y2="114.39767" />
+    <linearGradient
+       id="linearGradient4689">
+      <stop
+         style="stop-color:#5a9fd4;stop-opacity:1;"
+         offset="0"
+         id="stop4691" />
+      <stop
+         style="stop-color:#306998;stop-opacity:1;"
+         offset="1"
+         id="stop4693" />
+    </linearGradient>
+    <linearGradient
+       xlink:href="#linearGradient4671"
+       id="linearGradient1475"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.05088387,0,0,0.05137519,55.33512,73.752315)"
+       x1="150.96111"
+       y1="192.35176"
+       x2="112.03144"
+       y2="137.27299" />
+    <linearGradient
+       id="linearGradient4671">
+      <stop
+         style="stop-color:#ffd43b;stop-opacity:1;"
+         offset="0"
+         id="stop4673" />
+      <stop
+         style="stop-color:#ffe873;stop-opacity:1"
+         offset="1"
+         id="stop4675" />
+    </linearGradient>
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(-72.92005,-37.376332)">
+    <rect
+       style="fill:#e5e7e9;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect234-5"
+       width="30.656464"
+       height="12.892768"
+       x="73.070045"
+       y="49.084499" />
+    <g
+       id="g24164"
+       transform="translate(-3.5768547)">
+      <rect
+         style="fill:#ccd1d1;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+         id="rect234"
+         width="25.86063"
+         height="7.1323934"
+         x="116.33593"
+         y="37.612434" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:2.50001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.600001;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+         x="129.17805"
+         y="42.445107"
+         id="text1216"><tspan
+           id="tspan1214"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.6"
+           x="129.17805"
+           y="42.445107">USB to UART</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:2.25001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.600001;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="94.135521"
+       y="54.740841"
+       id="text1216-4"><tspan
+         id="tspan1214-7"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.6"
+         x="94.135521"
+         y="54.740841">Programmer</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.6"
+         x="94.135521"
+         y="57.943352"
+         id="tspan22618">script</tspan></text>
+    <rect
+       style="fill:#e5e7e9;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect234-5-6"
+       width="23.200937"
+       height="7.304594"
+       x="80.61187"
+       y="37.526333" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:2.25001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.600001;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="92.247261"
+       y="42.318455"
+       id="text1216-4-5"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.6"
+         x="92.247261"
+         y="42.318455"
+         id="tspan22618-9">Serial Terminal</tspan></text>
+    <rect
+       style="fill:#bfc9ca;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect234-2"
+       width="29.346996"
+       height="25.95093"
+       x="147.56833"
+       y="37.725132" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:3.50001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.600001;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="162.32085"
+       y="52.47366"
+       id="text1216-2"><tspan
+         id="tspan1214-8"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.6"
+         x="162.32085"
+         y="52.47366">SCuM</tspan></text>
+    <rect
+       style="fill:#e5e7e9;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect1321"
+       width="12.65416"
+       height="6.9067869"
+       x="147.56833"
+       y="37.725132" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:2.50001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="153.80722"
+       y="42.423832"
+       id="text1325"><tspan
+         id="tspan1323"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-dasharray:none"
+         x="153.80722"
+         y="42.423832">UART</tspan></text>
+    <rect
+       style="fill:#e5e7e9;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect1321-2"
+       width="12.251833"
+       height="7.0797038"
+       x="164.6635"
+       y="56.596359" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:2.50001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.6;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="170.78941"
+       y="61.402683"
+       id="text1325-9"><tspan
+         id="tspan1323-3"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.6;stroke-dasharray:none"
+         x="170.78941"
+         y="61.402683">ROM</tspan></text>
+    <rect
+       style="fill:#e5e7e9;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect1321-2-1"
+       width="12.251833"
+       height="7.0797038"
+       x="147.56833"
+       y="56.596359" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:2.50001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.6;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="153.69424"
+       y="61.402683"
+       id="text1325-9-9"><tspan
+         id="tspan1323-3-4"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.6;stroke-dasharray:none"
+         x="153.69424"
+         y="61.402683">GPIO</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 159.82016,59.776066 4.84334,3e-6"
+       id="path1490" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 159.82016,58.746602 4.84334,3e-6"
+       id="path1490-7" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 159.82016,61.834995 4.84334,3e-6"
+       id="path1490-8" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 159.82016,60.805531 4.84334,3e-6"
+       id="path1490-4" />
+    <g
+       id="g1704"
+       style="stroke-width:0.003;stroke-dasharray:none">
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.003;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 147.31803,40.596303 -4.99983,-0.01944"
+         id="path1625" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.003;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 147.31803,41.820492 -4.99983,-0.01944"
+         id="path1625-5" />
+    </g>
+    <g
+       id="g1704-0"
+       transform="matrix(1.0490115,0,0,1.0006238,-6.9698821,18.911833)"
+       style="stroke-width:0.33293;stroke-dasharray:none">
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.33293;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 147.31803,40.596303 -4.99983,-0.01944"
+         id="path1625-6" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.33293;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 147.31803,41.820492 -4.99983,-0.01944"
+         id="path1625-5-3" />
+    </g>
+    <g
+       id="g1704-0-4"
+       transform="matrix(1.731057,0,0,0.99644275,-107.59431,0.15567647)"
+       style="stroke-width:0.33293;stroke-dasharray:none">
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.33293;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 147.31803,40.596303 -4.99983,-0.01944"
+         id="path1625-6-5" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.33293;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 147.31803,41.820492 -4.99983,-0.01944"
+         id="path1625-5-3-2" />
+    </g>
+    <rect
+       style="fill:#d6dbdf;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect234-3"
+       width="32.967159"
+       height="16.290363"
+       x="109.20581"
+       y="47.3857" />
+    <rect
+       style="fill:#ebedef;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect1321-2-1-0"
+       width="12.293001"
+       height="16.289854"
+       x="109.20581"
+       y="47.385956" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:2.25001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.6;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="115.27293"
+       y="53.468197"
+       id="text1325-9-9-6"><tspan
+         id="tspan1323-3-4-1"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.6;stroke-dasharray:none"
+         x="115.27293"
+         y="53.468197">USB</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.6;stroke-dasharray:none"
+         x="115.27293"
+         y="56.670708"
+         id="tspan2532">to</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.6;stroke-dasharray:none"
+         x="115.27293"
+         y="59.873219"
+         id="tspan2530">UART</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:3.50001px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.600001;stroke-miterlimit:5.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       x="131.66367"
+       y="57.331108"
+       id="text1216-6"><tspan
+         id="tspan1214-1"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke-width:0.6"
+         x="131.66367"
+         y="57.331108">nRF DK</tspan></text>
+    <g
+       id="g22622"
+       transform="translate(17.773917,-24.362953)">
+      <path
+         style="fill:url(#linearGradient1478);fill-opacity:1;stroke-width:0.0904484"
+         d="m 61.658722,74.810919 c -0.414605,0.0021 -0.810548,0.03732 -1.158934,0.09893 -1.026309,0.181316 -1.212646,0.560825 -1.212646,1.260699 v 0.924318 h 2.425285 v 0.30811 h -2.425285 -0.91019 c -0.704853,0 -1.322055,0.423663 -1.5151,1.229604 -0.222677,0.923806 -0.232553,1.500271 0,2.464863 0.172394,0.718017 0.584111,1.229613 1.288969,1.229613 h 0.833865 v -1.108058 c 0,-0.800506 0.692613,-1.506625 1.515102,-1.506625 h 2.422459 c 0.674332,0 1.212643,-0.55522 1.212643,-1.232436 v -2.309389 c 0,-0.657262 -0.554472,-1.151002 -1.212643,-1.260699 -0.416625,-0.06934 -0.848922,-0.100862 -1.263525,-0.09893 z m -1.31157,0.743421 c 0.250505,0 0.455089,0.207918 0.455089,0.463567 0,0.254752 -0.204584,0.460757 -0.455089,0.460757 -0.251416,0 -0.455099,-0.206005 -0.455099,-0.460757 0,-0.255649 0.203683,-0.463567 0.455099,-0.463567 z"
+         id="path1948" />
+      <path
+         style="fill:url(#linearGradient1475);fill-opacity:1;stroke-width:0.0904484"
+         d="m 64.437343,77.402979 v 1.076961 c 0,0.834963 -0.707878,1.537714 -1.515096,1.537714 h -2.422459 c -0.663554,0 -1.212646,0.567917 -1.212646,1.232431 v 2.309401 c 0,0.657273 0.571542,1.04386 1.212646,1.23243 0.767702,0.22574 1.503903,0.266537 2.422459,0 0.610579,-0.176778 1.212643,-0.532557 1.212643,-1.23243 v -0.924329 h -2.422463 v -0.308098 h 2.422463 1.212652 c 0.704858,0 0.967518,-0.491656 1.212645,-1.229613 0.253206,-0.759711 0.242447,-1.490288 0,-2.464863 -0.174211,-0.701679 -0.506895,-1.229604 -1.212645,-1.229604 z m -1.362455,5.848404 c 0.251416,0 0.455093,0.205995 0.455093,0.460747 0,0.255646 -0.203677,0.463566 -0.455093,0.463566 -0.250517,0 -0.455096,-0.20792 -0.455096,-0.463566 0,-0.254752 0.204578,-0.460747 0.455096,-0.460747 z"
+         id="path1950" />
+    </g>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 103.72651,55.530884 h 5.4793"
+       id="path22624" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 103.81281,41.178629 h 8.94627"
+       id="path22624-3" />
+  </g>
+</svg>

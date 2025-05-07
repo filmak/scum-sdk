@@ -31,7 +31,7 @@
       gcc_entry_point="Reset_Handler"
       link_linker_script_file="$(ProjectDir)/ses_nrf52840_xxaa.icf"
       linker_memory_map_file="$(ProjectDir)/nRF52840_xxAA_MemoryMap.xml"
-      linker_output_format="bin"
+      linker_output_format="hex"
       linker_printf_fmt_level="int"
       linker_printf_width_precision_supported="Yes"
       linker_section_placement_file="$(ProjectDir)/flash_placement.xml"
@@ -88,5 +88,4 @@
     gcc_debugging_level="Level 2"
     gcc_omit_frame_pointer="Yes"
     gcc_optimization_level="Level 2 balanced" />
-  <configuration Name="Common" linker_output_format="hex" />
 </solution>
