@@ -4,13 +4,13 @@
 [![License][license-badge]][license-link]
 
 This repository is an attempt to provide a proprietary free support for the
-SCuM chip.
+Single Chip micro-Mote (SCuM).
+The SCuM chip is a 2x3mm2 single-chip standard-compatible Smart Dust chip,
+see https://www.crystalfree.org/.
 Most of the drivers (UART, Radio, Timer, SPI) are taken from the
 [scum-test-code](https://github.com/PisterLab/scum-test-code) repository.
 
-### Requirements
-
-So far this repository has only been tested on Linux.
+## Requirements
 
 What is needed to build a firmware for SCuM:
 - [CMake](https://cmake.org/)
@@ -19,17 +19,17 @@ What is needed to build a firmware for SCuM:
 
 Make sure that the ARM toolchain GCC program is available in your PATH.
 
-### Get the code
+## Get the code
 
 Use Git:
 ```
 git clone https://github.com/PisterLab/scum-sdk.git
 ```
 
-### Usage
+## Build a SCuM firmware
 
-So far, only the original `hello_world` example application is available. To
-build this application, from the repository base directory, simply run
+Some sample applications are provided in the [sdk/samples](sdk/samples) directory.
+To build an application, from the repository base directory, simply run
 (for Windows users adapt the path separators to "\"):
 
 ```
@@ -39,12 +39,12 @@ ninja -C sdk/samples/hello_world/build
 
 The generated firmwares (elf, hex, bin) are located in the `sdk/samples/hello_world/build` directory.
 
-### Load the firmware on SCuM
+## Program SCuM
 
 Once the SCuM chip is properly connected to an nRF52840-DK programmer, use the
 SCuM programmer `main.py` script available in the [scum_programmer](scum_programmer) directory.
 
-The build system proposes a `load` target to automatically call the SCuM programmer
+The build system also proposes a `load` target to automatically call the SCuM programmer
 script:
 
 ```
