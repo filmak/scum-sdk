@@ -5,8 +5,10 @@ build/
 *.swp
 *.orig
 
-# Python pyc
+# Python
 *.pyc
+.coverage
+coverage.xml
 
 # Segger Embedded Studio artifacts
 Output/

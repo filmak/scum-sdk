@@ -47,6 +47,13 @@ classifiers = [
 [project.scripts]
 scum-programmer = "scum_programmer.main:main"
 
+[tool.hatch.envs.hatch-test]
+dependencies = [
+    "coverage[toml]",
+    "pytest",
+    "pytest-cov",
+]
+
 [tool.hatch.envs.hatch-static-analysis]
 dependencies = ["isort", "ruff"]
 
@@ -75,3 +82,9 @@ profile = "black"
 [tool.black]
 line-length = 79
 skip-string-normalization = true
+
+[tool.pytest.ini_options]
+addopts = "-vv --doctest-modules --cov-report=term --cov-report=term-missing --cov=scum_programmer"
+testpaths = [
+    "scum_programmer",
+]
