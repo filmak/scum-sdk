@@ -57,3 +57,6 @@ jobs:
       - name: Check installation
         run:
           hatch run scum-programmer --help
+      - name: Check tests
+        run:
+          hatch test .
