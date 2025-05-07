@@ -73,7 +73,7 @@ extern "C" {
  *
  */
 
-const uint32_t REGOUT0 __attribute__((section(".uicr_regout0"))) = 0; // 0 = 1.8v, 1 = 2.1v, 2 = 2.4v, 3 = 2.7v, 4 = 3.0v, 5 = 3.3v
+const uint32_t REGOUT0 __attribute__((section(".uicr_regout0"))) = 0;  // 0 = 1.8v, 1 = 2.1v, 2 = 2.4v, 3 = 2.7v, 4 = 3.0v, 5 = 3.3v
 
 // const uint32_t UICR_CLENR0    __attribute__((at(0x10001000))) __attribute__((used)) = 0xFFFFFFFF;
 // const uint32_t UICR_RBPCONF   __attribute__((at(0x10001004))) __attribute__((used)) = 0xFFFFFFFF;
@@ -114,9 +114,8 @@ const uint32_t REGOUT0 __attribute__((section(".uicr_regout0"))) = 0; // 0 = 1.8
 
 /*lint --flb "Leave library region" */
 
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif //_UICR_CONFIG_H
+#endif  //_UICR_CONFIG_H
