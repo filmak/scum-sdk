@@ -9,6 +9,7 @@ on:
   pull_request:
 
 jobs:
+
   build-sdk:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -28,6 +29,7 @@ jobs:
         run: ninja --version
       - name: Build
         run: make all BUILD_TYPE=${{ matrix.build-type }}
+
   build-programmer-nrf-fw:
     runs-on: ubuntu-latest
     steps:
@@ -36,6 +38,16 @@ jobs:
       - name: Build SCuM nRF programmer
         run:
           make scum-programmer-in-docker
+
+  check-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Check format
+        run:
+          make check-format
+
   check-programmer-script:
     runs-on: ubuntu-latest
     steps:

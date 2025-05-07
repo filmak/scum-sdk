@@ -14,36 +14,36 @@ SCuM programmer.
 
 //=========================== defines =========================================
 
-#define UART_BUF_SIZE                   (32U)
-#define COMMAND_BUF_SIZE                (256U)
-#define CHUNK_SIZE                      (128U)
-#define SCUM_MEM_SIZE                   (1 << 16) // 64KiB
+#define UART_BUF_SIZE    (32U)
+#define COMMAND_BUF_SIZE (256U)
+#define CHUNK_SIZE       (128U)
+#define SCUM_MEM_SIZE    (1 << 16)  // 64KiB
 
-#define CALIBRATION_PORT                0UL
-#define PROGRAMMER_EN_PIN               30UL
-#define PROGRAMMER_HRST_PIN             31UL
-#define PROGRAMMER_CLK_PIN              28UL
-#define PROGRAMMER_DATA_PIN             29UL
-#define PROGRAMMER_TAP_PIN              3UL
+#define CALIBRATION_PORT    0UL
+#define PROGRAMMER_EN_PIN   30UL
+#define PROGRAMMER_HRST_PIN 31UL
+#define PROGRAMMER_CLK_PIN  28UL
+#define PROGRAMMER_DATA_PIN 29UL
+#define PROGRAMMER_TAP_PIN  3UL
 
-#define CALIBRATION_CLK_PIN             28UL
-#define CALIBRATION_PULSE_WIDTH         50      // approximate duty cycle (out of 100)
-#define CALIBRATION_PERIOD              100     // period in ms
-#define CALIBRATION_FUDGE               308     // # of clock cycles of "fudge"
-#define CALIBRATION_NUMBER_OF_PULSES    10      // # of rising edges at 100ms
+#define CALIBRATION_CLK_PIN          28UL
+#define CALIBRATION_PULSE_WIDTH      50   // approximate duty cycle (out of 100)
+#define CALIBRATION_PERIOD           100  // period in ms
+#define CALIBRATION_FUDGE            308  // # of clock cycles of "fudge"
+#define CALIBRATION_NUMBER_OF_PULSES 10   // # of rising edges at 100ms
 
-#define PROGRAMMER_VDDD_HI_PIN          27UL
-#define PROGRAMMER_VDDD_LO_PIN          15UL
+#define PROGRAMMER_VDDD_HI_PIN 27UL
+#define PROGRAMMER_VDDD_LO_PIN 15UL
 
-#define GPIOTE_CALIBRATION_CLOCK        0
+#define GPIOTE_CALIBRATION_CLOCK 0
 
 //=========================== variables =======================================
 
 typedef enum {
-    COMMAND_START       = 0x01,
-    COMMAND_CHUNK       = 0x02,
-    COMMAND_BOOT        = 0x03,
-    COMMAND_CALIBRATE   = 0x04,
+    COMMAND_START = 0x01,
+    COMMAND_CHUNK = 0x02,
+    COMMAND_BOOT = 0x03,
+    COMMAND_CALIBRATE = 0x04,
 } command_type_t;
 
 typedef struct __attribute__((packed)) {
@@ -70,14 +70,14 @@ static const char *UART_ACK = "ACK\n";
 static void busy_wait_ms(uint32_t ms) {
     uint32_t cycles = 3000 * ms;
     while (cycles--) {
-        asm volatile ("":::);
+        asm volatile("" :::);
     }
 }
 
 static void setup_clock(void) {
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
     NRF_CLOCK->TASKS_HFCLKSTART = 1;
-    while (!NRF_CLOCK->EVENTS_HFCLKSTARTED);
+    while (!NRF_CLOCK->EVENTS_HFCLKSTARTED) {}
 }
 
 static void setup_uart(void) {
@@ -86,7 +86,7 @@ static void setup_uart(void) {
     NRF_UARTE0->PSEL.TXD = (0 << UARTE_PSEL_TXD_PORT_Pos | 6 << UARTE_PSEL_TXD_PIN_Pos);
     NRF_UARTE0->PSEL.RXD = (0 << UARTE_PSEL_RXD_PORT_Pos | 8 << UARTE_PSEL_RXD_PIN_Pos);
     NRF_UARTE0->RXD.PTR = (uint32_t)&_programmer_vars.uart_rx_byte;
-    NRF_UARTE0->RXD.MAXCNT = 1; // Only receive one byte at a time
+    NRF_UARTE0->RXD.MAXCNT = 1;  // Only receive one byte at a time
     NRF_UARTE0->BAUDRATE = UARTE_BAUDRATE_BAUDRATE_Baud460800 << UARTE_BAUDRATE_BAUDRATE_Pos;
     NRF_UARTE0->SHORTS = (UARTE_SHORTS_ENDRX_STARTRX_Enabled << UARTE_SHORTS_ENDRX_STARTRX_Pos);
     NRF_UARTE0->INTENSET = (UARTE_INTENSET_ENDRX_Enabled << UARTE_INTENSET_ENDRX_Pos);
@@ -107,20 +107,21 @@ static void uart_write(const uint8_t *buffer, size_t len) {
 }
 
 static void setup_programmer(void) {
-    NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN]    = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-    NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN]     = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-    NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN]    = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos; // 0x00 configures the pin as an input, input buffer disconnected, pull up/down disabled (no pull)
-    NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN]      = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-    NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN]     = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos; // default to hi-Z
+    NRF_P0->PIN_CNF[PROGRAMMER_DATA_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
+                                            GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
+    NRF_P0->PIN_CNF[PROGRAMMER_CLK_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
+                                           GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
+    NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos;  // 0x00 configures the pin as an input, input buffer disconnected, pull up/down disabled (no pull)
+    NRF_P0->PIN_CNF[PROGRAMMER_EN_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
+                                          GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
+    NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos;  // default to hi-Z
     NRF_P0->PIN_CNF[PROGRAMMER_VDDD_HI_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos |
-                                                GPIO_PIN_CNF_DRIVE_H0H1 << GPIO_PIN_CNF_DRIVE_Pos);
+                                               GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos |
+                                               GPIO_PIN_CNF_DRIVE_H0H1 << GPIO_PIN_CNF_DRIVE_Pos);
     NRF_P1->PIN_CNF[PROGRAMMER_VDDD_LO_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos |
-                                                GPIO_PIN_CNF_DRIVE_H0H1 << GPIO_PIN_CNF_DRIVE_Pos);;
+                                               GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos |
+                                               GPIO_PIN_CNF_DRIVE_H0H1 << GPIO_PIN_CNF_DRIVE_Pos);
+    ;
 
     NRF_P0->OUTSET = 1 << PROGRAMMER_VDDD_HI_PIN;
     NRF_P1->OUTCLR = 1 << PROGRAMMER_VDDD_LO_PIN;
@@ -136,11 +137,11 @@ static void setup_gpiote(void) {
 
 static void setup_timer2(void) {
     NRF_TIMER2->BITMODE = TIMER_BITMODE_BITMODE_32Bit << TIMER_BITMODE_BITMODE_Pos;
-    NRF_TIMER2->PRESCALER = 0; // set prescaler to zero => 16MHz timer
+    NRF_TIMER2->PRESCALER = 0;  // set prescaler to zero => 16MHz timer
 
-    NRF_TIMER2->CC[1]   = 40;
-    NRF_TIMER2->CC[2]   = CALIBRATION_PERIOD * 16000 - CALIBRATION_FUDGE; // artificially remove the N clk cycle delay in the PPI
-    NRF_TIMER2->SHORTS  = TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos;
+    NRF_TIMER2->CC[1] = 40;
+    NRF_TIMER2->CC[2] = CALIBRATION_PERIOD * 16000 - CALIBRATION_FUDGE;  // artificially remove the N clk cycle delay in the PPI
+    NRF_TIMER2->SHORTS = TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos;
 }
 
 static void setup_ppi(void) {
@@ -167,7 +168,7 @@ static void run_calibration(void) {
     NRF_TIMER2->TASKS_START = 1;
 
     while (!_programmer_vars.calibration_done) {
-        asm volatile ("":::);
+        asm volatile("" :::);
     }
     _programmer_vars.calibration_counter = 0;
     _programmer_vars.calibration_done = false;
@@ -177,14 +178,12 @@ static void bitband_byte(uint8_t byte, bool latch) {
     for (uint8_t j = 0; j < 8; j++) {
         if ((byte >> j) & 0x01) {
             NRF_P0->OUTSET = 1 << PROGRAMMER_DATA_PIN;
-        }
-        else if (!((byte >> j) & 0x01)) {
+        } else if (!((byte >> j) & 0x01)) {
             NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
         }
         if (latch && (j == 7)) {
             NRF_P0->OUTSET = 1 << PROGRAMMER_EN_PIN;
-        }
-        else {
+        } else {
             NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
         }
         // toggle the clock
@@ -206,9 +205,9 @@ static void _process_command(void) {
             NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
             // execute hard reset (debug for now)
             NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                    GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos); // configure as output, set low
+                                                    GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);  // configure as output, set low
             busy_wait_ms(14);
-            NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos; // return to input
+            NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos;  // return to input
             busy_wait_ms(14);
             break;
         }
@@ -229,9 +228,9 @@ static void _process_command(void) {
                 bitband_byte(0x00, (idx % 4 == 0));
             }
 
-            NRF_P0->OUTSET = (1 << PROGRAMMER_TAP_PIN); // first set pin high - NEVER CLEAR!!! scum will hate it if you do
+            NRF_P0->OUTSET = (1 << PROGRAMMER_TAP_PIN);  // first set pin high - NEVER CLEAR!!! scum will hate it if you do
             NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-                                                    GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos); // then enable output
+                                                   GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);  // then enable output
             break;
         }
         case COMMAND_CALIBRATE:
@@ -260,9 +259,9 @@ int main(void) {
         }
 
         // wait for event
-        __SEV(); // set event
-        __WFE(); // wait for event
-        __WFE(); // wait for event
+        __SEV();  // set event
+        __WFE();  // wait for event
+        __WFE();  // wait for event
     }
 }
 
@@ -284,13 +283,13 @@ void TIMER2_IRQHandler(void) {
         NRF_TIMER2->CC[1] = 300;
 
         if (_programmer_vars.calibration_counter > 10) {
-            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos; // turn the tap off after 5 100ms cycles!
+            NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos;  // turn the tap off after 5 100ms cycles!
         }
 
-        if (_programmer_vars.calibration_counter > CALIBRATION_NUMBER_OF_PULSES) { 
+        if (_programmer_vars.calibration_counter > CALIBRATION_NUMBER_OF_PULSES) {
             _programmer_vars.calibration_counter = 0;
 
-            NRF_TIMER2->TASKS_STOP = 1; // stop the count!
+            NRF_TIMER2->TASKS_STOP = 1;  // stop the count!
             NRF_GPIOTE->CONFIG[GPIOTE_CALIBRATION_CLOCK] = 0;
             NRF_P0->PIN_CNF[CALIBRATION_CLK_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
                                                     GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
