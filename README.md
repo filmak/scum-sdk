@@ -58,7 +58,7 @@ to the SCuM project.
 
 ## License
 
-The SCuM SDK is published under the [BSD 3-clauses license](LICENSE.txt).
+The SCuM SDK is published under the [BSD 3-Clause license](LICENSE.txt).
 
 [ci-badge]: https://github.com/pisterlab/scum-sdk/workflows/CI/badge.svg
 [ci-link]: https://github.com/pisterlab/scum-sdk/actions?query=workflow%3ACI+branch%3Amain
