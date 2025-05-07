@@ -8,9 +8,11 @@ from rich import print
 from rich.console import Console
 from tqdm import tqdm
 
+from .hdlc import hdlc_encode
+
 # Constants
 USB_CHUNK_SIZE = 64
-CHUNK_SIZE = 256
+CHUNK_SIZE = 128
 
 
 class Command(IntEnum):
@@ -44,8 +46,9 @@ class ScumProgrammer:
     def _send_command(self, msg: str, command: bytes):
         """Send a command to the SCuM."""
         pos = 0
-        while (pos % USB_CHUNK_SIZE) == 0 and pos < len(command):
-            self.serial.write(command[pos : pos + USB_CHUNK_SIZE])
+        _command = hdlc_encode(command)
+        while (pos % USB_CHUNK_SIZE) == 0 and pos < len(_command):
+            self.serial.write(_command[pos : pos + USB_CHUNK_SIZE])
             self.serial.flush()
             pos += USB_CHUNK_SIZE
         response = self.serial.read_until().decode().strip()
@@ -68,7 +71,6 @@ class ScumProgrammer:
     def start(self):
         command = bytearray()
         command += Command.START.to_bytes(1)
-        command += b"\x00" * CHUNK_SIZE
         self._send_command("start", command)
 
     def program(self):
@@ -119,7 +121,6 @@ class ScumProgrammer:
         print("[bold]Booting SCuM...   [/]", end=" ")
         command = bytearray()
         command += Command.BOOT.to_bytes(1)
-        command += b"\x00" * CHUNK_SIZE
         self._send_command("boot SCuM", command)
         print("[bold green]:heavy_check_mark:[/]")
 
@@ -128,7 +129,6 @@ class ScumProgrammer:
         print("[bold]Calibrating...    [/]", end=" ")
         command = bytearray()
         command += Command.CALIBRATE.to_bytes(1)
-        command += b"\x00" * CHUNK_SIZE
         self._send_command("calibrate SCuM", command)
         print("[bold green]:heavy_check_mark:[/]")
 

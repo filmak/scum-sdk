@@ -10,10 +10,13 @@ SCuM programmer.
 #include <nrf.h>
 #include <nrf52840_peripherals.h>
 
+#include "hdlc.h"
+
 //=========================== defines =========================================
 
 #define UART_BUF_SIZE                   (32U)
 #define COMMAND_BUF_SIZE                (256U)
+#define CHUNK_SIZE                      (128U)
 #define SCUM_MEM_SIZE                   (1 << 16) // 64KiB
 
 #define CALIBRATION_PORT                0UL
@@ -52,7 +55,6 @@ typedef struct {
     bool uart_byte_received;
     uint8_t uart_rx_byte;
     uint8_t uart_tx_buf[UART_BUF_SIZE];
-    uint16_t uart_command_idx;
     uart_command_t uart_command;
 
     uint32_t chunk_idx;
@@ -63,7 +65,7 @@ typedef struct {
 
 static programmer_vars_t _programmer_vars = { 0 };
 
-static const char *UART_ACK = "ACK\r\n";
+static const char *UART_ACK = "ACK\n";
 
 static void busy_wait_ms(uint32_t ms) {
     uint32_t cycles = 3000 * ms;
@@ -191,12 +193,8 @@ static void bitband_byte(uint8_t byte, bool latch) {
     }
 }
 
-static void _process_byte_received(uint8_t byte) {
-    ((uint8_t *)&_programmer_vars.uart_command)[_programmer_vars.uart_command_idx++] = _programmer_vars.uart_rx_byte;
-    if (_programmer_vars.uart_command_idx < sizeof(uart_command_t)) {
-        return;
-    }
-
+static void _process_command(void) {
+    hdlc_decode((uint8_t *)&_programmer_vars.uart_command);
     switch (_programmer_vars.uart_command.type) {
         case COMMAND_START:
         {
@@ -216,7 +214,7 @@ static void _process_byte_received(uint8_t byte) {
         }
         case COMMAND_CHUNK:
         {
-            for (uint32_t idx = 1; idx < COMMAND_BUF_SIZE + 1; idx++) {
+            for (uint32_t idx = 1; idx < CHUNK_SIZE + 1; idx++) {
                 bitband_byte(_programmer_vars.uart_command.buffer[idx - 1], (idx % 4 == 0));
             }
             _programmer_vars.chunk_idx++;
@@ -225,7 +223,7 @@ static void _process_byte_received(uint8_t byte) {
         case COMMAND_BOOT:
         {
             puts("BOOT");
-            uint32_t received_bytes = _programmer_vars.chunk_idx * COMMAND_BUF_SIZE;
+            uint32_t received_bytes = _programmer_vars.chunk_idx * CHUNK_SIZE;
             uint32_t remaining_bytes = SCUM_MEM_SIZE - received_bytes;
             for (uint32_t idx = 1; idx < remaining_bytes + 1; idx++) {
                 bitband_byte(0x00, (idx % 4 == 0));
@@ -244,7 +242,6 @@ static void _process_byte_received(uint8_t byte) {
             break;
     }
 
-    _programmer_vars.uart_command_idx = 0;
     uart_write((uint8_t *)UART_ACK, strlen(UART_ACK));
 }
 
@@ -255,7 +252,10 @@ int main(void) {
 
     while (1) {
         if (_programmer_vars.uart_byte_received) {
-            _process_byte_received(_programmer_vars.uart_rx_byte);
+            hdlc_state_t state = hdlc_rx_byte(_programmer_vars.uart_rx_byte);
+            if (state == HDLC_STATE_READY) {
+                _process_command();
+            }
             _programmer_vars.uart_byte_received = false;
         }
 
