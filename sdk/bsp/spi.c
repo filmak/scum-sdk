@@ -12,18 +12,16 @@
 #define DATA_PIN 12  // Used when writing to the IMU thus a SCuM output
 
 void spi_write(unsigned char writeByte) {
-    int clk_pin = CLK_PIN;
-    int data_pin = DATA_PIN;
 
     for (uint8_t j = 7; j >= 0; j--) {
-        if ((writeByte & (0x01 << j)) != 0) {
-            SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);  // clock low
-            SCUM_GPIO_OUTPUT |= 1 << data_pin;    // write a 1
-            SCUM_GPIO_OUTPUT |= 1 << clk_pin;     // clock high
+        if ((writeByte & (0x01 << j))) {
+            SCUM_GPIO_OUTPUT &= ~(1 << CLK_PIN);  // clock low
+            SCUM_GPIO_OUTPUT |= 1 << DATA_PIN;    // write a 1
+            SCUM_GPIO_OUTPUT |= 1 << CLK_PIN;     // clock high
         } else {
-            SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);   // clock low
-            SCUM_GPIO_OUTPUT &= ~(1 << data_pin);  // write a 0
-            SCUM_GPIO_OUTPUT |= (1 << clk_pin);    // clock high
+            SCUM_GPIO_OUTPUT &= ~(1 << CLK_PIN);   // clock low
+            SCUM_GPIO_OUTPUT &= ~(1 << DATA_PIN);  // write a 0
+            SCUM_GPIO_OUTPUT |= (1 << CLK_PIN);    // clock high
         }
     }
 
@@ -32,34 +30,29 @@ void spi_write(unsigned char writeByte) {
 
 unsigned char spi_read(void) {
     unsigned char readByte = 0;
-    int clk_pin = CLK_PIN;
-    int din_pin = DIN_PIN;
 
-    SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);  // clock low
+    SCUM_GPIO_OUTPUT &= ~(1 << CLK_PIN);  // clock low
 
     for (uint8_t j = 7; j >= 0; j--) {
-        SCUM_GPIO_OUTPUT |= (1 << clk_pin);  // clock high
-        readByte |= ((SCUM_GPIO_OUTPUT & (1 << din_pin)) >> din_pin) << j;
-        SCUM_GPIO_OUTPUT &= ~(1 << clk_pin);  // clock low
+        SCUM_GPIO_OUTPUT |= (1 << CLK_PIN);  // clock high
+        readByte |= ((SCUM_GPIO_OUTPUT & (1 << DIN_PIN)) >> DIN_PIN) << j;
+        SCUM_GPIO_OUTPUT &= ~(1 << CLK_PIN);  // clock low
     }
 
     return readByte;
 }
 
 void spi_chip_select(void) {
-    int dout_pin = DATA_PIN;
-    int cs_pin = CS_PIN;
     // drop chip select low to select the chip
-    SCUM_GPIO_OUTPUT &= ~(1 << cs_pin);
-    SCUM_GPIO_OUTPUT &= ~(1 << dout_pin);
+    SCUM_GPIO_OUTPUT &= ~(1 << CS_PIN);
+    SCUM_GPIO_OUTPUT &= ~(1 << DATA_PIN);
 
     busy_wait_cycles(50);
 }
 
 void spi_chip_deselect(void) {
-    int cs_pin = CS_PIN;
     // hold chip select high to deselect the chip
-    SCUM_GPIO_OUTPUT |= (1 << cs_pin);
+    SCUM_GPIO_OUTPUT |= (1 << CS_PIN);
 }
 
 void initialize_imu(void) {
