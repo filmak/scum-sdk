@@ -375,7 +375,7 @@ void radio_init(void) {
     // Enable radio interrupts in NVIC
     NVIC_EnableIRQ(RF_IRQn);
 
-    // enable sfd done and send done interruptions of tranmission
+    // enable sfd done and send done interruptions of transmission
     // enable sfd done and receiving done interruptions of reception
     SCUM_RF->INT_CONFIG = TX_LOAD_DONE_INT_EN | TX_SFD_DONE_INT_EN |
                                    TX_SEND_DONE_INT_EN | RX_SFD_DONE_INT_EN |
@@ -554,7 +554,7 @@ void radio_frequency_housekeeping(uint32_t IF_estimate,
 
     uint16_t packet_len = radio_vars.radio_rx_buffer[0];
 
-    // When updating LO and IF clock frequncies, must wait long enough for the
+    // When updating LO and IF clock frequencies, must wait long enough for the
     // changes to propagate before changing again Need to receive as many
     // packets as there are taps in the FIR filter
     radio_vars.frequency_update_cooldown_timer++;
@@ -562,7 +562,7 @@ void radio_frequency_housekeeping(uint32_t IF_estimate,
     // FIR filter for cdr tau slope
     int32_t sum = 0;
 
-    // A tau value of 0 indicates there is no rate mistmatch between the TX and
+    // A tau value of 0 indicates there is no rate mismatch between the TX and
     // RX chip clocks The cdr_tau_value corresponds to the number of samples
     // that were added or dropped by the CDR Each sample point is 1/16MHz
     // = 62.5ns Need to estimate ppm error for each packet, then FIR those

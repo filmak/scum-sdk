@@ -18,7 +18,7 @@
 
 // ADC analog scan chain bit enum.
 typedef enum {
-    ADC_INVALD_ASC_BIT = -1,
+    ADC_INVALID_ASC_BIT = -1,
     ADC_RESET_SOURCE_ASC_BIT = 242,
     ADC_CONVERT_SOURCE_ASC_BIT = 243,
     ADC_PGA_AMPLIFY_SOURCE_ASC_BIT = 244,
@@ -108,7 +108,7 @@ static inline void adc_set_settling_time_asc_bits(const uint8_t settling_time) {
 }
 
 // Set the ASC bits for the bandgap reference.
-static inline void adc_set_bandgap_refernce_tuning_code_asc_bits(
+static inline void adc_set_bandgap_reference_tuning_code_asc_bits(
     const uint8_t bandgap_reference_tuning_code) {
     adc_set_asc_bit(ADC_BANDGAP_REFERENCE_TUNING_CODE_0_ASC_BIT,
                     (bandgap_reference_tuning_code >> 6) & 0x1);
@@ -167,7 +167,7 @@ void adc_config(const adc_config_t* adc_config) {
     adc_set_settling_time_asc_bits(adc_config->settling_time);
 
     // Set the ASC bits for the bandgap reference tuning code.
-    adc_set_bandgap_refernce_tuning_code_asc_bits(
+    adc_set_bandgap_reference_tuning_code_asc_bits(
         adc_config->bandgap_reference_tuning_code);
 
     // Set the ASC bits for the const gm device tuning code.

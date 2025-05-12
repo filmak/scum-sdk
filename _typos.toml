@@ -1,0 +1,12 @@
+# False positives exceptions
+[default.extend-words]
+ful = "ful" # Found in 0xFFFUL
+pn = "pn"
+
+[files]
+# Don't check typos in vendor code
+extend-exclude = [
+    "scum_programmer/nrf-fw/nRF/",
+    "scum_programmer/nrf-fw/*.svd",
+    "sdk/bsp/cmsis/",
+]

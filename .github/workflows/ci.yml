@@ -48,6 +48,18 @@ jobs:
         run:
           make check-format
 
+  check-typos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Install typos-cli
+        run:
+          cargo install typos-cli
+      - name: Check typos
+        run:
+          typos --sort
+
   check-programmer-script:
     runs-on: ubuntu-latest
     steps:
