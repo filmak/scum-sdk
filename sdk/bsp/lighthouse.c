@@ -443,12 +443,12 @@ pulse_type_t classify_pulse(unsigned int timestamp_rise,
 // This function takes the current gpio state as input returns a debounced
 // version of of the current gpio state. It keeps track of the previous gpio
 // states in order to add hysteresis to the system. The return value includes
-// the current gpio state and the time that the first transition ocurred, which
-// should help glitches from disrupting legitamate pulses. This is called
+// the current gpio state and the time that the first transition occurred, which
+// should help glitches from disrupting legitimate pulses. This is called
 void debounce_gpio(unsigned short gpio, unsigned short* gpio_out,
                    unsigned int* trans_out) {
     // keep track of number of times this gpio state has been measured since
-    // most recent transistion
+    // most recent transition
     static int count;
     static gpio_tran_t deb_gpio;  // current debounced state
 
