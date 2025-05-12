@@ -58,6 +58,14 @@ scm3c_hw_interface_vars_t scm3c_hw_interface_vars;
 
 //=========================== prototype =======================================
 
+static void _update_bit(uint32_t position, bool set) {
+    if (set) {
+        set_asc_bit(position);
+    } else {
+        clear_asc_bit(position);
+    }
+}
+
 //=========================== public ==========================================
 
 //==== admin
@@ -207,74 +215,39 @@ unsigned char flipChar(unsigned char b) {
 }
 
 void GPO_control(uint8_t row1, uint8_t row2, uint8_t row3, uint8_t row4) {
-    int j;
 
-    for (j = 0; j <= 3; j++) {
-        if ((row1 >> j) & 0x1) {
-            set_asc_bit(245 + j);
-        } else {
-            clear_asc_bit(245 + j);
-        }
+    for (uint8_t j = 0; j < 4; j++) {
+        _update_bit(245 + j, (row1 >> j) & 0x1);
     }
 
-    for (j = 0; j <= 3; j++) {
-        if ((row2 >> j) & 0x1) {
-            set_asc_bit(249 + j);
-        } else {
-            clear_asc_bit(249 + j);
-        }
+    for (uint8_t j = 0; j < 4; j++) {
+        _update_bit(249 + j, (row2 >> j) & 0x1);
     }
 
-    for (j = 0; j <= 3; j++) {
-        if ((row3 >> j) & 0x1) {
-            set_asc_bit(253 + j);
-        } else {
-            clear_asc_bit(253 + j);
-        }
+    for (uint8_t j = 0; j < 4; j++) {
+        _update_bit(253 + j, (row3 >> j) & 0x1);
     }
 
-    for (j = 0; j <= 3; j++) {
-        if ((row4 >> j) & 0x1) {
-            set_asc_bit(257 + j);
-        } else {
-            clear_asc_bit(257 + j);
-        }
+    for (uint8_t j = 0; j < 4; j++) {
+        _update_bit(257 + j, (row4 >> j) & 0x1);
     }
 }
 
 void GPI_control(uint8_t row1, uint8_t row2, uint8_t row3, uint8_t row4) {
-    int j;
-
-    for (j = 0; j <= 1; j++) {
-        if ((row1 >> j) & 0x1) {
-            set_asc_bit(261 + j);
-        } else {
-            clear_asc_bit(261 + j);
-        }
+    for (uint8_t j = 0; j < 2; j++) {
+        _update_bit(261 + j, (row1 >> j) & 0x1);
     }
 
-    for (j = 0; j <= 1; j++) {
-        if ((row2 >> j) & 0x1) {
-            set_asc_bit(263 + j);
-        } else {
-            clear_asc_bit(263 + j);
-        }
+    for (uint8_t j = 0; j < 2; j++) {
+        _update_bit(263 + j, (row2 >> j) & 0x1);
     }
 
-    for (j = 0; j <= 1; j++) {
-        if ((row3 >> j) & 0x1) {
-            set_asc_bit(265 + j);
-        } else {
-            clear_asc_bit(265 + j);
-        }
+    for (uint8_t j = 0; j < 2; j++) {
+        _update_bit(265 + j, (row3 >> j) & 0x1);
     }
 
-    for (j = 0; j <= 1; j++) {
-        if ((row4 >> j) & 0x1) {
-            set_asc_bit(267 + j);
-        } else {
-            clear_asc_bit(267 + j);
-        }
+    for (uint8_t j = 0; j < 2; j++) {
+        _update_bit(267 + j, (row4 >> j) & 0x1);
     }
 }
 
@@ -285,17 +258,12 @@ void GPO_enables(unsigned int mask) {
     // out_en<0:15> =
     // ASC<1131>,ASC<1133>,ASC<1135>,ASC<1137>,ASC<1140>,ASC<1142>,ASC<1144>,ASC<1146>,...
     // ASC<1115>,ASC<1117>,ASC<1119>,ASC<1121>,ASC<1124>,ASC<1126>,ASC<1128>,ASC<1130>
-    unsigned short asc_locations[16] = {1131, 1133, 1135, 1137, 1140, 1142,
+    uint16_t asc_locations[16] = {1131, 1133, 1135, 1137, 1140, 1142,
                                         1144, 1146, 1115, 1117, 1119, 1121,
                                         1124, 1126, 1128, 1130};
-    unsigned int j;
 
-    for (j = 0; j <= 15; j++) {
-        if ((mask >> j) & 0x1) {
-            clear_asc_bit(asc_locations[j]);
-        } else {
-            set_asc_bit(asc_locations[j]);
-        }
+    for (uint8_t j = 0; j < 16; j++) {
+        _update_bit(asc_locations[j], !((mask >> j) & 0x1));
     }
 }
 
@@ -306,17 +274,12 @@ void GPI_enables(unsigned int mask) {
     // in_en<0:15> =
     // ASC<1132>,ASC<1134>,ASC<1136>,ASC<1138>,ASC<1139>,ASC<1141>,ASC<1143>,ASC<1145>,...
     // ASC<1116>,ASC<1118>,ASC<1120>,ASC<1122>,ASC<1123>,ASC<1125>,ASC<1127>,ASC<1129>
-    unsigned short asc_locations[16] = {1132, 1134, 1136, 1138, 1139, 1141,
+    uint16_t asc_locations[16] = {1132, 1134, 1136, 1138, 1139, 1141,
                                         1143, 1145, 1116, 1118, 1120, 1122,
                                         1123, 1125, 1127, 1129};
-    unsigned int j;
 
-    for (j = 0; j <= 15; j++) {
-        if ((mask >> j) & 0x1) {
-            set_asc_bit(asc_locations[j]);
-        } else {
-            clear_asc_bit(asc_locations[j]);
-        }
+    for (uint8_t j = 0; j < 16; j++) {
+        _update_bit(asc_locations[j], (mask >> j) & 0x1);
     }
 }
 
@@ -490,12 +453,8 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
 void set_IF_LDO_voltage(int code) {
     // ASC<492:498> = if_ldo_rdac<0:6> (<0:6(MSB)>)
 
-    for (uint8_t j = 0; j <= 6; j++) {
-        if ((code >> j) & 0x1) {
-            set_asc_bit((uint32_t)492 + j);
-        } else {
-            clear_asc_bit((uint32_t)492 + j);
-        }
+    for (uint8_t j = 0; j < 7; j++) {
+        _update_bit(492 + j, (code >> j) & 0x1);
     }
 }
 
@@ -504,20 +463,13 @@ void set_IF_LDO_voltage(int code) {
 void set_VDDD_LDO_voltage(int code) {
     // ASC(791:1:797) (LSB:MSB)
 
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((code >> j) & 0x1) {
-            set_asc_bit((uint32_t)797 - j);
-        } else {
-            clear_asc_bit((uint32_t)797 - j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(797 + j, (code >> j) & 0x1);
     }
 
     // Two MSBs are inverted
-    for (uint8_t j = 5; j <= 6; j++) {
-        if ((code >> j) & 0x1)
-            clear_asc_bit((uint32_t)797 - j);
-        else
-            set_asc_bit((uint32_t)797 - j);
+    for (uint8_t j = 5; j < 7; j++) {
+        _update_bit(797 + j, !((code >> j) & 0x1));
     }
 }
 
@@ -526,19 +478,13 @@ void set_VDDD_LDO_voltage(int code) {
 void set_AUX_LDO_voltage(int code) {
     // ASC(923:-1:917) (MSB:LSB)
 
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((code >> j) & 0x1)
-            set_asc_bit((uint32_t)917 + j);
-        else
-            clear_asc_bit((uint32_t)917 + j);
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(917 + j, (code >> j) & 0x1);
     }
 
     // Two MSBs are inverted
-    for (uint8_t j = 5; j <= 6; j++) {
-        if ((code >> j) & 0x1)
-            clear_asc_bit((uint32_t)917 + j);
-        else
-            set_asc_bit((uint32_t)917 + j);
+    for (uint8_t j = 5; j < 7; j++) {
+        _update_bit(917 + j, !((code >> j) & 0x1));
     }
 }
 
@@ -547,35 +493,23 @@ void set_AUX_LDO_voltage(int code) {
 void set_ALWAYSON_LDO_voltage(int code) {
     // ASC(924:929) (MSB:LSB)
 
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((code >> j) & 0x1)
-            set_asc_bit((uint32_t)929 - j);
-        else
-            clear_asc_bit((uint32_t)929 - j);
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(929 + j, (code >> j) & 0x1);
     }
 
     // MSB of normal DAC is inverted
-    if ((code >> 5) & 0x1)
-        clear_asc_bit(924);
-    else
-        set_asc_bit(924);
+    _update_bit(924, !((code >> 5) & 0x1));
 
     // Panic bit was added for 3B (inverted)
-    if ((code >> 6) & 0x1)
-        clear_asc_bit(557);
-    else
-        set_asc_bit(557);
+    _update_bit(557, !((code >> 6) & 0x1));
 }
 
 // Must set IF clock frequency AFTER calling this function
 
 void set_zcc_demod_threshold(unsigned int thresh) {
     // counter threshold 122:107 MSB:LSB
-    for (uint8_t j = 0; j <= 15; j++) {
-        if ((thresh >> j) & 0x1)
-            set_asc_bit((uint32_t)107 + j);
-        else
-            clear_asc_bit((uint32_t)107 + j);
+    for (uint8_t j = 0; j < 16; j++) {
+        _update_bit(107 + j, (thresh >> j) & 0x1);
     }
 }
 
@@ -583,22 +517,16 @@ void set_zcc_demod_threshold(unsigned int thresh) {
 // Should be equal to (IF_clock_rate / 2 MHz)
 void set_IF_ZCC_clkdiv(unsigned int div_value) {
     // CLK_DIV = ASC<131:124> MSB:LSB
-    for (uint8_t j = 0; j <= 7; j++) {
-        if ((div_value >> j) & 0x1)
-            set_asc_bit((uint32_t)124 + j);
-        else
-            clear_asc_bit((uint32_t)124 + j);
+    for (uint8_t j = 0; j < 8; j++) {
+        _update_bit(124 + j, (div_value >> j) & 0x1);
     }
 }
 
 // Set the early decision value for ZCC demod
 void set_IF_ZCC_early(unsigned int early_value) {
     // ASC<224:209> MSB:LSB
-    for (uint8_t j = 0; j <= 15; j++) {
-        if ((early_value >> j) & 0x1)
-            set_asc_bit((uint32_t)209 + j);
-        else
-            clear_asc_bit((uint32_t)209 + j);
+    for (uint8_t j = 0; j < 16; j++) {
+        _update_bit(209 + j, (early_value >> j) & 0x1);
     }
 }
 
@@ -625,21 +553,13 @@ void set_IF_stg3gm_ASC(unsigned int Igm, unsigned int Qgm) {
 // Valid input range 0-31
 void set_IF_comparator_trim_I(unsigned int ptrim, unsigned int ntrim) {
     // I comparator N side = 452:456 LSB:MSB
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((ntrim >> j) & 0x1) {
-            set_asc_bit((uint32_t)452 + j);
-        } else {
-            clear_asc_bit((uint32_t)452 + j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(452 + j, (ntrim >> j) & 0x1);
     }
 
     // I comparator P side = 457:461 LSB:MSB
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((ptrim >> j) & 0x1) {
-            set_asc_bit((uint32_t)457 + j);
-        } else {
-            clear_asc_bit((uint32_t)457 + j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(457 + j, (ntrim >> j) & 0x1);
     }
 }
 
@@ -647,42 +567,26 @@ void set_IF_comparator_trim_I(unsigned int ptrim, unsigned int ntrim) {
 // Valid input range 0-31
 void set_IF_comparator_trim_Q(unsigned int ptrim, unsigned int ntrim) {
     // I comparator N side = 340:344 MSB:LSB
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((ntrim >> j) & 0x1) {
-            set_asc_bit((uint32_t)344 - j);
-        } else {
-            clear_asc_bit((uint32_t)344 - +j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(344 - j, (ntrim >> j) & 0x1);
     }
 
     // I comparator P side = 335:339 MSB:LSB
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((ptrim >> j) & 0x1) {
-            set_asc_bit((uint32_t)339 - j);
-        } else {
-            clear_asc_bit((uint32_t)339 - j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(339 - j, (ntrim >> j) & 0x1);
     }
 }
 
 // Untested function
 void set_IF_gain_ASC(unsigned int Igain, unsigned int Qgain) {
     // 485:490 = I code 0:5
-    for (uint8_t j = 0; j <= 4; j++) {
-        if ((Igain >> j) & 0x1) {
-            set_asc_bit((uint32_t)485 + j);
-        } else {
-            clear_asc_bit((uint32_t)485 + j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(485 + j, (Igain >> j) & 0x1);
     }
 
     // 272:277 = Q code 5:0
-    for (uint8_t j = 0; j <= 5; j++) {
-        if ((Qgain >> j) & 0x1) {
-            set_asc_bit((uint32_t)277 - j);
-        } else {
-            clear_asc_bit((uint32_t)277 - j);
-        }
+    for (uint8_t j = 0; j < 6; j++) {
+        _update_bit(277 - j, (Qgain >> j) & 0x1);
     }
 }
 
@@ -1032,32 +936,18 @@ void set_IF_clock_frequency(int coarse, int fine, int high_range) {
     // ASC<427:431> = RC_coarse<4:0> (<4(MSB):0>)
     // ASC<433:437> = RC_fine<4:0>   (<4(MSB):0>)
 
-    unsigned int j;
-
-    for (j = 0; j <= 4; j++) {
-        if ((coarse >> j) & 0x1) {
-            set_asc_bit(431 - j);
-        } else {
-            clear_asc_bit(431 - j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(431 - j, (coarse >> j) & 0x1);
     }
 
-    for (j = 0; j <= 4; j++) {
-        if ((fine >> j) & 0x1) {
-            set_asc_bit(437 - j);
-        } else {
-            clear_asc_bit(437 - j);
-        }
+    for (uint8_t j = 0; j < 5; j++) {
+        _update_bit(437 - j, (fine >> j) & 0x1);
     }
 
     // Switch between high and low speed ranges for IF RC:
     //'1' = high range
     // ASC<726> = RC_high_speed_mode
-    if (high_range == 1) {
-        set_asc_bit(726);
-    } else {
-        clear_asc_bit(726);
-    }
+    _update_bit(726, high_range == 1);
 }
 
 // Set frequency for TI 20M oscillator
@@ -1065,34 +955,16 @@ void set_sys_clk_secondary_freq(unsigned int coarse, unsigned int fine) {
     // coarse 0:4 = 860 861 875b 876b 877b
     // fine 0:4 870 871 872 873 874b
 
-    int j;
+    for (uint8_t j = 0; j < 4; j++) {
+        _update_bit(870 + j, (fine >> j) & 0x1);
+    }
+    _update_bit(874, !((fine >> 4) & 0x1));
 
-    for (j = 0; j <= 3; j++) {
-        if ((fine >> j) & 0x1) {
-            set_asc_bit(870 + j);
-        } else {
-            clear_asc_bit(870 + j);
-        }
+    for (uint8_t j = 0; j < 2; j++) {
+        _update_bit(860 + j, (coarse >> j) & 0x1);
     }
-    if ((fine >> 4) & 0x1) {
-        clear_asc_bit(874);
-    } else {
-        set_asc_bit(874);
-    }
-
-    for (j = 0; j <= 1; j++) {
-        if ((coarse >> j) & 0x1) {
-            set_asc_bit(860 + j);
-        } else {
-            clear_asc_bit(860 + j);
-        }
-    }
-    for (j = 2; j <= 4; j++) {
-        if ((coarse >> j) & 0x1) {
-            clear_asc_bit(873 + j);
-        } else {
-            set_asc_bit(873 + j);
-        }
+    for (uint8_t j = 2; j < 5; j++) {
+        _update_bit(873 + j, !((coarse >> j) & 0x1));
     }
 }
 
@@ -1259,21 +1131,16 @@ unsigned int flip_lsb8(unsigned int in) {
 }
 
 void analog_scan_chain_write(void) {
-    int i = 0;
-    int j = 0;
-    unsigned int asc_reg;
-
     // analog_cfg<357> is resetb for chip shift register, so leave that high
 
-    for (i = 37; i >= 0; i--) {
+    for (uint8_t i = 38; i > 0; i--) {
         // printf("\r\n%d,%lX\r\n",i,scan_bits[i]);
 
-        for (j = 0; j < 32; j++) {
+        for (uint8_t j = 0; j < 32; j++) {
             // Set scan_in (should be inverted)
-            if ((scm3c_hw_interface_vars.ASC[i] & (0x00000001 << j)) == 0) {
+            uint32_t asc_reg = 0x20;
+            if (!(scm3c_hw_interface_vars.ASC[i - 1] & (1 << j))) {
                 asc_reg = 0x21;
-            } else {
-                asc_reg = 0x20;
             }
 
             // Write asc_reg to analog_cfg
@@ -1388,19 +1255,15 @@ void read_counters(unsigned int* count_2M, unsigned int* count_LC,
 }
 
 void update_PN31_byte(unsigned int* current_lfsr) {
-    int i;
-
-    for (i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < 8; i++) {
         int newbit = (((*current_lfsr >> 30) ^ (*current_lfsr >> 27)) & 1);
         *current_lfsr = ((*current_lfsr << 1) | newbit);
     }
 }
 
 void set_asc_bit(unsigned int position) {
-    unsigned int index;
 
-    index = position >> 5;
-
+    uint32_t index = position >> 5;
     scm3c_hw_interface_vars.ASC[index] |=
         0x80000000 >> (position - (index << 5));
 
@@ -1409,10 +1272,8 @@ void set_asc_bit(unsigned int position) {
 }
 
 void clear_asc_bit(unsigned int position) {
-    unsigned int index;
 
-    index = position >> 5;
-
+    uint32_t index = position >> 5;
     scm3c_hw_interface_vars.ASC[index] &=
         ~(0x80000000 >> (position - (index << 5)));
 
