@@ -8,6 +8,8 @@
 
 //=========================== defines =========================================
 
+#define CALIBRATION_ITERATIONS 10U
+
 //=========================== variables =======================================
 
 typedef struct {
@@ -246,7 +248,7 @@ void OPTICAL_SFD_Handler(void) {
 #endif
     puts("");
 
-    if (optical_vars.optical_cal_iteration == 10) {
+    if (optical_vars.optical_cal_iteration == CALIBRATION_ITERATIONS) {
 
         // Disable this ISR
         NVIC_DisableIRQ(EXT_GPIO8_ACTIVEHIGH_IRQn);
