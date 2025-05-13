@@ -51,18 +51,22 @@ scum-programmer-in-docker:
 		-v $(PWD):/dotbot $(DOCKER_IMAGE) \
 		make scum-programmer
 
+INCLUDES_FILES_OPTS := \
+	-wholename "./sdk/bsp/scm3c_hw_interface.[c|h]" \
+	-or -wholename "./scum_programmer/nrf-fw/*.[c|h"]\
+	#
 EXCLUDED_DIRS := \
-	./sdk/bsp \
-	./sdk/bsp/cmsis \
-	./sdk/samples/* \
-	./sdk/samples/*/build \
+	./build/* \
 	./scum_programmer/nrf-fw/nRF \
 	#
-EXCLUDE_OPTS := $(foreach dir,$(EXCLUDED_DIRS),-not -path "$(dir)/*")
-SRCS ?= $(shell find . -name "*.[c|h]" $(EXCLUDE_OPTS))
+EXCLUDE_OPTS := $(foreach dir,$(sort $(EXCLUDED_DIRS)),-and -not -path "$(dir)/*")
+SRCS ?= $(shell find . $(INCLUDES_FILES_OPTS) $(EXCLUDE_OPTS))
 CLANG_FORMAT ?= clang-format
 CLANG_FORMAT_TYPE ?= file
-.PHONY: format
+.PHONY: format format-list check-format
+
+format-list:
+	@echo $(SRCS) | tr ' ' '\n' | sort
 
 format:
 	@$(CLANG_FORMAT) -i --style=$(CLANG_FORMAT_TYPE) $(SRCS)
