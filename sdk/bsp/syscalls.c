@@ -48,7 +48,7 @@ int _getpid(void) {
     return -1;
 }
 
-int _write (int file, char * ptr, int len) {
+int _write(int file, char *ptr, int len) {
     int written = 0;
 
     if ((file != 1) && (file != 2) && (file != 3)) {
@@ -62,7 +62,7 @@ int _write (int file, char * ptr, int len) {
     return written;
 }
 
-int _read (int file, char * ptr, int len) {
+int _read(int file, char *ptr, int len) {
     int read = 0;
 
     if (file != 0) {
@@ -75,4 +75,3 @@ int _read (int file, char * ptr, int len) {
     }
     return read;
 }
-

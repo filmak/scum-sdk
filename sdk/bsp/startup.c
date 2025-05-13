@@ -28,30 +28,32 @@ void Reset_Handler(void);
 void HardFault_Handler(void);
 void NMI_Handler(void);
 
-/* Cortex-M0 core handlers */
-void NMI_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void SVC_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void PendSV_Handler                         (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void SysTick_Handler                        (void) __attribute__ ((weak, alias("Dummy_Handler")));
+// Cortex-M0 core handlers
+// clang-format off
+void NMI_Handler(void)                              __attribute__((weak, alias("Dummy_Handler")));
+void SVC_Handler(void)                              __attribute__((weak, alias("Dummy_Handler")));
+void PendSV_Handler(void)                           __attribute__((weak, alias("Dummy_Handler")));
+void SysTick_Handler(void)                          __attribute__((weak, alias("Dummy_Handler")));
 
 /* External interrupts */
-void UART_Handler                           (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void EXT_OPTICAL_IRQ_IN_Handler             (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void ADC_Handler                            (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void RF_Handler                             (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void RFTIMER_Handler                        (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void RAWCHIPS_STARTVAL_Handler              (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void RAWCHIPS_32_Handler                    (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void OPTICAL_SFD_Handler                    (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void EXT_GPIO8_ACTIVEHIGH_Handler           (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void EXT_GPIO9_ACTIVELOW_Handler            (void) __attribute__ ((weak, alias("Dummy_Handler")));
-void EXT_GPIO10_ACTIVELOW_Handler           (void) __attribute__ ((weak, alias("Dummy_Handler")));
+void UART_Handler(void)                             __attribute__((weak, alias("Dummy_Handler")));
+void EXT_GPIO3_ACTIVEHIGH_DEBOUNCED_Handler(void)   __attribute__((weak, alias("Dummy_Handler")));
+void EXT_OPTICAL_IRQ_IN_Handler(void)               __attribute__((weak, alias("Dummy_Handler")));
+void ADC_Handler(void)                              __attribute__((weak, alias("Dummy_Handler")));
+void RF_Handler(void)                               __attribute__((weak, alias("Dummy_Handler")));
+void RFTIMER_Handler(void)                          __attribute__((weak, alias("Dummy_Handler")));
+void RAWCHIPS_STARTVAL_Handler(void)                __attribute__((weak, alias("Dummy_Handler")));
+void RAWCHIPS_32_Handler(void)                      __attribute__((weak, alias("Dummy_Handler")));
+void OPTICAL_SFD_Handler(void)                      __attribute__((weak, alias("Dummy_Handler")));
+void EXT_GPIO8_ACTIVEHIGH_Handler(void)             __attribute__((weak, alias("Dummy_Handler")));
+void EXT_GPIO9_ACTIVELOW_Handler(void)              __attribute__((weak, alias("Dummy_Handler")));
+void EXT_GPIO10_ACTIVELOW_Handler(void)             __attribute__((weak, alias("Dummy_Handler")));
+// clang-format on
 
 // vector table
-typedef void(*vector_table_t)(void);
+typedef void (*vector_table_t)(void);
 typedef struct {
-    void* _estack;
+    void *_estack;
     vector_table_t table[32];
 } vectors_t;
 
@@ -100,14 +102,14 @@ void HardFault_Handler(void) {
 #ifndef NDEBUG
     puts("Hard Fault!");
 #endif
-    while(1);
+    while (1) {}
 }
 
 void Dummy_Handler(void) {
 #ifndef NDEBUG
     puts("Dummy handler!");
 #endif
-    while(1);
+    while (1) {}
 }
 
 static void scum_init(void) {
@@ -126,7 +128,7 @@ void Reset_Handler(void) {
     uint32_t *pDest = &_sdata;
     if (pSrc != pDest) {
         for (; pDest < &_edata;) {
-                *pDest++ = *pSrc++;
+            *pDest++ = *pSrc++;
         }
     }
 

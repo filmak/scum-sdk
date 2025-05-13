@@ -6,18 +6,18 @@
 #include <string.h>
 
 // Validate that the given row and column are in bounds.
-static inline bool matrix_validate(const matrix_t* matrix, const size_t row,
+static inline bool matrix_validate(const matrix_t *matrix, const size_t row,
                                    const size_t col) {
     return row < matrix->rows && col < matrix->cols;
 }
 
 // Return the 1D array index corresponding to the given row and column.
-static inline size_t matrix_index(const matrix_t* matrix, const size_t row,
+static inline size_t matrix_index(const matrix_t *matrix, const size_t row,
                                   const size_t col) {
     return row * matrix->cols + col;
 }
 
-bool matrix_init(matrix_t* matrix, const size_t rows, const size_t cols) {
+bool matrix_init(matrix_t *matrix, const size_t rows, const size_t cols) {
     if (rows * cols > MATRIX_MAX_SIZE) {
         return false;
     }
@@ -30,12 +30,16 @@ bool matrix_init(matrix_t* matrix, const size_t rows, const size_t cols) {
     return true;
 }
 
-size_t matrix_num_rows(const matrix_t* matrix) { return matrix->rows; }
+size_t matrix_num_rows(const matrix_t *matrix) {
+    return matrix->rows;
+}
 
-size_t matrix_num_columns(const matrix_t* matrix) { return matrix->cols; }
+size_t matrix_num_columns(const matrix_t *matrix) {
+    return matrix->cols;
+}
 
-bool matrix_get(const matrix_t* matrix, const size_t row, const size_t col,
-                matrix_type_t* element) {
+bool matrix_get(const matrix_t *matrix, const size_t row, const size_t col,
+                matrix_type_t *element) {
     if (!matrix_validate(matrix, row, col)) {
         return false;
     }
@@ -44,7 +48,7 @@ bool matrix_get(const matrix_t* matrix, const size_t row, const size_t col,
     return true;
 }
 
-bool matrix_set(matrix_t* matrix, const size_t row, const size_t col,
+bool matrix_set(matrix_t *matrix, const size_t row, const size_t col,
                 const matrix_type_t value) {
     if (!matrix_validate(matrix, row, col)) {
         return false;
@@ -54,8 +58,8 @@ bool matrix_set(matrix_t* matrix, const size_t row, const size_t col,
     return true;
 }
 
-bool matrix_add(const matrix_t* matrix1, const matrix_t* matrix2,
-                matrix_t* result) {
+bool matrix_add(const matrix_t *matrix1, const matrix_t *matrix2,
+                matrix_t *result) {
     const size_t num_rows = matrix1->rows;
     const size_t num_cols = matrix1->cols;
 
@@ -76,8 +80,8 @@ bool matrix_add(const matrix_t* matrix1, const matrix_t* matrix2,
     return true;
 }
 
-bool matrix_multiply(const matrix_t* matrix1, const matrix_t* matrix2,
-                     matrix_t* result) {
+bool matrix_multiply(const matrix_t *matrix1, const matrix_t *matrix2,
+                     matrix_t *result) {
     const size_t num_rows = matrix1->rows;
     const size_t num_cols = matrix2->cols;
     const size_t inner_dimension = matrix1->cols;

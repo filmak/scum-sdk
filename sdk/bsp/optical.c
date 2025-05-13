@@ -63,7 +63,7 @@ void perform_calibration(void) {
 
     // Wait for optical cal to finish
     while (!optical_vars.optical_cal_finished) {
-        __asm volatile ("wfi");
+        __asm volatile("wfi");
     }
 
 #if defined(MODULE_RADIO)
@@ -150,7 +150,7 @@ void OPTICAL_SFD_Handler(void) {
             if (HF_CLOCK_fine == 0) {
                 HF_CLOCK_coarse--;
                 HF_CLOCK_fine = 10;
-                //optical_vars.optical_cal_iteration = 3;
+                // optical_vars.optical_cal_iteration = 3;
             } else {
                 HF_CLOCK_fine--;
             }
@@ -158,7 +158,7 @@ void OPTICAL_SFD_Handler(void) {
             if (HF_CLOCK_fine == 31) {
                 HF_CLOCK_coarse++;
                 HF_CLOCK_fine = 23;
-                //optical_vars.optical_cal_iteration = 3;
+                // optical_vars.optical_cal_iteration = 3;
             } else {
                 HF_CLOCK_fine++;
             }
@@ -211,11 +211,11 @@ void OPTICAL_SFD_Handler(void) {
             IF_fine -= 1;
         }
 
-	// if calibration resulted in tuning overflow, iterate coarse code
-	if (IF_fine >= 32) {
-	    IF_fine -= 8;
-	    IF_coarse += 1;
-	}
+        // if calibration resulted in tuning overflow, iterate coarse code
+        if (IF_fine >= 32) {
+            IF_fine -= 8;
+            IF_coarse += 1;
+        }
 
         set_IF_clock_frequency(IF_coarse, IF_fine, 0);
         scm3c_hw_interface_set_IF_coarse(IF_coarse);
@@ -231,20 +231,17 @@ void OPTICAL_SFD_Handler(void) {
     // print statement
     // doing this prevent a long string of loads back to back
     printf(
-"HF=%lu-%lu   2M=%lu-%lu",
+        "HF=%lu-%lu   2M=%lu-%lu",
         count_HFclock, HF_CLOCK_fine,
-        count_2M, RC2M_coarse
-    );
+        count_2M, RC2M_coarse);
     printf(
-",%lu,%lu   LC=%lu-%lu   ",
+        ",%lu,%lu   LC=%lu-%lu   ",
         RC2M_fine, RC2M_superfine,
-        count_LC, optical_vars.LC_code
-    );
+        count_LC, optical_vars.LC_code);
 #if defined(MODULE_RADIO)
     printf(
-"IF=%lu-%lu",
-        count_IF, IF_fine
-    );
+        "IF=%lu-%lu",
+        count_IF, IF_fine);
 #endif
     puts("");
 
@@ -263,8 +260,7 @@ void OPTICAL_SFD_Handler(void) {
         optical_vars.num_LC_ch11_ticks_in_100ms = count_LC;
         optical_vars.num_HFclock_ticks_in_100ms = count_HFclock;
 
-	// DEBUG: program one last time... some chips don't work?
-
+        // DEBUG: program one last time... some chips don't work?
 
         // Debug prints
         // printf("LC_code=%d\r\n", optical_vars.LC_code);

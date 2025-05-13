@@ -52,11 +52,26 @@ scum-programmer-in-docker:
 		make scum-programmer
 
 INCLUDES_FILES_OPTS := \
-	-wholename "./sdk/bsp/scm3c_hw_interface.[c|h]" \
-	-or -wholename "./scum_programmer/nrf-fw/*.[c|h"]\
+	-wholename "./sdk/bsp/adc.[c|h]" \
+	-or -wholename "./sdk/bsp/gpio.[c|h]" \
+	-or -wholename "./sdk/bsp/helpers.[c|h]" \
+	-or -wholename "./sdk/bsp/ieee_802_15_4.[c|h]" \
+	-or -wholename "./sdk/bsp/lighthouse.[c|h]" \
+	-or -wholename "./sdk/bsp/matrix.[c|h]" \
+	-or -wholename "./sdk/bsp/optical.[c|h]" \
+	-or -wholename "./sdk/bsp/rftimer.[c|h]" \
+	-or -wholename "./sdk/bsp/scum.[c|h]" \
+	-or -wholename "./sdk/bsp/spi.[c|h]" \
+	-or -wholename "./sdk/bsp/startup.[c|h]" \
+	-or -wholename "./sdk/bsp/syscalls.[c|h]" \
+	-or -wholename "./sdk/bsp/systick.[c|h]" \
+	-or -wholename "./sdk/bsp/tuning.[c|h]" \
+	-or -wholename "./sdk/bsp/uart.[c|h]" \
+	-or -wholename "./sdk/bsp/scm3c_hw_interface.[c|h]" \
+	-or -wholename "./scum_programmer/nrf-fw/*.[c|h"] \
 	#
 EXCLUDED_DIRS := \
-	./build/* \
+	./build \
 	./scum_programmer/nrf-fw/nRF \
 	#
 EXCLUDE_OPTS := $(foreach dir,$(sort $(EXCLUDED_DIRS)),-and -not -path "$(dir)/*")

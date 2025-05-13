@@ -147,7 +147,7 @@ static inline void adc_set_const_gm_tuning_code_asc_bits(
                     const_gm_tuning_code & 0x1);
 }
 
-void adc_config(const adc_config_t* adc_config) {
+void adc_config(const adc_config_t *adc_config) {
     // Set the ASC bit for the ADC reset signal source.
     adc_set_asc_bit(ADC_RESET_SOURCE_ASC_BIT,
                     (uint8_t)adc_config->reset_source);
@@ -205,11 +205,17 @@ void adc_trigger(void) {
     SCUM_ADC_START = 0x1;
 }
 
-bool adc_output_valid(void) { return g_adc_output_valid; }
+bool adc_output_valid(void) {
+    return g_adc_output_valid;
+}
 
-void adc_output_reset_valid(void) { g_adc_output_valid = false; }
+void adc_output_reset_valid(void) {
+    g_adc_output_valid = false;
+}
 
-uint16_t adc_peek_output(void) { return g_adc_output; }
+uint16_t adc_peek_output(void) {
+    return g_adc_output;
+}
 
 uint16_t adc_read_output(void) {
     // Trigger an ADC read times and keep the last read.

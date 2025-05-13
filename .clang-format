@@ -16,6 +16,7 @@ Cpp11BracedListStyle:                 false
 IncludeBlocks:                        Preserve
 IndentCaseLabels:                     true
 IndentWidth:                          4
+InsertBraces:                         true
 SortIncludes:                         false
 SpacesBeforeTrailingComments:         2
 UseTab:                               Never

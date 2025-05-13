@@ -80,7 +80,7 @@ typedef struct __attribute__((packed)) {
 } adc_config_t;
 
 // Configure the ADC according to the given ADC configuration.
-void adc_config(const adc_config_t* adc_config);
+void adc_config(const adc_config_t *adc_config);
 
 // Enable the ADC interrupt.
 void adc_enable_interrupt(void);

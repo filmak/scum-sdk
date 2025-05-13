@@ -12,8 +12,8 @@
 #include "scm3c_hw_interface.h"
 #include "radio.h"
 
-#define QX3_FINE 0
-#define QX3_MID 20
+#define QX3_FINE     0
+#define QX3_MID      20
 #define HCLOCK_ERROR 924 / 1000
 extern char send_packet[127];
 
@@ -109,7 +109,9 @@ void initialize_mote_lighthouse() {
     // Init counter setup - set all to analog_cfg control
     // ASC[0] is leftmost
     // ASC[0] |= 0x6F800000;
-    for (t = 2; t < 9; t++) set_asc_bit(t);
+    for (t = 2; t < 9; t++) {
+        set_asc_bit(t);
+    }
 
     // Init RX
     // radio_init_rx_MF_lighthouse(); //could be removed
@@ -418,24 +420,33 @@ pulse_type_t classify_pulse(unsigned int timestamp_rise,
 
     // Identify what kind of pulse this was
 
-    if (pulse_width < 585 + WIDTH_BIAS && pulse_width > 100 + WIDTH_BIAS)
+    if (pulse_width < 585 + WIDTH_BIAS && pulse_width > 100 + WIDTH_BIAS) {
         pulse_type = LASER;  // Laser sweep (THIS NEEDS TUNING)
-    if (pulse_width < 675 + WIDTH_BIAS && pulse_width > 585 + WIDTH_BIAS)
+    }
+    if (pulse_width < 675 + WIDTH_BIAS && pulse_width > 585 + WIDTH_BIAS) {
         pulse_type = AZ;  // Azimuth sync, data=0, skip = 0
-    if (pulse_width >= 675 + WIDTH_BIAS && pulse_width < 781 + WIDTH_BIAS)
+    }
+    if (pulse_width >= 675 + WIDTH_BIAS && pulse_width < 781 + WIDTH_BIAS) {
         pulse_type = EL;  // Elevation sync, data=0, skip = 0
-    if (pulse_width >= 781 + WIDTH_BIAS && pulse_width < 885 + WIDTH_BIAS)
+    }
+    if (pulse_width >= 781 + WIDTH_BIAS && pulse_width < 885 + WIDTH_BIAS) {
         pulse_type = AZ;  // Azimuth sync, data=1, skip = 0
-    if (pulse_width >= 885 + WIDTH_BIAS && pulse_width < 989 + WIDTH_BIAS)
+    }
+    if (pulse_width >= 885 + WIDTH_BIAS && pulse_width < 989 + WIDTH_BIAS) {
         pulse_type = EL;  // Elevation sync, data=1, skip = 0
-    if (pulse_width >= 989 + WIDTH_BIAS && pulse_width < 1083 + WIDTH_BIAS)
+    }
+    if (pulse_width >= 989 + WIDTH_BIAS && pulse_width < 1083 + WIDTH_BIAS) {
         pulse_type = AZ_SKIP;  // Azimuth sync, data=0, skip = 1
-    if (pulse_width >= 1083 + WIDTH_BIAS && pulse_width < 1200 + WIDTH_BIAS)
+    }
+    if (pulse_width >= 1083 + WIDTH_BIAS && pulse_width < 1200 + WIDTH_BIAS) {
         pulse_type = EL_SKIP;  // elevation sync, data=0, skip = 1
-    if (pulse_width >= 1200 + WIDTH_BIAS && pulse_width < 1300 + WIDTH_BIAS)
+    }
+    if (pulse_width >= 1200 + WIDTH_BIAS && pulse_width < 1300 + WIDTH_BIAS) {
         pulse_type = AZ_SKIP;  // Azimuth sync, data=1, skip = 1
-    if (pulse_width >= 1300 + WIDTH_BIAS && pulse_width < 1400 + WIDTH_BIAS)
+    }
+    if (pulse_width >= 1300 + WIDTH_BIAS && pulse_width < 1400 + WIDTH_BIAS) {
         pulse_type = EL_SKIP;  // Elevation sync, data=1, skip = 1
+    }
 
     return pulse_type;
 }
@@ -445,8 +456,8 @@ pulse_type_t classify_pulse(unsigned int timestamp_rise,
 // states in order to add hysteresis to the system. The return value includes
 // the current gpio state and the time that the first transition occurred, which
 // should help glitches from disrupting legitimate pulses. This is called
-void debounce_gpio(unsigned short gpio, unsigned short* gpio_out,
-                   unsigned int* trans_out) {
+void debounce_gpio(unsigned short gpio, unsigned short *gpio_out,
+                   unsigned int *trans_out) {
     // keep track of number of times this gpio state has been measured since
     // most recent transition
     static int count;
@@ -461,7 +472,8 @@ void debounce_gpio(unsigned short gpio, unsigned short* gpio_out,
     } state = NOT_DEBOUNCING;
 
     switch (state) {
-        case NOT_DEBOUNCING: {
+        case NOT_DEBOUNCING:
+        {
             // if not debouncing, compare current gpio state to previous
             // debounced gpio state
             if (gpio != deb_gpio.gpio) {
@@ -477,7 +489,8 @@ void debounce_gpio(unsigned short gpio, unsigned short* gpio_out,
             // otherwise just break without changing curr_state
             break;
         }
-        case DEBOUNCING: {
+        case DEBOUNCING:
+        {
             // if debouncing, compare current gpio state to target transition
             // state
             if (gpio == target_state) {
@@ -540,7 +553,8 @@ void update_state_elevation(pulse_type_t pulse_type,
     }
     switch (state) {
         // Search for an azimuth sync pulse, assume its A
-        case 0: {
+        case 0:
+        {
             if (pulse_type == EL || pulse_type == EL_SKIP) {
                 if (pulse_type == EL) {
                     elevation_a_sync = timestamp_rise;
@@ -564,7 +578,8 @@ void update_state_elevation(pulse_type_t pulse_type,
 
         // Waiting for another consecutive elevation skip sync from B, this
         // should be a skip sync pulse
-        case 1: {
+        case 1:
+        {
             if (pulse_type == EL_SKIP) {
                 nextstate = 3;
             } else if (pulse_type == EL) {
@@ -582,7 +597,8 @@ void update_state_elevation(pulse_type_t pulse_type,
         }
 
         // Azimuth B sync state
-        case 2: {
+        case 2:
+        {
             if (pulse_type == EL) {
                 // the last pulse was an azimuth sync from lighthouse B
                 elevation_b_sync = timestamp_rise;
@@ -601,7 +617,8 @@ void update_state_elevation(pulse_type_t pulse_type,
         }
 
         // Elevation A laser sweep
-        case 3: {
+        case 3:
+        {
             if (pulse_type == LASER) {
                 // lighthouse a laser
                 elevation_a_laser = timestamp_rise;
@@ -634,7 +651,8 @@ void update_state_elevation(pulse_type_t pulse_type,
         }
 
         // elevation B laser sweep
-        case 4: {
+        case 4:
+        {
             if (pulse_type == LASER) {
                 // lighthouse b laser
                 elevation_b_laser = timestamp_rise;
@@ -696,7 +714,8 @@ void update_state_azimuth(pulse_type_t pulse_type,
     // pulse widths are within the bounds listed above.
     switch (state) {
         // Search for an azimuth A sync pulse, we don't know if it's A or B yet
-        case 0: {
+        case 0:
+        {
             if (pulse_type == AZ || pulse_type == AZ_SKIP) {
                 if (pulse_type == AZ) {
                     azimuth_a_sync = timestamp_rise;
@@ -707,15 +726,17 @@ void update_state_azimuth(pulse_type_t pulse_type,
                     nextstate = 2;
                     // printf("state transition: %d to %d\n",state,nextstate);
                 }
-            } else
+            } else {
                 nextstate = 0;
+            }
 
             break;
         }
 
         // Waiting for another consecutive azimuth skip sync from B, this should
         // be a skip sync pulse
-        case 1: {
+        case 1:
+        {
             if (pulse_type == AZ_SKIP) {
                 // lighthouse A sweep pulse
 
@@ -734,7 +755,8 @@ void update_state_azimuth(pulse_type_t pulse_type,
         }
 
         // Azimuth B sync state
-        case 2: {
+        case 2:
+        {
             if (pulse_type == AZ) {
                 // the last pulse was an azimuth sync from lighthouse B
                 azimuth_b_sync = timestamp_rise;
@@ -753,7 +775,8 @@ void update_state_azimuth(pulse_type_t pulse_type,
         }
 
         // Azimuth A laser sweep
-        case 3: {
+        case 3:
+        {
             if (pulse_type == LASER) {
                 // lighthouse a laser
                 azimuth_a_laser = timestamp_rise;
@@ -784,7 +807,8 @@ void update_state_azimuth(pulse_type_t pulse_type,
         }
 
         // Azimuth B laser sweep
-        case 4: {
+        case 4:
+        {
             if (pulse_type == LASER) {
                 // lighthouse b laser
                 azimuth_b_laser = timestamp_rise;
