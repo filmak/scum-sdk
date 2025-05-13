@@ -45,30 +45,30 @@ typedef struct __attribute__((packed)) {
 
 // Initialize the tuning code to the minimum value given by the sweep
 // configuration.
-void tuning_init_for_sweep(tuning_code_t* tuning_code,
-                           const tuning_sweep_config_t* sweep_config);
+void tuning_init_for_sweep(tuning_code_t *tuning_code,
+                           const tuning_sweep_config_t *sweep_config);
 
 // Validate the sweep configuration.
-bool tuning_validate_sweep_config(const tuning_sweep_config_t* sweep_config);
+bool tuning_validate_sweep_config(const tuning_sweep_config_t *sweep_config);
 
 // Increment the tuning code by one fine code.
-void tuning_increment_code(tuning_code_t* tuning_code);
+void tuning_increment_code(tuning_code_t *tuning_code);
 
 // Increment the tuning code by one fine code, rolling over at the range
 // boundaries given by the sweep configuration.
-void tuning_increment_code_for_sweep(tuning_code_t* tuning_code,
-                                     const tuning_sweep_config_t* sweep_config);
+void tuning_increment_code_for_sweep(tuning_code_t *tuning_code,
+                                     const tuning_sweep_config_t *sweep_config);
 
 // Increment the tuning code by one mid code, rolling over at the range
 // boundaries given by the sweep configuration.
 void tuning_increment_mid_code_for_sweep(
-    tuning_code_t* tuning_code, const tuning_sweep_config_t* sweep_config);
+    tuning_code_t *tuning_code, const tuning_sweep_config_t *sweep_config);
 
 // Check whether the tuning code is at the end of the sweep.
-bool tuning_end_of_sweep(const tuning_code_t* tuning_code,
-                         const tuning_sweep_config_t* sweep_config);
+bool tuning_end_of_sweep(const tuning_code_t *tuning_code,
+                         const tuning_sweep_config_t *sweep_config);
 
 // Tune the radio to the desired tuning code.
-void tuning_tune_radio(const tuning_code_t* tuning_code);
+void tuning_tune_radio(const tuning_code_t *tuning_code);
 
 #endif  // __TUNING_H

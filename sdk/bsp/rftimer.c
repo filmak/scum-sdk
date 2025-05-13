@@ -9,8 +9,8 @@
 #define RFTIMER_MAX_COUNT 0xffffffff
 
 #define MINIMUM_COMPAREVALE_ADVANCE 5
-#define LARGEST_INTERVAL 0xffff
-#define NUM_INTERRUPTS 8
+#define LARGEST_INTERVAL            0xffff
+#define NUM_INTERRUPTS              8
 
 // ========================== variable ========================================
 
@@ -23,14 +23,14 @@ typedef struct {
 
 static rftimer_vars_t rftimer_vars = { 0 };
 
-static bool delay_completed[NUM_INTERRUPTS] = { 0 };  // flag indicating whether the delay has
-                                       // completed. For use by
-                                       // delay_milliseoncds_synchronous method
-static bool is_repeating[NUM_INTERRUPTS] = { 0 };     // flag indicating whethere each COMPARE
-                                       // will repeat at a fixed rate
+static bool delay_completed[NUM_INTERRUPTS] = { 0 };          // flag indicating whether the delay has
+                                                              // completed. For use by
+                                                              // delay_milliseoncds_synchronous method
+static bool is_repeating[NUM_INTERRUPTS] = { 0 };             // flag indicating whethere each COMPARE
+                                                              // will repeat at a fixed rate
 static unsigned int timer_durations[NUM_INTERRUPTS] = { 0 };  // indicates length each COMPARE
-                                               // interrupt was set to run for.
-                                               // Used for repeating delay.
+                                                              // interrupt was set to run for.
+                                                              // Used for repeating delay.
 
 // ========================== public ==========================================
 

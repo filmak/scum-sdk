@@ -6,9 +6,9 @@
 
 #include "helpers.h"
 
-#define CS_PIN 15
-#define CLK_PIN 14
-#define DIN_PIN 13   // Used when reading data from the IMU thus a SCuM input
+#define CS_PIN   15
+#define CLK_PIN  14
+#define DIN_PIN  13  // Used when reading data from the IMU thus a SCuM input
 #define DATA_PIN 12  // Used when writing to the IMU thus a SCuM output
 
 void spi_write(unsigned char writeByte) {
@@ -138,10 +138,10 @@ unsigned char read_imu_register(unsigned char reg) {
     reg |= 0x80;  // guarantee that the function input is a valid input (not
                   // necessarily a valid, and readable, register)
 
-    spi_chip_select();       // drop chip select
-    spi_write(reg);          // write the selected register to the port
+    spi_chip_select();                     // drop chip select
+    spi_write(reg);                        // write the selected register to the port
     unsigned char read_byte = spi_read();  // clock out the bits and read them
-    spi_chip_deselect();     // raise chip select
+    spi_chip_deselect();                   // raise chip select
 
     return read_byte;
 }
@@ -156,7 +156,7 @@ void write_imu_register(unsigned char reg, unsigned char data) {
     spi_chip_deselect();  // raise chip select
 }
 
-void read_all_imu_data(imu_data_t* imu_measurement) {
+void read_all_imu_data(imu_data_t *imu_measurement) {
     imu_measurement->acc_x.value = read_acc_x();
     imu_measurement->acc_y.value = read_acc_y();
     imu_measurement->acc_z.value = read_acc_z();
@@ -165,7 +165,7 @@ void read_all_imu_data(imu_data_t* imu_measurement) {
     imu_measurement->gyro_z.value = read_gyro_z();
 }
 
-void log_imu_data(imu_data_t* imu_measurement) {
+void log_imu_data(imu_data_t *imu_measurement) {
     printf(
         "AX: %3d %3d, AY: %3d %3d, AZ: %3d %3d, GX: %3d %3d, GY: %3d %3d, GZ: "
         "%3d %3d\n",

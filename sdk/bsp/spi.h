@@ -38,6 +38,6 @@ unsigned char read_imu_register(unsigned char reg);
 
 void write_imu_register(unsigned char reg, unsigned char data);
 
-void read_all_imu_data(imu_data_t* imu_measurement);
+void read_all_imu_data(imu_data_t *imu_measurement);
 
-void log_imu_data(imu_data_t* imu_measurement);
+void log_imu_data(imu_data_t *imu_measurement);

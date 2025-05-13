@@ -6,10 +6,10 @@
 #include "optical.h"
 #include "rftimer.h"
 
-#define RFTIMER_CHANNEL     (1U)
-#define RFTIMER_DELAY       (1000000UL)
+#define RFTIMER_CHANNEL (1U)
+#define RFTIMER_DELAY   (1000000UL)
 
-static void rftimer_cb2( void ) {
+static void rftimer_cb2(void) {
     rftimer_setCompareIn_by_id(rftimer_readCounter() + RFTIMER_DELAY, RFTIMER_CHANNEL);
     printf("RFTimer callback %d triggered - %lu\n\n", RFTIMER_CHANNEL, rftimer_readCounter());
 }
