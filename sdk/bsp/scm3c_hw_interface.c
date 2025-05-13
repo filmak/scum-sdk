@@ -54,7 +54,7 @@ typedef struct {
     uint32_t IF_fine;
 } scm3c_hw_interface_vars_t;
 
-scm3c_hw_interface_vars_t scm3c_hw_interface_vars;
+scm3c_hw_interface_vars_t scm3c_hw_interface_vars = { 0 };
 
 //=========================== prototype =======================================
 
@@ -71,7 +71,6 @@ static void _update_bit(uint32_t position, bool set) {
 //==== admin
 
 void scm3c_hw_interface_init(void) {
-    memset(&scm3c_hw_interface_vars, 0, sizeof(scm3c_hw_interface_vars_t));
 
     // HF_CLOCK tuning settings
     scm3c_hw_interface_vars.HF_CLOCK_fine = INIT_HF_CLOCK_FINE;
@@ -90,8 +89,7 @@ void scm3c_hw_interface_init(void) {
     scm3c_hw_interface_vars.IF_fine = INIT_IF_FINE;
 
     // coarse1, coarse2, coarse3, fine, superfine dac settings
-    memcpy(&scm3c_hw_interface_vars.dac_2M_settings[0], default_dac_2m_setting,
-           sizeof(default_dac_2m_setting));
+    memcpy(&scm3c_hw_interface_vars.dac_2M_settings[0], default_dac_2m_setting,DAC_2M_SETTING_LEN);
 }
 
 //==== get/set functions
@@ -150,8 +148,7 @@ void scm3c_hw_interface_set_IF_fine(uint32_t value) {
 }
 
 void scm3c_hw_interface_set_asc(uint32_t* asc_profile) {
-    memcpy(&scm3c_hw_interface_vars.ASC[0], asc_profile,
-           ASC_LEN * sizeof(uint32_t));
+    memcpy(&scm3c_hw_interface_vars.ASC[0], asc_profile,ASC_LEN * sizeof(uint32_t));
 }
 
 //==== from scm3c_hardware_interface.h
@@ -591,13 +588,10 @@ void set_IF_gain_ASC(unsigned int Igain, unsigned int Qgain) {
 }
 
 void radio_init_rx_MF() {
-    // int j;
-    unsigned int mask1, mask2;
-    unsigned int tau_shift, e_k_shift, correlation_threshold;
 
     // IF uses ASC<271:500>, mask off outside that range
-    mask1 = 0xFFFC0000;
-    mask2 = 0x000007FF;
+    uint32_t mask1 = 0xFFFC0000;
+    uint32_t mask2 = 0x000007FF;
     scm3c_hw_interface_vars.ASC[8] &= mask1;
     scm3c_hw_interface_vars.ASC[15] &= mask2;
 
@@ -691,14 +685,14 @@ void radio_init_rx_MF() {
 
     // CDR feedback parameters
     // Determined experimentally - unlikely to need to ever change
-    tau_shift = 11;
-    e_k_shift = 2;
+    uint8_t tau_shift = 11;
+    uint8_t e_k_shift = 2;
     SCUM_ANALOG_CFG_REG_3 = (tau_shift << 11) | (e_k_shift << 7);
 
     // Threshold used for packet detection
     // This number corresponds to the Hamming distance threshold for determining
     // if incoming 15.4 chip stream is a packet
-    correlation_threshold = 5;
+    uint8_t correlation_threshold = 5;
     SCUM_ANALOG_CFG_REG_9 = correlation_threshold;
 
     // Mux select bits to choose internal demod or external clk/data from gpio
@@ -744,13 +738,10 @@ void radio_init_rx_MF() {
 
 // Must set IF clock frequency AFTER calling this function
 void radio_init_rx_ZCC() {
-    // int j;
-    unsigned int mask1, mask2;
-    unsigned int correlation_threshold;
 
     // IF uses ASC<271:500>, mask off outside that range
-    mask1 = 0xFFFE0000;
-    mask2 = 0x000007FF;
+    uint32_t mask1 = 0xFFFE0000;
+    uint32_t mask2 = 0x000007FF;
     scm3c_hw_interface_vars.ASC[8] &= mask1;
     scm3c_hw_interface_vars.ASC[15] &= mask2;
 
@@ -794,7 +785,7 @@ void radio_init_rx_ZCC() {
     set_asc_bit(132);
 
     // Threshold used for packet detection
-    correlation_threshold = 5;
+    uint8_t correlation_threshold = 5;
     SCUM_ANALOG_CFG_REG_9 = correlation_threshold;
 
     // Trim comparator offset
@@ -1132,33 +1123,20 @@ unsigned int flip_lsb8(unsigned int in) {
 
 void analog_scan_chain_write(void) {
     // analog_cfg<357> is resetb for chip shift register, so leave that high
-
-    for (uint8_t i = 38; i > 0; i--) {
-        // printf("\r\n%d,%lX\r\n",i,scan_bits[i]);
-
+    for (uint8_t i = 0; i < 38; i++) {
         for (uint8_t j = 0; j < 32; j++) {
-            // Set scan_in (should be inverted)
-            uint32_t asc_reg = 0x20;
-            if (!(scm3c_hw_interface_vars.ASC[i - 1] & (1 << j))) {
-                asc_reg = 0x21;
-            }
-
             // Write asc_reg to analog_cfg
-            SCUM_ANALOG_CFG_REG_22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 = 0x20 | !(scm3c_hw_interface_vars.ASC[38 - i - 1] & (1 << j));
 
             // Lower phi1
-            asc_reg &= ~(0x2);
-            SCUM_ANALOG_CFG_REG_22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 &= ~(0x2);
 
             // Toggle phi2
-            asc_reg |= 0x4;
-            SCUM_ANALOG_CFG_REG_22 = asc_reg;
-            asc_reg &= ~(0x4);
-            SCUM_ANALOG_CFG_REG_22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 |= 0x4;
+            SCUM_ANALOG_CFG_REG_22 &= ~(0x4);
 
             // Raise phi1
-            asc_reg |= 0x2;
-            SCUM_ANALOG_CFG_REG_22 = asc_reg;
+            SCUM_ANALOG_CFG_REG_22 |= 0x2;
         }
     }
 }
@@ -1178,8 +1156,6 @@ void analog_scan_chain_load() {
 */
 void set_2M_RC_frequency(int coarse1, int coarse2, int coarse3, int fine,
                          int superfine) {
-    unsigned int newval;
-    unsigned int newcoarse1, newcoarse2, newcoarse3, newfine, newsuperfine;
 
     /* update our local dac array */
     scm3c_hw_interface_vars.dac_2M_settings[0] = coarse1;
@@ -1191,14 +1167,14 @@ void set_2M_RC_frequency(int coarse1, int coarse2, int coarse3, int fine,
     // make sure each argument is between 0-31, inclusive
 
     // scm3c_hw_interface_vars.ASC[34] covers 1088:1119
-    newval = scm3c_hw_interface_vars.ASC[34] & 0x8000001F;
+    uint32_t newval = scm3c_hw_interface_vars.ASC[34] & 0x8000001F;
 
     // flip endianness of each
-    newcoarse1 = (flip_lsb8(coarse1) >> 3) & 0x1F;
-    newcoarse2 = (flip_lsb8(coarse2) >> 3) & 0x1F;
-    newcoarse3 = (flip_lsb8(coarse3) >> 3) & 0x1F;
-    newfine = (flip_lsb8(fine) >> 3) & 0x1F;
-    newsuperfine = (flip_lsb8(superfine) >> 3) & 0x1F;
+    uint32_t newcoarse1 = (flip_lsb8(coarse1) >> 3) & 0x1F;
+    uint32_t newcoarse2 = (flip_lsb8(coarse2) >> 3) & 0x1F;
+    uint32_t newcoarse3 = (flip_lsb8(coarse3) >> 3) & 0x1F;
+    uint32_t newfine = (flip_lsb8(fine) >> 3) & 0x1F;
+    uint32_t newsuperfine = (flip_lsb8(superfine) >> 3) & 0x1F;
 
     newval |= newcoarse1 << 26;
     newval |= newcoarse2 << 21;
