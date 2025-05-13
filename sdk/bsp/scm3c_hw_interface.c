@@ -11,27 +11,27 @@
 
 //=========================== definition ======================================
 
-#define ASC_LEN 38
+#define ASC_LEN            38
 #define DAC_2M_SETTING_LEN 5
 
 // initialized value for frequency configuration
-#define INIT_HF_CLOCK_FINE 17
+#define INIT_HF_CLOCK_FINE   17
 #define INIT_HF_CLOCK_COARSE 3
-#define INIT_RC2M_COARSE 21
-#define INIT_RC2M_FINE 15
-#define INIT_RC2M_SUPERFINE 15
-#define INIT_IF_CLK_TARGET 1600000
-#define INIT_IF_COARSE 22
-#define INIT_IF_FINE 18
+#define INIT_RC2M_COARSE     21
+#define INIT_RC2M_FINE       15
+#define INIT_RC2M_SUPERFINE  15
+#define INIT_IF_CLK_TARGET   1600000
+#define INIT_IF_COARSE       22
+#define INIT_IF_FINE         18
 
 // CRC
-#define CRC_VALUE (*((volatile unsigned int*)0x0000FFFC))
-#define CODE_LENGTH (*((volatile unsigned int*)0x0000FFF8))
+#define CRC_VALUE   (*((volatile unsigned int *)0x0000FFFC))
+#define CODE_LENGTH (*((volatile unsigned int *)0x0000FFF8))
 
 //=========================== variable ========================================
 
 // default setting
-static const uint32_t default_dac_2m_setting[] = {31, 31, 29, 2, 2};
+static const uint32_t default_dac_2m_setting[] = { 31, 31, 29, 2, 2 };
 
 typedef struct {
     uint32_t ASC[ASC_LEN];
@@ -89,7 +89,7 @@ void scm3c_hw_interface_init(void) {
     scm3c_hw_interface_vars.IF_fine = INIT_IF_FINE;
 
     // coarse1, coarse2, coarse3, fine, superfine dac settings
-    memcpy(&scm3c_hw_interface_vars.dac_2M_settings[0], default_dac_2m_setting,DAC_2M_SETTING_LEN);
+    memcpy(&scm3c_hw_interface_vars.dac_2M_settings[0], default_dac_2m_setting, DAC_2M_SETTING_LEN);
 }
 
 //==== get/set functions
@@ -147,8 +147,8 @@ void scm3c_hw_interface_set_IF_fine(uint32_t value) {
     scm3c_hw_interface_vars.IF_fine = value;
 }
 
-void scm3c_hw_interface_set_asc(uint32_t* asc_profile) {
-    memcpy(&scm3c_hw_interface_vars.ASC[0], asc_profile,ASC_LEN * sizeof(uint32_t));
+void scm3c_hw_interface_set_asc(uint32_t *asc_profile) {
+    memcpy(&scm3c_hw_interface_vars.ASC[0], asc_profile, ASC_LEN * sizeof(uint32_t));
 }
 
 //==== from scm3c_hardware_interface.h
@@ -163,7 +163,7 @@ unsigned reverse(unsigned x) {
 }
 
 // Computes 32-bit crc from a starting address over 'length' dwords
-unsigned int crc32c(unsigned char* message, unsigned int length) {
+unsigned int crc32c(unsigned char *message, unsigned int length) {
     int i, j;
     unsigned int byte, crc;
 
@@ -200,7 +200,8 @@ void crc_check(void) {
         printf(
             "\r\nProgramming Error - CRC DOES NOT MATCH - Halting "
             "Execution\r\n");
-        while (1);
+        while (1)
+            ;
     }
 }
 
@@ -255,9 +256,10 @@ void GPO_enables(unsigned int mask) {
     // out_en<0:15> =
     // ASC<1131>,ASC<1133>,ASC<1135>,ASC<1137>,ASC<1140>,ASC<1142>,ASC<1144>,ASC<1146>,...
     // ASC<1115>,ASC<1117>,ASC<1119>,ASC<1121>,ASC<1124>,ASC<1126>,ASC<1128>,ASC<1130>
-    uint16_t asc_locations[16] = {1131, 1133, 1135, 1137, 1140, 1142,
-                                        1144, 1146, 1115, 1117, 1119, 1121,
-                                        1124, 1126, 1128, 1130};
+    const uint16_t asc_locations[16] = {
+        1131, 1133, 1135, 1137, 1140, 1142, 1144, 1146,
+        1115, 1117, 1119, 1121, 1124, 1126, 1128, 1130
+    };
 
     for (uint8_t j = 0; j < 16; j++) {
         _update_bit(asc_locations[j], !((mask >> j) & 0x1));
@@ -271,9 +273,10 @@ void GPI_enables(unsigned int mask) {
     // in_en<0:15> =
     // ASC<1132>,ASC<1134>,ASC<1136>,ASC<1138>,ASC<1139>,ASC<1141>,ASC<1143>,ASC<1145>,...
     // ASC<1116>,ASC<1118>,ASC<1120>,ASC<1122>,ASC<1123>,ASC<1125>,ASC<1127>,ASC<1129>
-    uint16_t asc_locations[16] = {1132, 1134, 1136, 1138, 1139, 1141,
-                                        1143, 1145, 1116, 1118, 1120, 1122,
-                                        1123, 1125, 1127, 1129};
+    const uint16_t asc_locations[16] = {
+        1132, 1134, 1136, 1138, 1139, 1141, 1143, 1145,
+        1116, 1118, 1120, 1122, 1123, 1125, 1127, 1129
+    };
 
     for (uint8_t j = 0; j < 16; j++) {
         _update_bit(asc_locations[j], (mask >> j) & 0x1);
@@ -365,12 +368,12 @@ void init_ldo_control(void) {
 // [1] Van De Goor, Ad J. "Using march tests to test SRAMs." IEEE Design & Test
 // of Computers 10.1 (1993): 8-14. Only works for DMEM since you must be able to
 // read and write
-unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
-    unsigned int* addr = baseAddress;
+unsigned int sram_test(unsigned int *baseAddress, unsigned int num_dwords) {
+    unsigned int *addr = baseAddress;
     uint32_t num_errors = 0;
 
     printf("\r\n\r\nStarting SRAM test from 0x%p to 0x%p...\r\n", (void *)baseAddress,
-    (void *)(baseAddress + num_dwords));
+           (void *)(baseAddress + num_dwords));
     printf("This takes awhile...\r\n");
 
     // Write 0 to all bits, in any address order
@@ -386,7 +389,7 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
         for (uint8_t j = 0; j < 32; j++) {
             if ((addr[i] & (1UL << j)) != 0x0) {
                 printf("\r\nERROR 1 @ address %X bit %d -- Value is %X",
-                        i, j, addr[i]);
+                       i, j, addr[i]);
                 num_errors++;
             }
             addr[i] |= 1UL << j;
@@ -398,7 +401,7 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
         for (uint8_t j = 0; j < 32; j++) {
             if ((addr[i] & (1UL << j)) != 1UL << j) {
                 printf("\r\nERROR 2 @ address %X bit %d -- Value is %X",
-                        i, j, addr[i]);
+                       i, j, addr[i]);
                 num_errors++;
             }
             addr[i] &= ~(1UL << j);
@@ -410,7 +413,7 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
         for (uint8_t j = 31; j >= 0; j--) {
             if ((addr[i] & (1UL << j)) != 0x0) {
                 printf("\r\nERROR 3 @ address %X bit %d -- Value is %X",
-                        i, j, addr[i]);
+                       i, j, addr[i]);
                 num_errors++;
             }
             addr[i] |= 1UL << j;
@@ -422,7 +425,7 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
         for (uint8_t j = 31; j >= 0; j--) {
             if ((addr[i] & (1UL << j)) != 1UL << j) {
                 printf("\r\nERROR 4 @ address %X bit %d -- Value is %X",
-                        i, j, addr[i]);
+                       i, j, addr[i]);
                 num_errors++;
             }
             addr[i] &= ~(1UL << j);
@@ -434,7 +437,7 @@ unsigned int sram_test(unsigned int* baseAddress, unsigned int num_dwords) {
         for (uint8_t j = 0; j < 32; j++) {
             if ((addr[i] & (1UL << j)) != 0x0) {
                 printf("\r\nERROR 5 @ address %X bit %d -- Value is %X",
-                        i, j, addr[i]);
+                       i, j, addr[i]);
                 num_errors++;
             }
         }
@@ -879,8 +882,8 @@ void radio_init_divider(unsigned int div_value) {
     set_asc_bit(1012);
 }
 
-void read_counters_3B(unsigned int* count_2M, unsigned int* count_LC,
-                      unsigned int* count_adc) {
+void read_counters_3B(unsigned int *count_2M, unsigned int *count_LC,
+                      unsigned int *count_adc) {
     // Disable all counters
     SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
@@ -915,11 +918,15 @@ unsigned int read_IF_estimate() {
 }
 
 // Read Link Quality Indicator
-unsigned int read_LQI() { return SCUM_ANALOG_CFG_REG_21 & 0xFF; }
+unsigned int read_LQI() {
+    return SCUM_ANALOG_CFG_REG_21 & 0xFF;
+}
 
 // Read RSSI - the gain control settings
 
-unsigned int read_RSSI() { return SCUM_ANALOG_CFG_REG_15 & 0xF; }
+unsigned int read_RSSI() {
+    return SCUM_ANALOG_CFG_REG_15 & 0xF;
+}
 
 // set IF clock frequency
 void set_IF_clock_frequency(int coarse, int fine, int high_range) {
@@ -1086,7 +1093,6 @@ unsigned int estimate_temperature_2M_32k() {
     // Count for some arbitrary amount of time
     busy_wait_cycles(50000);
 
-
     // Disable all counters
     SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
@@ -1106,8 +1112,7 @@ unsigned int estimate_temperature_2M_32k() {
 
 // Reverse endianness of lower 16 bits
 unsigned int flip_lsb8(unsigned int in) {
-    int out = 0;
-
+    uint32_t out = 0;
     out |= (0x01 & in) << 7;
     out |= (0x02 & in) << 5;
     out |= (0x04 & in) << 3;
@@ -1205,8 +1210,8 @@ void initialize_2M_DAC(void) {
     // print_2MHz_DAC();
 }
 
-void read_counters(unsigned int* count_2M, unsigned int* count_LC,
-                   unsigned int* count_32k) {
+void read_counters(unsigned int *count_2M, unsigned int *count_LC,
+                   unsigned int *count_32k) {
     // Disable all counters
     SCUM_ANALOG_CFG_REG_0 = 0x007F;
 
@@ -1230,7 +1235,7 @@ void read_counters(unsigned int* count_2M, unsigned int* count_LC,
     // printf("32k_count=%X\r\n\r\n",count_32k);
 }
 
-void update_PN31_byte(unsigned int* current_lfsr) {
+void update_PN31_byte(unsigned int *current_lfsr) {
     for (uint8_t i = 0; i < 8; i++) {
         int newbit = (((*current_lfsr >> 30) ^ (*current_lfsr >> 27)) & 1);
         *current_lfsr = ((*current_lfsr << 1) | newbit);
@@ -1286,7 +1291,7 @@ void LC_FREQCHANGE(int coarse, int mid, int fine) {
 
     // initialize registers
     unsigned int fcode =
-        0x00000000;  // contains everything but LSB of the fine DAC
+        0x00000000;                    // contains everything but LSB of the fine DAC
     unsigned int fcode2 = 0x00000000;  // contains the LSB of the fine DAC
 
     fine_f &= 0x000000FF;
@@ -1360,19 +1365,35 @@ void set_LC_current(unsigned int current) {
     scm3c_hw_interface_vars.ASC[31] &= 0x0FFFFFFF;
     scm3c_hw_interface_vars.ASC[31] |= current_lsb;
 }
-void disable_polyphase_ASC() { scm3c_hw_interface_vars.ASC[30] &= 0xFFEFFFFF; }
+void disable_polyphase_ASC() {
+    scm3c_hw_interface_vars.ASC[30] &= 0xFFEFFFFF;
+}
 
-void enable_polyphase_ASC() { scm3c_hw_interface_vars.ASC[30] |= 0x00100000; }
+void enable_polyphase_ASC() {
+    scm3c_hw_interface_vars.ASC[30] |= 0x00100000;
+}
 
-void disable_div_power_ASC() { scm3c_hw_interface_vars.ASC[16] &= 0xB7FFFFFF; }
-void enable_div_power_ASC() { scm3c_hw_interface_vars.ASC[16] |= 0x48000000; }
+void disable_div_power_ASC() {
+    scm3c_hw_interface_vars.ASC[16] &= 0xB7FFFFFF;
+}
+void enable_div_power_ASC() {
+    scm3c_hw_interface_vars.ASC[16] |= 0x48000000;
+}
 
-void ext_clk_ble_ASC() { scm3c_hw_interface_vars.ASC[32] |= 0x00080000; }
-void int_clk_ble_ASC() { scm3c_hw_interface_vars.ASC[32] &= 0xFFF7FFFF; }
+void ext_clk_ble_ASC() {
+    scm3c_hw_interface_vars.ASC[32] |= 0x00080000;
+}
+void int_clk_ble_ASC() {
+    scm3c_hw_interface_vars.ASC[32] &= 0xFFF7FFFF;
+}
 
-void enable_1mhz_ble_ASC() { scm3c_hw_interface_vars.ASC[32] &= 0xFFF9FFFF; }
+void enable_1mhz_ble_ASC() {
+    scm3c_hw_interface_vars.ASC[32] &= 0xFFF9FFFF;
+}
 
-void disable_1mhz_ble_ASC() { scm3c_hw_interface_vars.ASC[32] |= 0x00060000; }
+void disable_1mhz_ble_ASC() {
+    scm3c_hw_interface_vars.ASC[32] |= 0x00060000;
+}
 void set_PA_supply(unsigned int code) {
     // 7-bit setting (between 0 and 127)
     // MSB is a "panic" bit that engages the high-voltage settings
