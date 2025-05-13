@@ -24,6 +24,14 @@ Use an nRF52840-DK and a Python script to program SCuM!
   socat - open:/dev/ttyUSB0,b19200,echo=0,raw,cs8,parenb=0,cstopb=0
   ```
 
+## Python script installation
+
+The scum-programmer command line tool is published on PyPI:
+
+```
+pip install scum-programmer
+```
+
 ## Use
 
 ### Load code onto SCuM
@@ -32,14 +40,14 @@ The `main.py` script only takes firmware files in .bin format.
 Use it as following:
 
 ```
-main.py path/to/scum-firmware.bin
+scum-programmer path/to/scum-firmware.bin
 ```
 
 On Windows, the nRF J-Link TTY port cannot be detected automatically and needs
 to be set manually using the `--port` option. For example:
 
 ```
-main.py --port COM42 path/to/scum-firmware.bin
+scum-programmer --port COM42 path/to/scum-firmware.bin
 ```
 
 ### Calibrate SCuM
@@ -48,7 +56,7 @@ If the application requires calibration, use the `--calibrate` option to trigger
 the calibration after booting SCuM:
 
 ```
-main.py --calibrate path/to/scum-firmware.bin
+scum-programmer --calibrate path/to/scum-firmware.bin
 ```
 
 ## Build the nRF firmware
