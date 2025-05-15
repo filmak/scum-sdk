@@ -10,7 +10,7 @@ Use an nRF52840-DK and a Python script to program SCuM!
 
 ### Setup the nRF52840-DK
 
-- Download `scum-programmer.hex` from the https://github.com/pisterlab/scum-sdk/releases/latest/
+- Download [scum-programmer.hex](https://github.com/PisterLab/scum-sdk/releases/latest/download/scum-programmer.hex)
 - Plug in your nRF52840-DK into your computer, drive "JLINK" appears
 - Drag-and-drop `scum-programmer.hex` onto this drive
 
