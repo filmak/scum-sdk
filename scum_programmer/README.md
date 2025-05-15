@@ -3,7 +3,7 @@
 Use an nRF52840-DK and a Python script to program SCuM!
 
 <p align="center">
-  <img src="https://github.com/PisterLab/scum-sdk/blob/main/scum_programmer/programmer-setup.svg" width="75%">
+  <img src="https://github.com/PisterLab/scum-sdk/blob/main/scum_programmer/programmer-setup.svg?raw=True" width="75%">
 </p>
 
 ## Prerequisites
@@ -26,7 +26,7 @@ Use an nRF52840-DK and a Python script to program SCuM!
 
 ## Python script installation
 
-The scum-programmer command line tool is published on PyPI:
+The `scum-programmer` command line tool is published on PyPI:
 
 ```
 pip install scum-programmer
