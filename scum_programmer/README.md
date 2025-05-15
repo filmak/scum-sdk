@@ -32,11 +32,11 @@ The scum-programmer command line tool is published on PyPI:
 pip install scum-programmer
 ```
 
-## Use
+## Usage
 
 ### Load code onto SCuM
 
-The `main.py` script only takes firmware files in .bin format.
+The `scum-programmer` command requires a firmware input file in .bin format.
 Use it as following:
 
 ```
