@@ -6,6 +6,7 @@ build/
 *.orig
 
 # Python
+dist/
 *.pyc
 .coverage
 coverage.xml
