@@ -14,6 +14,8 @@ SCuM programmer.
 #include "hardware/structs/dma.h"
 #include "hardware/regs/dma.h"
 #include "hardware/irq.h"
+#include "hardware/regs/timer.h"
+#include "hardware/structs/timer.h"
 #include "hdlc.h"
 
 //=========================== defines =========================================
@@ -32,7 +34,7 @@ SCuM programmer.
 
 #define CALIBRATION_CLK_PIN          28UL
 #define CALIBRATION_PULSE_WIDTH      50   // approximate duty cycle (out of 100)
-#define CALIBRATION_PERIOD           100  // period in ms
+#define CALIBRATION_PERIOD           100000  // period in us
 #define CALIBRATION_FUDGE            308  // # of clock cycles of "fudge"
 #define CALIBRATION_NUMBER_OF_PULSES 10   // # of rising edges at 100ms
 
@@ -79,6 +81,21 @@ static programmer_vars_t _programmer_vars = { 0 };
 
 static const char *UART_ACK = "ACK\n";
 
+
+
+void timer_irq(void) {
+    // handle compare[1]
+
+}
+
+static void setup_timer2(void) {
+    timer_hw->alarm[2] = timer_hw->timerawl + CALIBRATION_PERIOD;
+    hw_set_bits(&timer_hw->inte, 1u << 2);
+    irq_set_exclusive_handler(TIMER0_IRQ_0, timer_irq);
+    irq_set_enabled(TIMER0_IRQ_0, true);
+}
+
+
 static void setup_uart(void) {
 
     // configure baud:
@@ -119,51 +136,27 @@ static void setup_uart(void) {
     // Enable UART DMA
     uart1_hw->dmacr = UART_UARTDMACR_RXDMAE_BITS | UART_UARTDMACR_TXDMAE_BITS;
     
-    // enable DMA0 interrupts:
+    // enable DMA0 interrupts on RX:
     dma_hw->inte0 = 1;
-
 }
 
-
-
-
-int64_t alarm_callback(alarm_id_t id, void *user_data) {
-    // Put your timeout handler code in here
-    return 0;
+static void uart_write(const uint8_t *buffer, size_t len) {
+    memcpy(_programmer_vars.uart_tx_buf, buffer, len);
+    dma_hw->ch[1].transfer_count = len;
+    dma_hw->ch[1].al1_ctrl |= DMA_CH0_CTRL_TRIG_EN_BITS;
+    while(dma_hw->ch[1].ctrl_trig & DMA_CH0_CTRL_TRIG_BUSY_BITS) {}
 }
-
-
 
 
 int main()
 {
-    stdio_init_all();
-
-    // Timer example code - This example fires off the callback after 2000ms
-    add_alarm_in_ms(2000, alarm_callback, NULL, false);
-    // For more examples of timer use see https://github.com/raspberrypi/pico-examples/tree/master/timer
-
-    printf("System Clock Frequency is %d Hz\n", clock_get_hz(clk_sys));
-    printf("USB Clock Frequency is %d Hz\n", clock_get_hz(clk_usb));
-    // For more examples of clocks use see https://github.com/raspberrypi/pico-examples/tree/master/clocks
-
-    // Set up our UART
-    uart_init(UART_ID, BAUD_RATE);
-    // Set the TX and RX pins by using the function select on the GPIO
-    // Set datasheet for more information on function select
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-    
-    // Use some the various UART functions to send out data
-    // In a default system, printf will also output via the default UART
-    
-    // Send out a string, with CR/LF conversions
-    uart_puts(UART_ID, " Hello, UART!\n");
-    
-    // For more examples of UART use see https://github.com/raspberrypi/pico-examples/tree/master/uart
-
     while (true) {
-        printf("Hello, world!\n");
+        uart_write((uint8_t *)UART_ACK, strlen(UART_ACK));
         sleep_ms(1000);
     }
+}
+
+
+void UARTE0_UART0_IRQHandler(void) {
+    // on received byte
 }
