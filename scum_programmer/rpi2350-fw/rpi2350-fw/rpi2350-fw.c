@@ -14,6 +14,7 @@ SCuM programmer.
 #include "hardware/structs/dma.h"
 #include "hardware/regs/dma.h"
 #include "hardware/irq.h"
+#include "hardware/gpio.h"
 #include "hardware/regs/timer.h"
 #include "hardware/structs/timer.h"
 #include "hdlc.h"
@@ -83,13 +84,37 @@ void timer_irq(void) {
     // handle compare[1]
 }
 
+static void setup_programmer(void) {
+    gpio_init(PROGRAMMER_CLK_PIN);
+    gpio_set_dir(PROGRAMMER_CLK_PIN, GPIO_OUT);
+    gpio_init(PROGRAMMER_DATA_PIN);
+    gpio_set_dir(PROGRAMMER_DATA_PIN, GPIO_OUT);
+    gpio_init(PROGRAMMER_EN_PIN);
+    gpio_set_dir(PROGRAMMER_EN_PIN, GPIO_OUT);
+  
+    // The hard reset pin is set to high-Z.
+    gpio_init(PROGRAMMER_HRST_PIN);
+    gpio_set_dir(PROGRAMMER_HRST_PIN, GPIO_IN);
+  
+    // Disable all pull-up and pull-down resistors.
+    gpio_disable_pulls(PROGRAMMER_CLK_PIN);
+    gpio_disable_pulls(PROGRAMMER_DATA_PIN);
+    gpio_disable_pulls(PROGRAMMER_EN_PIN);
+    gpio_disable_pulls(PROGRAMMER_HRST_PIN);
+  
+    // Decrease the drive strengths of the GPIOs.
+    gpio_set_drive_strength(PROGRAMMER_CLK_PIN, GPIO_DRIVE_STRENGTH_2MA);
+    gpio_set_drive_strength(PROGRAMMER_DATA_PIN, GPIO_DRIVE_STRENGTH_2MA);
+    gpio_set_drive_strength(PROGRAMMER_EN_PIN, GPIO_DRIVE_STRENGTH_2MA);
+    gpio_set_drive_strength(PROGRAMMER_HRST_PIN, GPIO_DRIVE_STRENGTH_2MA);
+}
+
 static void setup_timer2(void) {
     timer_hw->alarm[2] = timer_hw->timerawl + CALIBRATION_PERIOD;
     hw_set_bits(&timer_hw->inte, 1u << 2);
     irq_set_exclusive_handler(TIMER0_IRQ_0, timer_irq);
     irq_set_enabled(TIMER0_IRQ_0, true);
 }
-
 
 static void setup_uart(void) {
     // RPi pico2 specific: all comms are done over USB, not UART
@@ -114,6 +139,40 @@ static void poll_usb_rx(void) {
     }
 }
 
+static void run_calibration(void) {
+    setup_timer2();
+
+    //NVIC_EnableIRQ(TIMER2_IRQn);
+    //NRF_TIMER2->INTENCLR = TIMER_INTENCLR_COMPARE2_Enabled << TIMER_INTENCLR_COMPARE2_Pos;
+    //NRF_TIMER2->INTENSET = TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos;
+    //NRF_TIMER2->TASKS_START = 1;
+
+    while (!_programmer_vars.calibration_done) {
+        asm volatile("" :::);
+    }
+    _programmer_vars.calibration_counter = 0;
+    _programmer_vars.calibration_done = false;
+}
+
+
+static void bitband_byte(uint8_t byte, bool latch) {
+    for (uint8_t j = 0; j < 8; j++) {
+        if ((byte >> j) & 0x01) {
+            gpio_put(PROGRAMMER_DATA_PIN, true);
+        } else if (!((byte >> j) & 0x01)) {
+            gpio_put(PROGRAMMER_DATA_PIN, false);
+        }
+        if (latch && (j == 7)) {
+            gpio_put(PROGRAMMER_EN_PIN, true);
+        } else {
+            gpio_put(PROGRAMMER_EN_PIN, false);
+        }
+        // toggle the clock
+        gpio_put(PROGRAMMER_CLK_PIN, true);
+        gpio_put(PROGRAMMER_CLK_PIN, false);
+    }
+}
+
 static void _process_command(void) {
     hdlc_decode((uint8_t *)&_programmer_vars.uart_command);
     switch (_programmer_vars.uart_command.type) {
@@ -123,41 +182,40 @@ static void _process_command(void) {
             _programmer_vars.chunk_idx = 0;
 
             //NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
+            gpio_put(PROGRAMMER_CLK_PIN, false);
             //NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
+            gpio_put(PROGRAMMER_DATA_PIN, false);
             //NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
+            gpio_put(PROGRAMMER_EN_PIN, false);
             // execute hard reset (debug for now)
-            //NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-            //                                        GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);  // configure as output, set low
+            gpio_put(PROGRAMMER_HRST_PIN, false);
+            gpio_set_dir(PROGRAMMER_HRST_PIN, GPIO_OUT); // configure as output
+            gpio_put(PROGRAMMER_HRST_PIN, false); // set value to zero (HRESET is active low)
             busy_wait_ms(14);
-            //NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos;  // return to input
+            gpio_set_dir(PROGRAMMER_HRST_PIN, GPIO_IN); // return to input
             busy_wait_ms(14);
             break;
         }
         case COMMAND_CHUNK:
         {
             for (uint32_t idx = 1; idx < CHUNK_SIZE + 1; idx++) {
-            //    bitband_byte(_programmer_vars.uart_command.buffer[idx - 1], (idx % 4 == 0));
+                bitband_byte(_programmer_vars.uart_command.buffer[idx - 1], (idx % 4 == 0));
             }
             _programmer_vars.chunk_idx++;
             break;
         }
         case COMMAND_BOOT:
         {
-            puts("BOOT");
             uint32_t received_bytes = _programmer_vars.chunk_idx * CHUNK_SIZE;
             uint32_t remaining_bytes = SCUM_MEM_SIZE - received_bytes;
             for (uint32_t idx = 1; idx < remaining_bytes + 1; idx++) {
-            //    bitband_byte(0x00, (idx % 4 == 0));
+                bitband_byte(0x00, (idx % 4 == 0));
             }
-
-            //NRF_P0->OUTSET = (1 << PROGRAMMER_TAP_PIN);  // first set pin high - NEVER CLEAR!!! scum will hate it if you do
-            //NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
-            //                                       GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);  // then enable output
             break;
         }
         case COMMAND_CALIBRATE:
             puts("CALIBRATE");
-            //run_calibration();
+            run_calibration();
             break;
         default:
             break;
