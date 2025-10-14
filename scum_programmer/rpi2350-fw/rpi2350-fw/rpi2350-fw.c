@@ -25,12 +25,10 @@ SCuM programmer.
 #define CHUNK_SIZE       (1024U)
 #define SCUM_MEM_SIZE    (1 << 16)  // 64KiB
 
-#define CALIBRATION_PORT    0UL
-#define PROGRAMMER_EN_PIN   30UL
-#define PROGRAMMER_HRST_PIN 31UL
-#define PROGRAMMER_CLK_PIN  28UL
-#define PROGRAMMER_DATA_PIN 29UL
-#define PROGRAMMER_TAP_PIN  3UL
+#define PROGRAMMER_EN_PIN   4
+#define PROGRAMMER_HRST_PIN 5
+#define PROGRAMMER_CLK_PIN  2
+#define PROGRAMMER_DATA_PIN 3
 
 #define CALIBRATION_CLK_PIN          28UL
 #define CALIBRATION_PULSE_WIDTH      50   // approximate duty cycle (out of 100)
@@ -81,11 +79,8 @@ static programmer_vars_t _programmer_vars = { 0 };
 
 static const char *UART_ACK = "ACK\n";
 
-
-
 void timer_irq(void) {
     // handle compare[1]
-
 }
 
 static void setup_timer2(void) {
@@ -97,66 +92,93 @@ static void setup_timer2(void) {
 
 
 static void setup_uart(void) {
+    // RPi pico2 specific: all comms are done over USB, not UART
+    // Initialize USB.
+    stdio_usb_init();
 
-    // configure baud:
-    float div = (125000000.0f) / (16.0f * (float)BAUD_RATE);
-    uint32_t int_part = (uint32_t)div;
-    uint32_t frac_part = (uint32_t)((div - int_part) * 64 + 0.5f);
-    uart1_hw->ibrd = int_part;
-    uart1_hw->fbrd = frac_part;
-
-    uart1_hw->lcr_h =   (3 << UART_UARTLCR_H_WLEN_LSB) |  // 8 bits
-                        (1 << UART_UARTLCR_H_FEN_LSB);    // FIFO enable
-
-    uart1_hw->cr =  (1 << UART_UARTCR_UARTEN_LSB)   |
-                    (1 << UART_UARTCR_TXE_LSB)      |
-                    (1 << UART_UARTCR_RXE_LSB);
-
-    // RX DMA
-    dma_hw->ch[0].read_addr  = (uintptr_t)&uart1_hw->dr;
-    dma_hw->ch[0].write_addr = (uintptr_t)&_programmer_vars.uart_rx_byte;
-    dma_hw->ch[0].transfer_count = 1;
-
-    dma_hw->ch[0].ctrl_trig =   (0 << DMA_CH0_CTRL_TRIG_DATA_SIZE_LSB) | 
-                                (0 << DMA_CH0_CTRL_TRIG_INCR_READ_LSB)  |   // fixed read (DR)
-                                (0 << DMA_CH0_CTRL_TRIG_INCR_WRITE_LSB) |   // fixed write (rx_byte)
-                                (0 << DMA_CH0_CTRL_TRIG_CHAIN_TO_LSB) |     // retrigger self
-                                DMA_CH0_CTRL_TRIG_EN_BITS;
-
-    // TX DMA 
-    dma_hw->ch[1].read_addr  = (uintptr_t)_programmer_vars.uart_tx_buf;
-    dma_hw->ch[1].write_addr = (uintptr_t)&uart1_hw->dr;
-    dma_hw->ch[1].transfer_count = 0; // set when sending
-
-    dma_hw->ch[1].ctrl_trig =   (1 << DMA_CH0_CTRL_TRIG_DATA_SIZE_LSB) |
-                                (1 << DMA_CH0_CTRL_TRIG_INCR_READ_LSB)  |  // increment buffer
-                                (0 << DMA_CH0_CTRL_TRIG_INCR_WRITE_LSB) |  // fixed write (DR)
-                                DMA_CH0_CTRL_TRIG_EN_BITS;
-
-    // Enable UART DMA
-    uart1_hw->dmacr = UART_UARTDMACR_RXDMAE_BITS | UART_UARTDMACR_TXDMAE_BITS;
-    
-    // enable DMA0 interrupts on RX:
-    dma_hw->inte0 = 1;
+    // Limit input and output to USB only.
+    stdio_filter_driver(&stdio_usb);
 }
 
 static void uart_write(const uint8_t *buffer, size_t len) {
-    memcpy(_programmer_vars.uart_tx_buf, buffer, len);
-    dma_hw->ch[1].transfer_count = len;
-    dma_hw->ch[1].al1_ctrl |= DMA_CH0_CTRL_TRIG_EN_BITS;
-    while(dma_hw->ch[1].ctrl_trig & DMA_CH0_CTRL_TRIG_BUSY_BITS) {}
+    for (size_t i = 0; i < len; i++) {
+        putchar_raw(buffer[i]);  // send one byte directly over USB CDC
+    }
+}
+
+static void poll_usb_rx(void) {
+    int c = getchar_timeout_us(1000);  // non-blocking read from USB CDC
+    if (c != PICO_ERROR_TIMEOUT) {
+        _programmer_vars.uart_rx_byte = (uint8_t)c;
+        _programmer_vars.uart_byte_received = true;
+    }
+}
+
+static void _process_command(void) {
+    hdlc_decode((uint8_t *)&_programmer_vars.uart_command);
+    switch (_programmer_vars.uart_command.type) {
+        case COMMAND_START:
+        {
+            //puts("START");
+            _programmer_vars.chunk_idx = 0;
+
+            //NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
+            //NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
+            //NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
+            // execute hard reset (debug for now)
+            //NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
+            //                                        GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);  // configure as output, set low
+            busy_wait_ms(14);
+            //NRF_P0->PIN_CNF[PROGRAMMER_HRST_PIN] = GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos;  // return to input
+            busy_wait_ms(14);
+            break;
+        }
+        case COMMAND_CHUNK:
+        {
+            for (uint32_t idx = 1; idx < CHUNK_SIZE + 1; idx++) {
+            //    bitband_byte(_programmer_vars.uart_command.buffer[idx - 1], (idx % 4 == 0));
+            }
+            _programmer_vars.chunk_idx++;
+            break;
+        }
+        case COMMAND_BOOT:
+        {
+            puts("BOOT");
+            uint32_t received_bytes = _programmer_vars.chunk_idx * CHUNK_SIZE;
+            uint32_t remaining_bytes = SCUM_MEM_SIZE - received_bytes;
+            for (uint32_t idx = 1; idx < remaining_bytes + 1; idx++) {
+            //    bitband_byte(0x00, (idx % 4 == 0));
+            }
+
+            //NRF_P0->OUTSET = (1 << PROGRAMMER_TAP_PIN);  // first set pin high - NEVER CLEAR!!! scum will hate it if you do
+            //NRF_P0->PIN_CNF[PROGRAMMER_TAP_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos |
+            //                                       GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);  // then enable output
+            break;
+        }
+        case COMMAND_CALIBRATE:
+            puts("CALIBRATE");
+            //run_calibration();
+            break;
+        default:
+            break;
+    }
+
+    uart_write((uint8_t *)UART_ACK, strlen(UART_ACK));
 }
 
 
 int main()
 {
+    setup_uart();
+
     while (true) {
-        uart_write((uint8_t *)UART_ACK, strlen(UART_ACK));
-        sleep_ms(1000);
+        poll_usb_rx();
+        if (_programmer_vars.uart_byte_received) {
+            hdlc_state_t state = hdlc_rx_byte(_programmer_vars.uart_rx_byte);
+            if (state == HDLC_STATE_READY) {
+                _process_command();
+            }
+            _programmer_vars.uart_byte_received = false;
+        }
     }
-}
-
-
-void UARTE0_UART0_IRQHandler(void) {
-    // on received byte
 }

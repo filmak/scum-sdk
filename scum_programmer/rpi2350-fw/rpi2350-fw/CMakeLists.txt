@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(rpi2350-fw rpi2350-fw.c )
+add_executable(rpi2350-fw rpi2350-fw.c hdlc.c)
 
 pico_set_program_name(rpi2350-fw "rpi2350-fw")
 pico_set_program_version(rpi2350-fw "0.1")
