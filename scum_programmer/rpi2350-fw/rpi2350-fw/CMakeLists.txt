@@ -57,6 +57,7 @@ target_include_directories(rpi2350-fw PRIVATE
 target_link_libraries(rpi2350-fw 
         hardware_timer
         hardware_clocks
+        hardware_pwm
         )
 
 pico_add_extra_outputs(rpi2350-fw)

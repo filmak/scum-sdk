@@ -15,6 +15,7 @@ SCuM programmer.
 #include "hardware/regs/dma.h"
 #include "hardware/irq.h"
 #include "hardware/gpio.h"
+#include "hardware/pwm.h"
 #include "hardware/regs/timer.h"
 #include "hardware/structs/timer.h"
 #include "hdlc.h"
@@ -33,7 +34,7 @@ SCuM programmer.
 
 #define CALIBRATION_CLK_PIN          28UL
 #define CALIBRATION_PULSE_WIDTH      50   // approximate duty cycle (out of 100)
-#define CALIBRATION_PERIOD           100000  // period in us
+#define CALIBRATION_PERIOD           100  // period in ms
 #define CALIBRATION_FUDGE            308  // # of clock cycles of "fudge"
 #define CALIBRATION_NUMBER_OF_PULSES 10   // # of rising edges at 100ms
 
@@ -80,9 +81,9 @@ static programmer_vars_t _programmer_vars = { 0 };
 
 static const char *UART_ACK = "ACK\n";
 
-void timer_irq(void) {
-    // handle compare[1]
-}
+// Calibration timer.
+static repeating_timer_t g_scum_calibration_timer;
+
 
 static void setup_programmer(void) {
     gpio_init(PROGRAMMER_CLK_PIN);
@@ -109,13 +110,6 @@ static void setup_programmer(void) {
     gpio_set_drive_strength(PROGRAMMER_HRST_PIN, GPIO_DRIVE_STRENGTH_2MA);
 }
 
-static void setup_timer2(void) {
-    timer_hw->alarm[2] = timer_hw->timerawl + CALIBRATION_PERIOD;
-    hw_set_bits(&timer_hw->inte, 1u << 2);
-    irq_set_exclusive_handler(TIMER0_IRQ_0, timer_irq);
-    irq_set_enabled(TIMER0_IRQ_0, true);
-}
-
 static void setup_uart(void) {
     // RPi pico2 specific: all comms are done over USB, not UART
     // Initialize USB.
@@ -139,37 +133,58 @@ static void poll_usb_rx(void) {
     }
 }
 
-static void run_calibration(void) {
-    setup_timer2();
-
-    //NVIC_EnableIRQ(TIMER2_IRQn);
-    //NRF_TIMER2->INTENCLR = TIMER_INTENCLR_COMPARE2_Enabled << TIMER_INTENCLR_COMPARE2_Pos;
-    //NRF_TIMER2->INTENSET = TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos;
-    //NRF_TIMER2->TASKS_START = 1;
-
-    while (!_programmer_vars.calibration_done) {
-        asm volatile("" :::);
-    }
-    _programmer_vars.calibration_counter = 0;
-    _programmer_vars.calibration_done = false;
+// Calibration active time alarm callback.
+static int64_t scum_calibration_active_time_alarm_callback(const alarm_id_t id, void* user_data) {
+    gpio_put(PROGRAMMER_CLK_PIN, false);
+    return 0;
 }
 
+// Calibration timer callback.
+static bool scum_calibration_timer_callback(repeating_timer_t* timer) {
+    gpio_put(PROGRAMMER_CLK_PIN, true);
+    add_alarm_in_us(CALIBRATION_PULSE_WIDTH,
+                    scum_calibration_active_time_alarm_callback,
+                    /*user_data=*/NULL, /*fire_if_past=*/true);
+    ++_programmer_vars.calibration_counter;
+    return _programmer_vars.calibration_counter < CALIBRATION_NUMBER_OF_PULSES;
+}
+  
+
+void run_calibration(void) {
+    if (!add_repeating_timer_ms(
+        CALIBRATION_PERIOD, scum_calibration_timer_callback,
+        /*user_data=*/NULL, &g_scum_calibration_timer)) {
+        printf("Failed to create the calibration timer.\n");
+        return;
+    }
+    while (_programmer_vars.calibration_counter < CALIBRATION_NUMBER_OF_PULSES) {
+        // TODO(titan): Use a condition variable once it is implemented in the
+        // pico_sync library.
+        sleep_us(20);
+    }
+    _programmer_vars.calibration_counter = 0;
+}
 
 static void bitband_byte(uint8_t byte, bool latch) {
     for (uint8_t j = 0; j < 8; j++) {
+        busy_wait_us(1);
         if ((byte >> j) & 0x01) {
             gpio_put(PROGRAMMER_DATA_PIN, true);
         } else if (!((byte >> j) & 0x01)) {
             gpio_put(PROGRAMMER_DATA_PIN, false);
         }
+        busy_wait_us(1);
         if (latch && (j == 7)) {
             gpio_put(PROGRAMMER_EN_PIN, true);
         } else {
             gpio_put(PROGRAMMER_EN_PIN, false);
         }
+        busy_wait_us(1);
         // toggle the clock
         gpio_put(PROGRAMMER_CLK_PIN, true);
+        busy_wait_us(1);
         gpio_put(PROGRAMMER_CLK_PIN, false);
+        busy_wait_us(1);
     }
 }
 
@@ -178,30 +193,32 @@ static void _process_command(void) {
     switch (_programmer_vars.uart_command.type) {
         case COMMAND_START:
         {
-            //puts("START");
             _programmer_vars.chunk_idx = 0;
 
-            //NRF_P0->OUTCLR = 1 << PROGRAMMER_CLK_PIN;
             gpio_put(PROGRAMMER_CLK_PIN, false);
-            //NRF_P0->OUTCLR = 1 << PROGRAMMER_DATA_PIN;
             gpio_put(PROGRAMMER_DATA_PIN, false);
-            //NRF_P0->OUTCLR = 1 << PROGRAMMER_EN_PIN;
             gpio_put(PROGRAMMER_EN_PIN, false);
-            // execute hard reset (debug for now)
             gpio_put(PROGRAMMER_HRST_PIN, false);
             gpio_set_dir(PROGRAMMER_HRST_PIN, GPIO_OUT); // configure as output
             gpio_put(PROGRAMMER_HRST_PIN, false); // set value to zero (HRESET is active low)
             busy_wait_ms(14);
             gpio_set_dir(PROGRAMMER_HRST_PIN, GPIO_IN); // return to input
             busy_wait_ms(14);
+
             break;
         }
         case COMMAND_CHUNK:
         {
+            //puts("CHUNK");
             for (uint32_t idx = 1; idx < CHUNK_SIZE + 1; idx++) {
                 bitband_byte(_programmer_vars.uart_command.buffer[idx - 1], (idx % 4 == 0));
             }
             _programmer_vars.chunk_idx++;
+
+            gpio_init(PICO_DEFAULT_LED_PIN);
+            gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+            gpio_put(PICO_DEFAULT_LED_PIN, true);
+
             break;
         }
         case COMMAND_BOOT:
@@ -214,7 +231,6 @@ static void _process_command(void) {
             break;
         }
         case COMMAND_CALIBRATE:
-            puts("CALIBRATE");
             run_calibration();
             break;
         default:
@@ -228,6 +244,12 @@ static void _process_command(void) {
 int main()
 {
     setup_uart();
+    setup_programmer();
+
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_LED_PIN, false);
+
 
     while (true) {
         poll_usb_rx();
