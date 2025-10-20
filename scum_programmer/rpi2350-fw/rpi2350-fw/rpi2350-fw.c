@@ -250,7 +250,6 @@ int main()
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
     gpio_put(PICO_DEFAULT_LED_PIN, false);
 
-
     while (true) {
         poll_usb_rx();
         if (_programmer_vars.uart_byte_received) {
