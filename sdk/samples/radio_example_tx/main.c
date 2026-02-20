@@ -15,30 +15,41 @@
 #define NUM_CYCLES_BETWEEN_PACKET (1000UL)
 #define TX_PACKET_LEN (64UL)
 
-static void tx_endframe_callback(uint32_t timestamp);
-static uint8_t packet[TX_PACKET_LEN] = {0};
+//static void tx_endframe_callback(uint32_t timestamp);
+//static uint8_t packet[TX_PACKET_LEN] = {0};
 
 int main(void) {
 
     printf("Radio Transmitter Example\n");
     radio_init();
-    LC_FREQCHANGE(0,0,0);
-    radio_setEndFrameTxCb(tx_endframe_callback);
-    radio_loadPacket(packet, TX_PACKET_LEN + 2);
-    radio_txEnable();
-    busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
-    radio_txNow();
+    LC_FREQCHANGE(23,31,31);
+    //radio_setEndFrameTxCb(tx_endframe_callback);
+    //radio_loadPacket(packet, TX_PACKET_LEN + 2);
+    radio_rxEnable();
+    //busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
+    //radio_txNow();
+
+    uintptr_t addr = 0x20002400;      // starting address
+    uint8_t *p = (uint8_t *)addr; // pointer to that address
+
+    printf("Bytes at %p: ", (void *)p);
+
+    for (int i = 0; i < 8; i++) {
+        printf("%02X", p[i]);     // two-digit hex, no spaces, continuous
+    }
+
+    printf("\n");
 
     while (1) {
         __WFE();
     }
 }
 
-void tx_endframe_callback(uint32_t timestamp) {
-    radio_rfOff();
-    printf("sent a packet\r\n");
-    radio_loadPacket(packet, TX_PACKET_LEN + 2);
-    radio_txEnable();
-    busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
-    radio_txNow();
-}
+// void tx_endframe_callback(uint32_t timestamp) {
+//     radio_rfOff();
+//     printf("sent a packet\r\n");
+//     radio_loadPacket(packet, TX_PACKET_LEN + 2);
+//     radio_txEnable();
+//     busy_wait_cycles(NUM_CYCLES_BETWEEN_PACKET);
+//     radio_txNow();
+// }
